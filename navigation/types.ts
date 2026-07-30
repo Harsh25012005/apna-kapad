@@ -1,0 +1,93 @@
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+
+export type AuthStackParamList = {
+  Login: undefined;
+  Signup: undefined;
+  ForgotPassword: undefined;
+};
+
+/** Screens shared across several stacks (orders/bills reachable from many tabs). */
+type SharedOrderRoutes = {
+  OrderForm: { customerId?: string } | undefined;
+  OrderDetail: { orderId: string };
+  BillForm: { orderId?: string; customerId?: string } | undefined;
+};
+
+export type CustomersStackParamList = SharedOrderRoutes & {
+  CustomerList: undefined;
+  CustomerDetail: { customerId: string };
+  CustomerForm: undefined;
+  MeasurementForm: { customerId: string };
+};
+
+export type OrdersStackParamList = SharedOrderRoutes & {
+  OrderList: undefined;
+};
+
+export type BillingStackParamList = {
+  BillingList: undefined;
+  BillForm: { orderId?: string; customerId?: string } | undefined;
+  BillDetail: { billId: string };
+};
+
+export type DashboardStackParamList = SharedOrderRoutes & {
+  Dashboard: undefined;
+};
+
+export type SettingsStackParamList = {
+  SettingsHome: undefined;
+  Staff: undefined;
+  StaffForm: { staffId?: string } | undefined;
+};
+
+export type MainTabParamList = {
+  DashboardTab: undefined;
+  CustomersTab: undefined;
+  OrdersTab: undefined;
+  BillingTab: undefined;
+  SettingsTab: undefined;
+};
+
+export type RootStackParamList = {
+  Auth: undefined;
+  ShopSetup: undefined;
+  Main: undefined;
+};
+
+/**
+ * Union of every in-app route. Screens that are registered in more than one
+ * stack (OrderForm, OrderDetail, BillForm) type against this so they can be
+ * reused without re-declaring props per stack.
+ */
+export type AppParamList = CustomersStackParamList &
+  OrdersStackParamList &
+  BillingStackParamList &
+  DashboardStackParamList &
+  SettingsStackParamList;
+
+export type AppScreenProps<T extends keyof AppParamList> = NativeStackScreenProps<AppParamList, T>;
+
+export type AuthScreenProps<T extends keyof AuthStackParamList> = NativeStackScreenProps<
+  AuthStackParamList,
+  T
+>;
+export type CustomersScreenProps<T extends keyof CustomersStackParamList> = NativeStackScreenProps<
+  CustomersStackParamList,
+  T
+>;
+export type OrdersScreenProps<T extends keyof OrdersStackParamList> = NativeStackScreenProps<
+  OrdersStackParamList,
+  T
+>;
+export type BillingScreenProps<T extends keyof BillingStackParamList> = NativeStackScreenProps<
+  BillingStackParamList,
+  T
+>;
+export type DashboardScreenProps<T extends keyof DashboardStackParamList> = NativeStackScreenProps<
+  DashboardStackParamList,
+  T
+>;
+export type SettingsScreenProps<T extends keyof SettingsStackParamList> = NativeStackScreenProps<
+  SettingsStackParamList,
+  T
+>;

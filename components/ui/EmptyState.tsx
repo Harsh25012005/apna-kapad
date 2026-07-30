@@ -1,0 +1,63 @@
+import { Text, View } from 'react-native';
+import { FontAwesome5 } from '@expo/vector-icons';
+import { Button } from './Button';
+
+export type EmptyStateProps = {
+  icon?: React.ComponentProps<typeof FontAwesome5>['name'];
+  title: string;
+  description?: string;
+  actionLabel?: string;
+  onAction?: () => void;
+  /**
+   * 'full' centers within all available space (use for a whole screen/tab).
+   * 'compact' is a smaller, non-flex card for nesting inside a section on a
+   * screen that already has other content (e.g. one part of a detail page).
+   */
+  variant?: 'full' | 'compact';
+};
+
+export function EmptyState({
+  icon = 'inbox',
+  title,
+  description,
+  actionLabel,
+  onAction,
+  variant = 'full',
+}: EmptyStateProps) {
+  const isCompact = variant === 'compact';
+
+  return (
+    <View
+      className={
+        isCompact
+          ? 'items-center justify-center rounded-xl border border-dashed border-gray-200 bg-white px-6 py-8'
+          : 'flex-1 items-center justify-center px-8 py-12'
+      }
+    >
+      <View
+        className={`items-center justify-center rounded-full bg-primary-50 ${
+          isCompact ? 'mb-3 h-12 w-12' : 'mb-4 h-16 w-16'
+        }`}
+      >
+        <FontAwesome5 name={icon} size={isCompact ? 18 : 24} color="#2563EB" />
+      </View>
+      <Text
+        className={`text-center font-semibold text-gray-900 ${
+          isCompact ? 'mb-0.5 text-sm' : 'mb-1 text-base'
+        }`}
+      >
+        {title}
+      </Text>
+      {description ? (
+        <Text
+          className={`text-center text-gray-500 ${isCompact ? 'mb-3 text-xs' : 'mb-5 text-sm'}`}
+        >
+          {description}
+        </Text>
+      ) : null}
+      {actionLabel && onAction ? (
+        <Button title={actionLabel} onPress={onAction} fullWidth={false} size="sm" />
+      ) : null}
+    </View>
+  );
+}

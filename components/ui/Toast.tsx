@@ -79,10 +79,10 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       {toast ? (
         <Animated.View
           style={{ top: insets.top + 8, opacity, transform: [{ translateY }] }}
-          className="absolute left-4 right-4 z-50 flex-row items-center rounded-lg px-4 py-3"
+          className="absolute left-4 right-4 z-50 flex-row items-center rounded-md px-4 py-3"
         >
           <View
-            className="absolute inset-0 rounded-lg"
+            className="absolute inset-0 rounded-md"
             style={{ backgroundColor: TYPE_STYLES[toast.type].bg, opacity: 0.95 }}
           />
           <FontAwesome5 name={TYPE_STYLES[toast.type].icon} size={16} color="#FFFFFF" />

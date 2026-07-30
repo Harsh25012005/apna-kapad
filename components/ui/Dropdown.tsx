@@ -37,8 +37,8 @@ export function Dropdown<T extends string = string>({
 
       <Pressable
         onPress={() => setOpen(true)}
-        className={`h-[52px] flex-row items-center justify-between rounded-2xl border-2 bg-gray-50 px-4 ${
-          error ? 'border-danger' : 'border-gray-100'
+        className={`h-[52px] flex-row items-center justify-between rounded-md border bg-gray-50 px-4 ${
+          error ? 'border-danger' : 'border-gray-200'
         }`}
       >
         <Text className={selected ? 'text-base text-gray-900' : 'text-base text-gray-400'}>
@@ -51,7 +51,7 @@ export function Dropdown<T extends string = string>({
 
       <Modal visible={open} transparent animationType="fade" onRequestClose={() => setOpen(false)}>
         <Pressable className="flex-1 justify-end bg-black/40" onPress={() => setOpen(false)}>
-          <Pressable className="max-h-[60%] rounded-t-2xl bg-white p-4" onPress={() => {}}>
+          <Pressable className="max-h-[60%] rounded-t-md bg-white p-4" onPress={() => {}}>
             {label ? (
               <Text className="mb-3 text-base font-semibold text-gray-900">{label}</Text>
             ) : null}

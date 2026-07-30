@@ -35,7 +35,7 @@ export function InputField({
   const [isFocused, setIsFocused] = useState(false);
   const [hidden, setHidden] = useState(secureTextEntry);
 
-  const borderColor = error ? 'border-danger' : isFocused ? 'border-primary-600' : 'border-gray-100';
+  const borderColor = error ? 'border-danger' : isFocused ? 'border-primary-600' : 'border-gray-200';
   const bgColor = !editable ? 'bg-gray-100' : isFocused ? 'bg-white' : 'bg-gray-50';
 
   return (
@@ -43,28 +43,17 @@ export function InputField({
       {label ? (
         <Text
           style={{ letterSpacing: 0.4 }}
-          className={`mb-1.5 text-xs font-bold uppercase ${
-            error ? 'text-danger' : isFocused ? 'text-primary-600' : 'text-gray-500'
-          }`}
+          className={`mb-1.5 text-sm font-semibold ${error ? 'text-danger' : isFocused ? 'text-primary-600' : 'text-gray-500'
+            }`}
         >
           {label}
         </Text>
       ) : null}
 
       <View
-        className={`flex-row items-center rounded-2xl border-2 px-4 ${borderColor} ${bgColor} ${
-          multiline ? 'min-h-[96px] items-start py-3' : 'h-[52px]'
-        }`}
+        className={`flex-row items-center rounded-md border px-4 ${borderColor} ${bgColor} ${multiline ? 'min-h-[96px] items-start py-3' : 'h-[52px]'
+          }`}
       >
-        {leftIcon ? (
-          <FontAwesome5
-            name={leftIcon}
-            size={15}
-            color={error ? '#DC2626' : isFocused ? '#2563EB' : '#9CA3AF'}
-            style={{ marginRight: 10 }}
-          />
-        ) : null}
-
         <TextInput
           value={value}
           onChangeText={onChangeText}

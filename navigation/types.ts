@@ -4,6 +4,7 @@ export type AuthStackParamList = {
   Login: undefined;
   Signup: undefined;
   ForgotPassword: undefined;
+  ComponentShowcase: undefined;
 };
 
 /** Screens shared across several stacks (orders/bills reachable from many tabs). */

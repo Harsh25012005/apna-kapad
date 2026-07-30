@@ -11,8 +11,10 @@ module.exports = {
     scheme: 'apnakapad',
     ios: {
       supportsTablet: true,
+      bundleIdentifier: 'com.apnakapad.app',
     },
     android: {
+      package: 'com.apnakapad.app',
       adaptiveIcon: {
         backgroundColor: '#E6F4FE',
         foregroundImage: './assets/android-icon-foreground.png',
@@ -28,10 +30,19 @@ module.exports = {
       'expo-secure-store',
       'expo-font',
       '@react-native-community/datetimepicker',
+      [
+        '@react-native-google-signin/google-signin',
+        {
+          // iosUrlScheme looks like: com.googleusercontent.apps.XXXXXXXXX
+          // Get it from Google Cloud Console → Credentials → iOS OAuth Client ID → "reversed client ID"
+          iosUrlScheme: process.env.GOOGLE_IOS_URL_SCHEME ?? 'com.googleusercontent.apps.PLACEHOLDER',
+        },
+      ],
     ],
     extra: {
       supabaseUrl: process.env.SUPABASE_URL,
       supabasePublishableKey: process.env.SUPABASE_PUBLISHABLE_KEY,
+      googleWebClientId: process.env.GOOGLE_WEB_CLIENT_ID,
     },
   },
 };

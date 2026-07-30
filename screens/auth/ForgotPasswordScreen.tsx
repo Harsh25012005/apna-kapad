@@ -48,7 +48,6 @@ export default function ForgotPasswordScreen({ navigation }: AuthScreenProps<'Fo
               value={email}
               onChangeText={setEmail}
               placeholder="you@example.com"
-              leftIcon="envelope"
               keyboardType="email-address"
               autoCapitalize="none"
               error={error}

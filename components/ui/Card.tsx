@@ -8,7 +8,7 @@ export type CardProps = {
 };
 
 export function Card({ children, onPress, className = '' }: CardProps) {
-  const baseClass = `rounded-2xl border border-gray-200 bg-white p-4 ${className}`;
+  const baseClass = `rounded-md border border-gray-200 bg-white p-4 ${className}`;
 
   if (onPress) {
     return (

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Text, View, Pressable, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
-import { Button, InputField, useToast } from '../../components/ui';
+import { Button, GoogleIcon, InputField, useToast } from '../../components/ui';
 import { useAuth } from '../../context/AuthContext';
 import type { AuthScreenProps } from '../../navigation/types';
 
@@ -67,7 +67,6 @@ export default function SignupScreen({ navigation }: AuthScreenProps<'Signup'>) 
             value={email}
             onChangeText={setEmail}
             placeholder="you@example.com"
-            leftIcon="envelope"
             keyboardType="email-address"
             autoCapitalize="none"
             error={errors.email}
@@ -78,7 +77,6 @@ export default function SignupScreen({ navigation }: AuthScreenProps<'Signup'>) 
             value={password}
             onChangeText={setPassword}
             placeholder="••••••••"
-            leftIcon="lock"
             secureTextEntry
             error={errors.password}
           />
@@ -88,7 +86,6 @@ export default function SignupScreen({ navigation }: AuthScreenProps<'Signup'>) 
             value={confirmPassword}
             onChangeText={setConfirmPassword}
             placeholder="••••••••"
-            leftIcon="lock"
             secureTextEntry
             error={errors.confirmPassword}
           />
@@ -103,10 +100,10 @@ export default function SignupScreen({ navigation }: AuthScreenProps<'Signup'>) 
 
           <Button
             title="Continue with Google"
-            variant="outline"
+            variant="google"
             onPress={handleGoogle}
             loading={googleLoading}
-            icon={<FontAwesome5 name="google" size={16} color="#2563EB" />}
+            icon={<GoogleIcon size={20} />}
           />
 
           <View className="mt-8 flex-row justify-center">

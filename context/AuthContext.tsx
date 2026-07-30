@@ -1,11 +1,43 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
-import * as WebBrowser from 'expo-web-browser';
-import * as AuthSession from 'expo-auth-session';
+import Constants, { ExecutionEnvironment } from 'expo-constants';
 import type { Session, User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import type { Shop } from '../types';
 
-WebBrowser.maybeCompleteAuthSession();
+/**
+ * @react-native-google-signin/google-signin is a native module — it isn't
+ * bundled into Expo Go. Its own index.js re-exports GoogleSigninButton,
+ * which calls NativeModule.getConstants() at MODULE-EVALUATION time (not
+ * inside any function). That means the mere `import ... from
+ * '@react-native-google-signin/google-signin'` line — evaluated the instant
+ * this file loads — used to crash the entire app in Expo Go with
+ * "RNGoogleSignin could not be found", before any screen even rendered.
+ *
+ * A top-level `import` is always eagerly evaluated by Metro, so delaying
+ * *calls* into the module (e.g. wrapping .configure() in a function) doesn't
+ * help — the crash happens on import, not on use. The only fix is to never
+ * let Metro evaluate that module's code in Expo Go at all, via a runtime
+ * `require()` inside a function that's gated behind an Expo Go check.
+ */
+const isExpoGo = Constants.executionEnvironment === ExecutionEnvironment.StoreClient;
+
+type GoogleSigninModule = typeof import('@react-native-google-signin/google-signin');
+
+function loadGoogleSignIn(): GoogleSigninModule {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  return require('@react-native-google-signin/google-signin');
+}
+
+let googleSignInConfigured = false;
+function ensureGoogleSignInConfigured(GoogleSignin: GoogleSigninModule['GoogleSignin']) {
+  if (googleSignInConfigured) return;
+  GoogleSignin.configure({
+    webClientId: (Constants.expoConfig?.extra?.googleWebClientId as string | undefined) ?? '',
+    scopes: ['email', 'profile'],
+    offlineAccess: false,
+  });
+  googleSignInConfigured = true;
+}
 
 type AuthContextValue = {
   session: Session | null;
@@ -91,46 +123,66 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signInWithGoogle = async () => {
-    // No `scheme` override here: in Expo Go this resolves to the running
-    // exp://<lan-ip>:<port> URL (which Expo Go can actually receive), and in
-    // a dev/standalone build it resolves to the native `apnakapad://` scheme
-    // from app.config.js. Hardcoding scheme: 'apnakapad' breaks Expo Go,
-    // since Expo Go can't be deep-linked via a custom scheme — Supabase would
-    // then fall back to the dashboard's Site URL (localhost:3000) because the
-    // requested redirect wasn't on the allow list.
-    const redirectTo = AuthSession.makeRedirectUri();
+    if (isExpoGo) {
+      throw new Error(
+        'Google Sign-In needs a custom dev build — it isn\'t available in Expo Go. Run "npx expo run:android" (or an EAS dev build), or sign in with email instead.'
+      );
+    }
 
-    const { data, error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: { redirectTo, skipBrowserRedirect: true },
-    });
-    if (error) throw error;
-    if (!data.url) throw new Error('Could not start Google sign-in');
+    const { GoogleSignin, statusCodes } = loadGoogleSignIn();
 
-    const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
-    if (result.type !== 'success' || !result.url) return;
+    try {
+      ensureGoogleSignInConfigured(GoogleSignin);
 
-    const fragment = result.url.split('#')[1] ?? result.url.split('?')[1] ?? '';
-    const params = new URLSearchParams(fragment);
-    const access_token = params.get('access_token');
-    const refresh_token = params.get('refresh_token');
+      // Ensure Google Play Services are available (Android only, no-op on iOS)
+      await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
 
-    if (access_token && refresh_token) {
-      const { error: sessionError } = await supabase.auth.setSession({
-        access_token,
-        refresh_token,
+      // Show the native Google account picker drawer
+      const response = await GoogleSignin.signIn();
+
+      const idToken = response.data?.idToken;
+      if (!idToken) {
+        throw new Error('Google Sign-In did not return an ID token. Check your Web Client ID configuration.');
+      }
+
+      // Exchange Google ID token with Supabase
+      const { error } = await supabase.auth.signInWithIdToken({
+        provider: 'google',
+        token: idToken,
       });
-      if (sessionError) throw sessionError;
+      if (error) throw error;
+    } catch (error: unknown) {
+      if (
+        typeof error === 'object' &&
+        error !== null &&
+        'code' in error &&
+        (error as { code: string }).code === statusCodes.SIGN_IN_CANCELLED
+      ) {
+        // User cancelled — do nothing
+        return;
+      }
+      throw error;
     }
   };
 
   const resetPassword = async (email: string) => {
-    const redirectTo = AuthSession.makeRedirectUri();
-    const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: 'apnakapad://reset-password',
+    });
     if (error) throw error;
   };
 
   const signOut = async () => {
+    // Sign out from both Supabase and Google (clears cached Google account).
+    // Skipped entirely in Expo Go, where the native module isn't present.
+    if (!isExpoGo) {
+      try {
+        const { GoogleSignin } = loadGoogleSignIn();
+        await GoogleSignin.signOut();
+      } catch {
+        // Not a fatal error if Google sign-out fails
+      }
+    }
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
   };

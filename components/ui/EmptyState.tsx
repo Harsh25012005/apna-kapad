@@ -30,12 +30,12 @@ export function EmptyState({
     <View
       className={
         isCompact
-          ? 'items-center justify-center rounded-xl border border-dashed border-gray-200 bg-white px-6 py-8'
+          ? 'items-center justify-center rounded-md border border-dashed border-gray-200 bg-white px-6 py-8'
           : 'flex-1 items-center justify-center px-8 py-12'
       }
     >
       <View
-        className={`items-center justify-center rounded-full bg-primary-50 ${
+        className={`items-center justify-center rounded-md bg-primary-50 ${
           isCompact ? 'mb-3 h-12 w-12' : 'mb-4 h-16 w-16'
         }`}
       >

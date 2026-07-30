@@ -14,7 +14,7 @@ export function BottomSheet({ visible, onClose, title, children }: ModalProps) {
   return (
     <RNModal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <Pressable className="flex-1 justify-end bg-black/40" onPress={onClose}>
-        <Pressable className="max-h-[85%] rounded-t-2xl bg-white p-4" onPress={() => {}}>
+        <Pressable className="max-h-[85%] rounded-t-md bg-white p-4" onPress={() => {}}>
           {title ? (
             <View className="mb-3 flex-row items-center justify-between">
               <Text className="text-lg font-semibold text-gray-900">{title}</Text>
@@ -33,9 +33,9 @@ export function BottomSheet({ visible, onClose, title, children }: ModalProps) {
 /** Centered dialog modal — for confirmations/alerts. */
 export function CenterModal({ visible, onClose, title, children }: ModalProps) {
   return (
-    <RNModal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+    <RNModal visible={visible} transparent animationType="fade" onRequestClose={() => onClose()}>
       <Pressable className="flex-1 items-center justify-center bg-black/40 px-6" onPress={onClose}>
-        <Pressable className="w-full rounded-2xl bg-white p-5" onPress={() => {}}>
+        <Pressable className="w-full rounded-md bg-white p-5" onPress={() => {}}>
           {title ? <Text className="mb-3 text-lg font-semibold text-gray-900">{title}</Text> : null}
           {children}
         </Pressable>

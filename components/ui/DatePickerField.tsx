@@ -50,7 +50,7 @@ export function DatePickerField({
 
       <Pressable
         onPress={() => setShow(true)}
-        className={`h-12 flex-row items-center justify-between rounded-lg border bg-white px-3 ${
+        className={`h-[52px] flex-row items-center justify-between rounded-md border bg-white px-4 ${
           error ? 'border-danger' : 'border-gray-200'
         }`}
       >

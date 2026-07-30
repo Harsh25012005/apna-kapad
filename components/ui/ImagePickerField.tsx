@@ -45,7 +45,7 @@ export function ImagePickerField({
 
       <Pressable
         onPress={pickImage}
-        className="h-32 w-32 items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-gray-200 bg-gray-50 active:bg-gray-100"
+        className="h-32 w-32 items-center justify-center overflow-hidden rounded-md border border-dashed border-gray-200 bg-gray-50 active:bg-gray-100"
       >
         {uri ? (
           <Image source={{ uri }} className="h-full w-full" resizeMode="cover" />

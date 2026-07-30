@@ -63,6 +63,9 @@ module.exports = {
       supabaseUrl: process.env.SUPABASE_URL,
       supabasePublishableKey: process.env.SUPABASE_PUBLISHABLE_KEY,
       googleWebClientId: process.env.GOOGLE_WEB_CLIENT_ID,
+      eas: {
+        projectId: 'ca988b3c-e174-4e4e-81c8-5d3ce6e7040b',
+      },
     },
   },
 };

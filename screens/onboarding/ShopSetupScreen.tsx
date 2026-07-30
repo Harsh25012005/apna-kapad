@@ -73,7 +73,7 @@ export default function ShopSetupScreen() {
   return (
     <ScrollView className="flex-1 bg-white" contentContainerStyle={{ padding: 24 }}>
       <Text className="mb-1 text-2xl font-bold text-gray-900">Set up your shop</Text>
-      <Text className="mb-6 text-sm text-gray-500">
+      <Text className="font-sans mb-6 text-sm text-gray-500">
         Tell us a bit about your shop to get started.
       </Text>
 
@@ -117,8 +117,8 @@ export default function ShopSetupScreen() {
 
       <View className="mb-6 flex-row items-center justify-between rounded-lg border border-gray-200 bg-white px-4 py-3">
         <View className="flex-1 pr-4">
-          <Text className="text-base text-gray-800">Do you also do tailoring?</Text>
-          <Text className="text-xs text-gray-500">Enables order tracking & measurements</Text>
+          <Text className="font-sans text-base text-gray-800">Do you also do tailoring?</Text>
+          <Text className="font-sans text-xs text-gray-500">Enables order tracking & measurements</Text>
         </View>
         <Toggle value={hasTailoring} onChange={setHasTailoring} />
       </View>

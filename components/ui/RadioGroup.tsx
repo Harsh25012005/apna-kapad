@@ -21,7 +21,7 @@ export function RadioButton({ selected, onPress, label, disabled = false }: Radi
       >
         {selected ? <View className="h-2.5 w-2.5 rounded-full bg-primary-600" /> : null}
       </View>
-      {label ? <Text className="ml-2 text-base text-gray-800">{label}</Text> : null}
+      {label ? <Text className="font-sans ml-2 text-base text-gray-800">{label}</Text> : null}
     </Pressable>
   );
 }

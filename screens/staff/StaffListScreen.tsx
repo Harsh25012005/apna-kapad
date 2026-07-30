@@ -91,14 +91,14 @@ export default function StaffListScreen({ navigation }: SettingsScreenProps<'Sta
                 <Avatar name={item.name} size="md" />
                 <View className="ml-3 flex-1">
                   <Text className="text-base font-semibold text-gray-900">{item.name}</Text>
-                  <Text className="text-sm text-gray-500">{item.role ?? 'Staff'}</Text>
+                  <Text className="font-sans text-sm text-gray-500">{item.role ?? 'Staff'}</Text>
                 </View>
                 <View className="items-end">
                   <Text className="text-sm font-semibold text-gray-900">
                     {formatCurrency(item.wage_amount)}
-                    <Text className="text-xs text-gray-500">{WAGE_LABELS[item.wage_type]}</Text>
+                    <Text className="font-sans text-xs text-gray-500">{WAGE_LABELS[item.wage_type]}</Text>
                   </Text>
-                  <Text className="text-xs text-gray-400">{completedOrders} orders done</Text>
+                  <Text className="font-sans text-xs text-gray-400">{completedOrders} orders done</Text>
                 </View>
               </View>
             </Card>

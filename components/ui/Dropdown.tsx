@@ -66,7 +66,7 @@ export function Dropdown<T extends string = string>({
                   }}
                   className="flex-row items-center justify-between py-3"
                 >
-                  <Text className="text-base text-gray-800">{item.label}</Text>
+                  <Text className="font-sans text-base text-gray-800">{item.label}</Text>
                   {item.value === value ? (
                     <FontAwesome5 name="check" size={14} color="#2563EB" />
                   ) : null}

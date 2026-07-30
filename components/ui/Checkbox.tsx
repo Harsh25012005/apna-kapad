@@ -21,7 +21,7 @@ export function Checkbox({ checked, onChange, label, disabled = false }: Checkbo
       >
         {checked ? <FontAwesome5 name="check" size={10} color="#FFFFFF" /> : null}
       </View>
-      {label ? <Text className="ml-2 text-base text-gray-800">{label}</Text> : null}
+      {label ? <Text className="font-sans ml-2 text-base text-gray-800">{label}</Text> : null}
     </Pressable>
   );
 }

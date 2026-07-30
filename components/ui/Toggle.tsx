@@ -26,7 +26,7 @@ export function Toggle({ value, onChange, label, disabled = false }: ToggleProps
 
   return (
     <View className="flex-row items-center justify-between">
-      {label ? <Text className="text-base text-gray-800">{label}</Text> : null}
+      {label ? <Text className="font-sans text-base text-gray-800">{label}</Text> : null}
       <Pressable
         onPress={() => !disabled && onChange(!value)}
         disabled={disabled}

@@ -60,7 +60,7 @@ export function DatePickerField({
         <FontAwesome5 name="calendar-alt" size={16} color="#6B7280" />
       </Pressable>
 
-      {error ? <Text className="mt-1 text-xs text-danger">{error}</Text> : null}
+      {error ? <Text className="font-sans mt-1 text-xs text-danger">{error}</Text> : null}
 
       {show ? (
         <DateTimePicker

@@ -1,12 +1,22 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   content: [
-    './App.js',
+    './App.tsx',
     './screens/**/*.{js,jsx,ts,tsx}',
     './components/**/*.{js,jsx,ts,tsx}',
     './navigation/**/*.{js,jsx,ts,tsx}',
   ],
   presets: [require('nativewind/preset')],
+  // Disabled: Tailwind's built-in fontWeight utilities use the exact same
+  // class names (font-medium, font-semibold, font-bold) as our custom
+  // fontFamily entries below. With both active, every "font-bold" element
+  // got fontFamily AND fontWeight applied together — Android then couldn't
+  // find a "bold variant" of the custom (single static weight) font family
+  // and silently fell back to the system font. Disabling this corePlugin
+  // means font-bold etc. only ever select the custom font file.
+  corePlugins: {
+    fontWeight: false,
+  },
   theme: {
     extend: {
       colors: {
@@ -29,10 +39,10 @@ module.exports = {
         info: '#0891B2',
       },
       fontFamily: {
-        sans: ['Inter_400Regular'],
-        medium: ['Inter_500Medium'],
-        semibold: ['Inter_600SemiBold'],
-        bold: ['Inter_700Bold'],
+        sans: ['GoogleSansFlex_400Regular'],
+        medium: ['GoogleSansFlex_500Medium'],
+        semibold: ['GoogleSansFlex_600SemiBold'],
+        bold: ['GoogleSansFlex_700Bold'],
       },
     },
   },

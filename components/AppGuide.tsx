@@ -118,7 +118,7 @@ export function AppGuide({ visible, onDone }: AppGuideProps) {
             </View>
 
             <Text className="mb-1.5 text-lg font-bold text-gray-900">{step.title}</Text>
-            <Text className="mb-5 text-sm leading-5 text-gray-500">{step.description}</Text>
+            <Text className="font-sans mb-5 text-sm leading-5 text-gray-500">{step.description}</Text>
 
             <View className="mb-4 flex-row justify-center gap-1.5">
               {STEPS.map((s, i) => (

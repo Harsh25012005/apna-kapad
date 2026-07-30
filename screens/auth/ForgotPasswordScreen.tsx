@@ -35,12 +35,12 @@ export default function ForgotPasswordScreen({ navigation }: AuthScreenProps<'Fo
       <Header title="Reset Password" onBack={() => navigation.goBack()} />
       <View className="flex-1 px-6 py-8">
         {sent ? (
-          <Text className="text-base text-gray-700">
+          <Text className="font-sans text-base text-gray-700">
             If an account exists for {email}, a password reset link has been sent.
           </Text>
         ) : (
           <>
-            <Text className="mb-6 text-sm text-gray-500">
+            <Text className="font-sans mb-6 text-sm text-gray-500">
               Enter the email linked to your account and we&apos;ll send you a reset link.
             </Text>
             <InputField

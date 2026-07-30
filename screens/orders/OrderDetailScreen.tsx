@@ -107,17 +107,17 @@ export default function OrderDetailScreen({ navigation, route }: AppScreenProps<
             <Text className="text-base font-semibold text-gray-900">{order.customers?.name}</Text>
             <Badge type="order_status" value={order.status} />
           </View>
-          <Text className="mt-1 text-sm text-gray-500">{order.cloth_type ?? 'No cloth type'}</Text>
+          <Text className="font-sans mt-1 text-sm text-gray-500">{order.cloth_type ?? 'No cloth type'}</Text>
           {order.measurements?.garment_type ? (
-            <Text className="mt-1 text-sm text-gray-500">
+            <Text className="font-sans mt-1 text-sm text-gray-500">
               Measurement: {order.measurements.garment_type}
             </Text>
           ) : null}
-          <Text className="mt-1 text-sm text-gray-500">
+          <Text className="font-sans mt-1 text-sm text-gray-500">
             Ordered {formatDate(order.order_date)} · Delivery {formatDate(order.delivery_date)}
           </Text>
           {order.staff?.name ? (
-            <Text className="mt-1 text-sm text-gray-500">Assigned to {order.staff.name}</Text>
+            <Text className="font-sans mt-1 text-sm text-gray-500">Assigned to {order.staff.name}</Text>
           ) : null}
           {order.priority === 'urgent' ? (
             <View className="mt-2 self-start rounded-full bg-red-50 px-2 py-0.5">

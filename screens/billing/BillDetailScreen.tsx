@@ -171,9 +171,9 @@ export default function BillDetailScreen({ navigation, route }: BillingScreenPro
                     <Text className="text-sm font-semibold text-gray-900">
                       {formatCurrency(p.amount_paid)}
                     </Text>
-                    <Text className="text-xs text-gray-500">{p.payment_mode}</Text>
+                    <Text className="font-sans text-xs text-gray-500">{p.payment_mode}</Text>
                   </View>
-                  <Text className="mt-1 text-xs text-gray-400">
+                  <Text className="font-sans mt-1 text-xs text-gray-400">
                     {formatDateTime(p.payment_date)}
                   </Text>
                 </Card>
@@ -232,7 +232,7 @@ function Row({
 }) {
   return (
     <View className="flex-row items-center justify-between">
-      <Text className="text-sm text-gray-500">{label}</Text>
+      <Text className="font-sans text-sm text-gray-500">{label}</Text>
       <Text
         className={bold ? 'text-base font-bold text-gray-900' : 'text-sm text-gray-700'}
         style={color ? { color } : undefined}

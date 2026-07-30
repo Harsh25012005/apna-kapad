@@ -118,14 +118,14 @@ export default function CustomerListScreen({ navigation }: CustomersScreenProps<
               <Avatar name={item.name} size="md" />
               <View className="ml-3 flex-1">
                 <Text className="text-base font-semibold text-gray-900">{item.name}</Text>
-                <Text className="text-sm text-gray-500">{item.phone ?? 'No phone'}</Text>
+                <Text className="font-sans text-sm text-gray-500">{item.phone ?? 'No phone'}</Text>
               </View>
               {item.balance > 0 ? (
                 <Text className="text-sm font-semibold text-danger">
                   {formatCurrency(item.balance)}
                 </Text>
               ) : (
-                <Text className="text-sm text-success">Settled</Text>
+                <Text className="font-sans text-sm text-success">Settled</Text>
               )}
             </View>
           </Card>

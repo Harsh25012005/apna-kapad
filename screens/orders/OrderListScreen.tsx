@@ -110,10 +110,10 @@ export default function OrderListScreen({ navigation }: OrdersScreenProps<'Order
               <Text className="text-base font-semibold text-gray-900">#{item.order_number}</Text>
               <Badge type="order_status" value={item.status} />
             </View>
-            <Text className="mt-1 text-sm text-gray-600">{item.customers?.name}</Text>
+            <Text className="font-sans mt-1 text-sm text-gray-600">{item.customers?.name}</Text>
             <View className="mt-1 flex-row items-center justify-between">
-              <Text className="text-xs text-gray-400">{item.cloth_type ?? 'No cloth type'}</Text>
-              <Text className="text-xs text-gray-400">
+              <Text className="font-sans text-xs text-gray-400">{item.cloth_type ?? 'No cloth type'}</Text>
+              <Text className="font-sans text-xs text-gray-400">
                 Delivery {formatDate(item.delivery_date)}
               </Text>
             </View>

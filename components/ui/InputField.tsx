@@ -66,7 +66,7 @@ export function InputField({
           multiline={multiline}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
-          className="flex-1 text-base text-gray-900"
+          className="font-sans flex-1 text-base text-gray-900"
         />
 
         {secureTextEntry ? (
@@ -79,7 +79,7 @@ export function InputField({
       {error ? (
         <Text className="mt-1.5 text-xs font-medium text-danger">{error}</Text>
       ) : helperText ? (
-        <Text className="mt-1.5 text-xs text-gray-500">{helperText}</Text>
+        <Text className="font-sans mt-1.5 text-xs text-gray-500">{helperText}</Text>
       ) : null}
     </View>
   );

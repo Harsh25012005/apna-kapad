@@ -66,7 +66,7 @@ export default function BillingListScreen({ navigation }: BillingScreenProps<'Bi
       </View>
 
       <Card className="mb-3">
-        <Text className="text-sm text-gray-500">Total Pending Across All Customers</Text>
+        <Text className="font-sans text-sm text-gray-500">Total Pending Across All Customers</Text>
         <Text className="mt-1 text-2xl font-bold text-danger">{formatCurrency(totalPending)}</Text>
       </Card>
 
@@ -95,7 +95,7 @@ export default function BillingListScreen({ navigation }: BillingScreenProps<'Bi
               <Badge type="payment_status" value={item.payment_status} />
             </View>
             <View className="mt-1 flex-row items-center justify-between">
-              <Text className="text-sm text-gray-500">{formatDate(item.created_at)}</Text>
+              <Text className="font-sans text-sm text-gray-500">{formatDate(item.created_at)}</Text>
               <Text className="text-sm font-semibold text-gray-900">
                 {formatCurrency(item.total_amount)}
               </Text>

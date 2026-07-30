@@ -191,7 +191,7 @@ export default function ComponentShowcaseScreen() {
         <Section title="4. Cards">
           <Card>
             <Text className="font-bold text-gray-900">Standard Card Container</Text>
-            <Text className="text-sm text-gray-500 mt-1">
+            <Text className="font-sans text-sm text-gray-500 mt-1">
               Used across the app to group order info, customer details, and stats.
             </Text>
           </Card>
@@ -200,7 +200,7 @@ export default function ComponentShowcaseScreen() {
             <View className="flex-row items-center justify-between">
               <View>
                 <Text className="font-bold text-gray-900">Clickable Interactive Card</Text>
-                <Text className="text-xs text-gray-500">Tap to test press feedback</Text>
+                <Text className="font-sans text-xs text-gray-500">Tap to test press feedback</Text>
               </View>
               <FontAwesome5 name="chevron-right" size={14} color="#9CA3AF" />
             </View>
@@ -343,7 +343,7 @@ export default function ComponentShowcaseScreen() {
           title="Sample BottomSheet"
         >
           <View className="py-4">
-            <Text className="text-base text-gray-700 mb-4">
+            <Text className="font-sans text-base text-gray-700 mb-4">
               This is a bottom-sheet modal slide up. Great for filtering options, action sheets, or detailed forms.
             </Text>
             <Button title="Close Modal" onPress={() => setBottomSheetVisible(false)} />
@@ -357,7 +357,7 @@ export default function ComponentShowcaseScreen() {
           title="Confirm Action"
         >
           <View className="py-2">
-            <Text className="text-sm text-gray-600 mb-4">
+            <Text className="font-sans text-sm text-gray-600 mb-4">
               Are you sure you want to proceed with this demo operation?
             </Text>
             <View className="flex-row gap-3">

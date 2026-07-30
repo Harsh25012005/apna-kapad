@@ -32,10 +32,10 @@ export const colors = {
 };
 
 export const fonts = {
-  regular: 'Inter_400Regular',
-  medium: 'Inter_500Medium',
-  semibold: 'Inter_600SemiBold',
-  bold: 'Inter_700Bold',
+  regular: 'GoogleSansFlex_400Regular',
+  medium: 'GoogleSansFlex_500Medium',
+  semibold: 'GoogleSansFlex_600SemiBold',
+  bold: 'GoogleSansFlex_700Bold',
 } as const;
 
 export const spacing = {

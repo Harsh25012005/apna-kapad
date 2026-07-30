@@ -96,15 +96,15 @@ export default function CustomerDetailScreen({
             <Avatar name={customer.name} size="lg" />
             <View className="ml-4 flex-1">
               <Text className="text-lg font-semibold text-gray-900">{customer.name}</Text>
-              <Text className="text-sm text-gray-500">{customer.phone ?? 'No phone'}</Text>
+              <Text className="font-sans text-sm text-gray-500">{customer.phone ?? 'No phone'}</Text>
               {customer.address ? (
-                <Text className="text-sm text-gray-500">{customer.address}</Text>
+                <Text className="font-sans text-sm text-gray-500">{customer.address}</Text>
               ) : null}
             </View>
           </View>
 
           <View className="mt-4 flex-row items-center justify-between rounded-lg bg-gray-50 p-3">
-            <Text className="text-sm text-gray-600">Outstanding Balance</Text>
+            <Text className="font-sans text-sm text-gray-600">Outstanding Balance</Text>
             <Text className={`text-base font-bold ${balance > 0 ? 'text-danger' : 'text-success'}`}>
               {formatCurrency(balance)}
             </Text>
@@ -144,11 +144,11 @@ export default function CustomerDetailScreen({
               {measurements.map((m) => (
                 <Card key={m.id}>
                   <Text className="mb-1 text-sm font-semibold text-gray-900">{m.garment_type}</Text>
-                  <Text className="text-xs text-gray-500">
+                  <Text className="font-sans text-xs text-gray-500">
                     Chest {m.chest ?? '—'} · Waist {m.waist ?? '—'} · Shoulder {m.shoulder ?? '—'} ·
                     Length {m.length ?? '—'} · Sleeve {m.sleeve ?? '—'}
                   </Text>
-                  {m.notes ? <Text className="mt-1 text-xs text-gray-400">{m.notes}</Text> : null}
+                  {m.notes ? <Text className="font-sans mt-1 text-xs text-gray-400">{m.notes}</Text> : null}
                 </Card>
               ))}
             </View>
@@ -182,7 +182,7 @@ export default function CustomerDetailScreen({
                     <Text className="text-sm font-semibold text-gray-900">#{o.order_number}</Text>
                     <Badge type="order_status" value={o.status} />
                   </View>
-                  <Text className="mt-1 text-xs text-gray-500">
+                  <Text className="font-sans mt-1 text-xs text-gray-500">
                     {o.cloth_type ?? 'No cloth type'} · Ordered {formatDate(o.order_date)}
                   </Text>
                 </Card>

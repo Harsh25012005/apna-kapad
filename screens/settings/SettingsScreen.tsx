@@ -48,8 +48,8 @@ export default function SettingsScreen({ navigation }: SettingsScreenProps<'Sett
           )}
           <View className="ml-3 flex-1">
             <Text className="text-base font-semibold text-gray-900">{shop?.shop_name}</Text>
-            <Text className="text-sm text-gray-500">{shop?.owner_name}</Text>
-            <Text className="text-sm text-gray-400">{user?.email}</Text>
+            <Text className="font-sans text-sm text-gray-500">{shop?.owner_name}</Text>
+            <Text className="font-sans text-sm text-gray-400">{user?.email}</Text>
           </View>
         </View>
       </Card>
@@ -96,10 +96,10 @@ function MenuRow({
     <>
       <View className="flex-row items-center">
         <FontAwesome5 name={icon} size={14} color="#6B7280" />
-        <Text className="ml-3 text-sm text-gray-800">{label}</Text>
+        <Text className="font-sans ml-3 text-sm text-gray-800">{label}</Text>
       </View>
       {value ? (
-        <Text className="text-sm text-gray-500">{value}</Text>
+        <Text className="font-sans text-sm text-gray-500">{value}</Text>
       ) : onPress ? (
         <FontAwesome5 name="chevron-right" size={12} color="#9CA3AF" />
       ) : null}

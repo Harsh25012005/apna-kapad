@@ -60,7 +60,7 @@ export default function SignupScreen({ navigation }: AuthScreenProps<'Signup'>) 
       <ScrollView contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled">
         <View className="flex-1 justify-center px-6 py-10">
           <Text className="mb-1 text-2xl font-bold text-gray-900">Create Account</Text>
-          <Text className="mb-8 text-base text-gray-500">Set up your shop in a few steps</Text>
+          <Text className="font-sans mb-8 text-base text-gray-500">Set up your shop in a few steps</Text>
 
           <InputField
             label="Email"
@@ -94,7 +94,7 @@ export default function SignupScreen({ navigation }: AuthScreenProps<'Signup'>) 
 
           <View className="my-6 flex-row items-center">
             <View className="h-px flex-1 bg-gray-200" />
-            <Text className="mx-3 text-xs text-gray-400">OR</Text>
+            <Text className="font-sans mx-3 text-xs text-gray-400">OR</Text>
             <View className="h-px flex-1 bg-gray-200" />
           </View>
 
@@ -107,7 +107,7 @@ export default function SignupScreen({ navigation }: AuthScreenProps<'Signup'>) 
           />
 
           <View className="mt-8 flex-row justify-center">
-            <Text className="text-sm text-gray-500">Already have an account? </Text>
+            <Text className="font-sans text-sm text-gray-500">Already have an account? </Text>
             <Pressable onPress={() => navigation.navigate('Login')}>
               <Text className="text-sm font-semibold text-primary-600">Sign In</Text>
             </Pressable>

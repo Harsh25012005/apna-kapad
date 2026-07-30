@@ -16,7 +16,7 @@ export function LoadingSpinner({ text, fullScreen = false, size = 'large' }: Loa
       }
     >
       <ActivityIndicator size={size} color="#2563EB" />
-      {text ? <Text className="mt-3 text-sm text-gray-500">{text}</Text> : null}
+      {text ? <Text className="font-sans mt-3 text-sm text-gray-500">{text}</Text> : null}
     </View>
   );
 }

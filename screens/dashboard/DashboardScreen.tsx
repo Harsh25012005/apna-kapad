@@ -103,7 +103,7 @@ export default function DashboardScreen({ navigation }: DashboardScreenProps<'Da
     >
       <View>
         <Text className="text-2xl font-bold text-gray-900">{shop.shop_name}</Text>
-        <Text className="text-sm text-gray-500">Here&apos;s how your shop is doing today</Text>
+        <Text className="font-sans text-sm text-gray-500">Here&apos;s how your shop is doing today</Text>
       </View>
 
       <View className="flex-row gap-3">
@@ -122,7 +122,7 @@ export default function DashboardScreen({ navigation }: DashboardScreenProps<'Da
       </View>
 
       <Card>
-        <Text className="text-sm text-gray-500">This Month&apos;s Sales</Text>
+        <Text className="font-sans text-sm text-gray-500">This Month&apos;s Sales</Text>
         <Text className="mt-1 text-2xl font-bold text-primary-700">
           {formatCurrency(stats.monthlySales)}
         </Text>
@@ -175,7 +175,7 @@ function StatCard({
       >
         <FontAwesome5 name={icon} size={14} color={color} />
       </View>
-      <Text className="text-xs text-gray-500">{label}</Text>
+      <Text className="font-sans text-xs text-gray-500">{label}</Text>
       <Text className="mt-0.5 text-lg font-bold text-gray-900">{value}</Text>
     </Card>
   );

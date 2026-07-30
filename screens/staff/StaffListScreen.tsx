@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react';
 import { FlatList, Pressable, RefreshControl, Text, View } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
-import { FontAwesome5 } from '@expo/vector-icons';
+import { FontAwesome5, Ionicons } from '@expo/vector-icons';
 import { Avatar, Card, EmptyState, Header, LoadingSpinner, useToast } from '../../components/ui';
 import { supabase } from '../../lib/supabase';
 import { formatCurrency } from '../../lib/format';
@@ -50,29 +50,18 @@ export default function StaffListScreen({ navigation }: SettingsScreenProps<'Sta
   if (loading) return <LoadingSpinner fullScreen text="Loading staff..." />;
 
   return (
-    <View className="flex-1 bg-gray-50">
+    <View className="flex-1 bg-white">
       <Header
         title="Staff"
         onBack={() => navigation.goBack()}
-        right={
-          <Pressable
-            onPress={() => {
-              haptics.tap();
-              navigation.navigate('StaffForm', {});
-            }}
-            hitSlop={8}
-          >
-            <FontAwesome5 name="plus" size={18} color="#2563EB" />
-          </Pressable>
-        }
       />
 
       <FlatList
         data={staff}
         keyExtractor={(item) => item.id}
-        contentContainerStyle={staff.length === 0 ? { flexGrow: 1 } : { padding: 16, gap: 10 }}
+        contentContainerStyle={staff.length === 0 ? { flexGrow: 1 } : { padding: 16, paddingBottom: 130, gap: 10 }}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor="#2563EB" />
+          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor="#1D4ED8" />
         }
         ListEmptyComponent={
           <EmptyState
@@ -105,6 +94,7 @@ export default function StaffListScreen({ navigation }: SettingsScreenProps<'Sta
           );
         }}
       />
+
     </View>
   );
 }

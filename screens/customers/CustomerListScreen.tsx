@@ -2,7 +2,7 @@ import { useCallback, useState } from 'react';
 import { FlatList, Pressable, RefreshControl, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
-import { FontAwesome5 } from '@expo/vector-icons';
+import { FontAwesome5, Ionicons } from '@expo/vector-icons';
 import { Avatar, Card, EmptyState, InputField, LoadingSpinner, useToast } from '../../components/ui';
 import { supabase } from '../../lib/supabase';
 import { formatCurrency } from '../../lib/format';
@@ -69,18 +69,9 @@ export default function CustomerListScreen({ navigation }: CustomersScreenProps<
   if (loading) return <LoadingSpinner fullScreen text="Loading customers..." />;
 
   return (
-    <View className="flex-1 bg-gray-50 px-4" style={{ paddingTop: insets.top + 20 }}>
-      <View className="mb-2 flex-row items-center justify-between">
-        <Text className="text-2xl font-bold text-gray-900">Customers</Text>
-        <Pressable
-          onPress={() => {
-            haptics.tap();
-            navigation.navigate('CustomerForm');
-          }}
-          className="h-10 w-10 items-center justify-center rounded-full bg-primary-600"
-        >
-          <FontAwesome5 name="plus" size={16} color="#FFFFFF" />
-        </Pressable>
+    <View className="flex-1 bg-white px-5" style={{ paddingTop: insets.top + 8 }}>
+      <View className="mb-3 flex-row items-center justify-between py-2">
+        <Text className="text-[18px] font-semibold text-[#101828]">Customers</Text>
       </View>
 
       <InputField
@@ -94,10 +85,10 @@ export default function CustomerListScreen({ navigation }: CustomersScreenProps<
         data={filtered}
         keyExtractor={(item) => item.id}
         contentContainerStyle={
-          filtered.length === 0 ? { flexGrow: 1 } : { paddingBottom: 24, gap: 10 }
+          filtered.length === 0 ? { flexGrow: 1 } : { paddingBottom: 130, gap: 10 }
         }
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor="#2563EB" />
+          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor="#1D4ED8" />
         }
         ListEmptyComponent={
           <EmptyState
@@ -131,6 +122,7 @@ export default function CustomerListScreen({ navigation }: CustomersScreenProps<
           </Card>
         )}
       />
+
     </View>
   );
 }

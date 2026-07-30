@@ -42,7 +42,6 @@ export function InputField({
     <View className="w-full mb-4">
       {label ? (
         <Text
-          style={{ letterSpacing: 0.4 }}
           className={`mb-1.5 text-sm font-semibold ${error ? 'text-danger' : isFocused ? 'text-primary-600' : 'text-gray-500'
             }`}
         >

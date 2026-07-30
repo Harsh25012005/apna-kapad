@@ -1,21 +1,40 @@
 import { useCallback, useState } from 'react';
-import { RefreshControl, ScrollView, Text, View } from 'react-native';
+import { Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
-import { FontAwesome5 } from '@expo/vector-icons';
-import { Badge, Card, EmptyState, LoadingSpinner, useToast } from '../../components/ui';
+import { FontAwesome5, Ionicons } from '@expo/vector-icons';
+import { EmptyState, LoadingSpinner, useToast } from '../../components/ui';
 import { supabase } from '../../lib/supabase';
 import { formatCurrency } from '../../lib/format';
+import { haptics } from '../../lib/haptics';
 import { useShop } from '../../context/AuthContext';
 import type { DashboardScreenProps } from '../../navigation/types';
 import type { OrderListItem } from '../../types';
 
+type ClientItem = {
+  id: string;
+  name: string;
+  phone: string | null;
+};
+
 type Stats = {
   todaysOrders: OrderListItem[];
+  recentOrders: OrderListItem[];
+  topClients: ClientItem[];
   pendingCount: number;
   todaysCollections: number;
   monthlySales: number;
+  totalPendingBalance: number;
 };
+
+const AVATAR_COLORS = [
+  'bg-blue-100 text-blue-700',
+  'bg-purple-100 text-purple-700',
+  'bg-emerald-100 text-emerald-700',
+  'bg-amber-100 text-amber-700',
+  'bg-rose-100 text-rose-700',
+  'bg-indigo-100 text-indigo-700',
+];
 
 /** Local-time day boundaries as ISO strings, plus the plain YYYY-MM-DD date. */
 function todayRange() {
@@ -24,8 +43,6 @@ function todayRange() {
   const end = new Date();
   end.setHours(23, 59, 59, 999);
 
-  // order_date is a DATE column, so compare it against a local calendar date
-  // rather than a UTC-shifted slice of the ISO timestamp.
   const localDate = `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, '0')}-${String(
     start.getDate()
   ).padStart(2, '0')}`;
@@ -50,28 +67,34 @@ export default function DashboardScreen({ navigation }: DashboardScreenProps<'Da
     try {
       const { start, end, localDate } = todayRange();
 
-      const [ordersRes, pendingRes, paymentsRes, billsRes] = await Promise.all([
-        supabase.from('orders').select('*, customers(name, phone)').eq('order_date', localDate),
-        supabase
-          .from('orders')
-          .select('id', { count: 'exact', head: true })
-          .neq('status', 'delivered'),
-        supabase
-          .from('payments')
-          .select('amount_paid')
-          .gte('payment_date', start)
-          .lte('payment_date', end),
-        supabase.from('bills').select('total_amount').gte('created_at', monthStart()),
-      ]);
+      const [ordersRes, recentOrdersRes, topClientsRes, pendingRes, paymentsRes, billsRes, balanceRes] =
+        await Promise.all([
+          supabase.from('orders').select('*, customers(name, phone)').eq('order_date', localDate),
+          supabase
+            .from('orders')
+            .select('*, customers(name, phone)')
+            .order('created_at', { ascending: false })
+            .limit(6),
+          supabase.from('customers').select('id, name, phone').order('created_at', { ascending: false }).limit(8),
+          supabase.from('orders').select('id', { count: 'exact', head: true }).neq('status', 'delivered'),
+          supabase.from('payments').select('amount_paid').gte('payment_date', start).lte('payment_date', end),
+          supabase.from('bills').select('total_amount').gte('created_at', monthStart()),
+          supabase.from('bills').select('total_amount, payments(amount_paid)'),
+        ]);
+
+      const totalPendingBalance = (balanceRes.data ?? []).reduce((sum, bill) => {
+        const paid = bill.payments.reduce((s, p) => s + Number(p.amount_paid), 0);
+        return sum + Math.max(Number(bill.total_amount ?? 0) - paid, 0);
+      }, 0);
 
       setStats({
         todaysOrders: ordersRes.data ?? [],
+        recentOrders: recentOrdersRes.data ?? [],
+        topClients: topClientsRes.data ?? [],
         pendingCount: pendingRes.count ?? 0,
-        todaysCollections: (paymentsRes.data ?? []).reduce(
-          (s, p) => s + Number(p.amount_paid),
-          0
-        ),
+        todaysCollections: (paymentsRes.data ?? []).reduce((s, p) => s + Number(p.amount_paid), 0),
         monthlySales: (billsRes.data ?? []).reduce((s, b) => s + Number(b.total_amount ?? 0), 0),
+        totalPendingBalance,
       });
     } catch (err) {
       showToast(err instanceof Error ? err.message : 'Could not load dashboard', 'error');
@@ -95,88 +118,183 @@ export default function DashboardScreen({ navigation }: DashboardScreenProps<'Da
 
   return (
     <ScrollView
-      className="flex-1 bg-gray-50"
-      contentContainerStyle={{ padding: 16, paddingTop: insets.top + 20, gap: 16 }}
+      className="flex-1 bg-white"
+      contentContainerStyle={{ paddingTop: insets.top + 8, paddingBottom: 110 }}
       refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor="#2563EB" />
+        <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor="#1D4ED8" />
       }
     >
-      <View>
-        <Text className="text-2xl font-bold text-gray-900">{shop.shop_name}</Text>
-        <Text className="font-sans text-sm text-gray-500">Here&apos;s how your shop is doing today</Text>
-      </View>
-
-      <View className="flex-row gap-3">
-        <StatCard
-          icon="clipboard-list"
-          label="Pending Orders"
-          value={String(stats.pendingCount)}
-          color="#D97706"
-        />
-        <StatCard
-          icon="rupee-sign"
-          label="Today's Collections"
-          value={formatCurrency(stats.todaysCollections)}
-          color="#16A34A"
-        />
-      </View>
-
-      <Card>
-        <Text className="font-sans text-sm text-gray-500">This Month&apos;s Sales</Text>
-        <Text className="mt-1 text-2xl font-bold text-primary-700">
-          {formatCurrency(stats.monthlySales)}
+      {/* Topbar Header */}
+      <View className="flex-row items-center justify-between px-5 py-3">
+        <Text className="text-[18px] font-semibold text-[#101828]">
+          Hi, {shop.shop_name || 'User'}
         </Text>
-      </Card>
+        <Pressable
+          onPress={() => showToast('No new notifications', 'info')}
+          className="h-10 w-10 items-center justify-center rounded-full active:bg-gray-100"
+        >
+          <Ionicons name="notifications-outline" size={22} color="#101828" />
+        </Pressable>
+      </View>
 
-      <View>
-        <Text className="mb-2 text-base font-semibold text-gray-900">Today&apos;s Orders</Text>
-        {stats.todaysOrders.length === 0 ? (
-          <EmptyState
-            variant="compact"
-            icon="calendar-day"
-            title="No orders taken today"
-            description="New orders placed today will show up here"
-          />
-        ) : (
-          <View className="gap-2">
-            {stats.todaysOrders.map((o) => (
-              <Card key={o.id} onPress={() => navigation.navigate('OrderDetail', { orderId: o.id })}>
-                <View className="flex-row items-center justify-between">
-                  <Text className="text-sm font-semibold text-gray-900">
-                    #{o.order_number} · {o.customers?.name}
-                  </Text>
-                  <Badge type="order_status" value={o.status} />
-                </View>
-              </Card>
-            ))}
+      {/* Balance Hero Card */}
+      <View className="mx-4 my-2 rounded-lg bg-[#101828] p-4 shadow-md">
+        <View className="flex-row items-start justify-between">
+          <View className="gap-1">
+            <Text className="font-sans text-[14px] font-medium text-[#98A2B3]">
+              Today&apos;s collections
+            </Text>
+            <Text className="text-[36px] font-medium text-white tracking-tight">
+              {formatCurrency(stats.todaysCollections)}
+            </Text>
           </View>
-        )}
+          <View className="h-12 w-12 items-center justify-center rounded-lg bg-[#1D4ED8]/20">
+            <FontAwesome5 name="rupee-sign" size={20} color="#1D4ED8" />
+          </View>
+        </View>
+
+        {/* Action Buttons */}
+        <View className="mt-4 flex-row gap-3">
+          <Pressable
+            onPress={() => {
+              haptics.tap();
+              navigation.navigate('OrderForm', {});
+            }}
+            className="flex-1 flex-row items-center justify-center gap-1.5 rounded-md bg-[#1D4ED8] py-3 active:bg-blue-700"
+          >
+            <Ionicons name="add" size={20} color="#FFFFFF" />
+            <Text className="font-sans text-[16px] font-medium text-white">Order</Text>
+          </Pressable>
+
+          <Pressable
+            onPress={() => {
+              haptics.tap();
+              navigation.navigate('CustomersTab' as any, { screen: 'CustomerForm' });
+            }}
+            className="flex-1 flex-row items-center justify-center gap-1.5 rounded-md bg-[#1D2939] py-3 active:bg-gray-800 border border-white/15"
+          >
+            <Ionicons name="add" size={20} color="#FFFFFF" />
+            <Text className="font-sans text-[16px] font-medium text-white">Client</Text>
+          </Pressable>
+        </View>
+      </View>
+
+      {/* Quick Send & Transactions Sheet Container */}
+      <View className="flex-1 bg-white">
+
+        {/* Top Clients */}
+        <View className="px-5">
+          <Text className="mb-3 text-[14px] font-semibold text-[#101828]">Top Clients</Text>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ gap: 14 }}
+          >
+            {/* Add Client Circle */}
+            <Pressable
+              onPress={() => navigation.navigate('CustomersTab' as any, { screen: 'CustomerForm' })}
+              className="w-[54px] items-center gap-1"
+            >
+              <View className="h-[54px] w-[54px] items-center justify-center rounded-full border border-dashed border-gray-300 bg-gray-50">
+                <Ionicons name="add-outline" size={22} color="#667085" />
+              </View>
+              <Text className="font-sans text-[12px] font-medium text-gray-500 text-center">Add</Text>
+            </Pressable>
+
+            {stats.topClients.map((client, idx) => {
+              const initial = client.name ? client.name.charAt(0).toUpperCase() : 'C';
+              const colorStyle = AVATAR_COLORS[idx % AVATAR_COLORS.length];
+              return (
+                <Pressable
+                  key={client.id}
+                  onPress={() =>
+                    navigation.navigate('CustomersTab' as any, {
+                      screen: 'CustomerDetail',
+                      params: { customerId: client.id },
+                    })
+                  }
+                  className="w-[54px] items-center gap-1"
+                >
+                  <View className={`h-[54px] w-[54px] items-center justify-center rounded-full ${colorStyle}`}>
+                    <Text className="text-[18px] font-semibold">{initial}</Text>
+                  </View>
+                  <Text className="font-sans text-[12px] font-medium text-[#101828] text-center" numberOfLines={1}>
+                    {client.name.split(' ')[0]}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </ScrollView>
+        </View>
+
+        {/* Transaction History / Recent Activity */}
+        <View className="mt-6 px-5">
+          <View className="mb-3 flex-row items-center justify-between">
+            <Text className="text-[14px] font-semibold text-[#101828]">Transaction history</Text>
+            <Pressable onPress={() => navigation.navigate('OrdersTab' as any)}>
+              <Text className="text-[12px] font-medium text-[#1D4ED8] underline">View all</Text>
+            </Pressable>
+          </View>
+
+          {stats.recentOrders.length === 0 ? (
+            <EmptyState
+              variant="compact"
+              icon="calendar-day"
+              title="No recent transactions"
+              description="New orders and payments will show up here"
+            />
+          ) : (
+            <View className="gap-3">
+              {stats.recentOrders.map((o) => {
+                const isDelivered = o.status === 'delivered';
+                const dateStr = o.order_date
+                  ? new Date(o.order_date).toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric',
+                  })
+                  : 'Recent';
+
+                return (
+                  <Pressable
+                    key={o.id}
+                    onPress={() => navigation.navigate('OrderDetail', { orderId: o.id })}
+                    className="flex-row items-center justify-between rounded-xl py-2"
+                  >
+                    <View className="flex-1 flex-row items-center gap-3">
+                      <View className="h-[48px] w-[48px] items-center justify-center rounded-full bg-[#F4F6F9]">
+                        <FontAwesome5 name="shopping-bag" size={18} color="#1D4ED8" />
+                      </View>
+                      <View className="flex-1">
+                        <Text className="text-[15px] font-semibold text-[#101828]" numberOfLines={1}>
+                          #{o.order_number} · {o.customers?.name || 'Customer'}
+                        </Text>
+                        <Text className="font-sans text-[12px] font-medium text-[#667085]">
+                          {dateStr}
+                        </Text>
+                      </View>
+                    </View>
+
+                    <View className="items-end">
+                      <Text className="text-[14px] font-semibold text-[#101828]">
+                        {o.cloth_type || 'Garment Order'}
+                      </Text>
+                      <Text
+                        className={`text-[12px] font-medium ${isDelivered ? 'text-[#12B76A]' : 'text-amber-600'
+                          }`}
+                      >
+                        {isDelivered ? 'Paid' : o.status.replace('_', ' ')}
+                      </Text>
+                    </View>
+                  </Pressable>
+                );
+              })}
+            </View>
+          )}
+        </View>
       </View>
     </ScrollView>
   );
 }
 
-function StatCard({
-  icon,
-  label,
-  value,
-  color,
-}: {
-  icon: React.ComponentProps<typeof FontAwesome5>['name'];
-  label: string;
-  value: string;
-  color: string;
-}) {
-  return (
-    <Card className="flex-1">
-      <View
-        className="mb-2 h-9 w-9 items-center justify-center rounded-full"
-        style={{ backgroundColor: `${color}1A` }}
-      >
-        <FontAwesome5 name={icon} size={14} color={color} />
-      </View>
-      <Text className="font-sans text-xs text-gray-500">{label}</Text>
-      <Text className="mt-0.5 text-lg font-bold text-gray-900">{value}</Text>
-    </Card>
-  );
-}
+

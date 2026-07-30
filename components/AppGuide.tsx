@@ -36,17 +36,11 @@ const STEPS: Step[] = [
       'Create an order and move it through Cutting → Stitching → Ready → Delivered right from its detail page.',
   },
   {
-    tab: 'BillingTab',
-    icon: 'file-invoice-dollar',
-    title: 'Bill & Collect Payments',
-    description:
-      'Generate a bill, record partial or full payments, and share it with your customer on WhatsApp.',
-  },
-  {
     tab: 'SettingsTab',
-    icon: 'user-friends',
-    title: 'Staff & Settings',
-    description: 'Add tailors and helpers, assign them to orders, and manage your shop details here.',
+    icon: 'file-invoice-dollar',
+    title: 'Billing, Staff & Settings',
+    description:
+      'Find Billing & Payments and Staff Management here — generate bills, record payments, and share them on WhatsApp.',
   },
 ];
 

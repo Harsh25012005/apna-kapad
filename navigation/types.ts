@@ -39,13 +39,18 @@ export type SettingsStackParamList = {
   SettingsHome: undefined;
   Staff: undefined;
   StaffForm: { staffId?: string } | undefined;
+  /** The whole Billing stack, nested here since Billing is no longer a tab. */
+  Billing: undefined;
 };
 
+/**
+ * Four tabs plus a centre "Add" action button (the Add button is not a tab —
+ * it opens the QuickAddMenu instead of navigating).
+ */
 export type MainTabParamList = {
   DashboardTab: undefined;
   CustomersTab: undefined;
   OrdersTab: undefined;
-  BillingTab: undefined;
   SettingsTab: undefined;
 };
 

@@ -1,7 +1,7 @@
 import { Pressable, Text, View } from 'react-native';
 import type { ReactNode } from 'react';
 import { useNavigation } from '@react-navigation/native';
-import { FontAwesome5 } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export type HeaderProps = {
@@ -18,21 +18,21 @@ export function Header({ title, showBack = true, right, onBack }: HeaderProps) {
   return (
     <View
       style={{ paddingTop: insets.top + 8 }}
-      className="flex-row items-center justify-between border-b border-gray-200 bg-white px-3 pb-3"
+      className="flex-row items-center justify-between border-b border-gray-100 bg-white px-4 pb-3"
     >
       <View className="w-10">
         {showBack ? (
           <Pressable
             onPress={onBack ?? (() => navigation.goBack())}
             hitSlop={8}
-            className="h-9 w-9 items-center justify-center rounded-md border border-gray-200 active:bg-gray-50"
+            className="h-10 w-10 items-center justify-center rounded-full active:bg-gray-100"
           >
-            <FontAwesome5 name="arrow-left" size={15} color="#111827" />
+            <Ionicons name="arrow-back" size={22} color="#101828" />
           </Pressable>
         ) : null}
       </View>
 
-      <Text className="flex-1 text-center text-lg font-bold text-gray-900" numberOfLines={1}>
+      <Text className="flex-1 text-center text-[18px] font-semibold text-[#101828]" numberOfLines={1}>
         {title}
       </Text>
 
@@ -40,3 +40,4 @@ export function Header({ title, showBack = true, right, onBack }: HeaderProps) {
     </View>
   );
 }
+

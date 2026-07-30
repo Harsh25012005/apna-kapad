@@ -34,10 +34,12 @@ export default function SettingsScreen({ navigation }: SettingsScreenProps<'Sett
 
   return (
     <ScrollView
-      className="flex-1 bg-gray-50"
-      contentContainerStyle={{ padding: 16, paddingTop: insets.top + 20, gap: 16 }}
+      className="flex-1 bg-white"
+      contentContainerStyle={{ paddingHorizontal: 20, paddingTop: insets.top + 8, paddingBottom: 110, gap: 16 }}
     >
-      <Text className="text-2xl font-bold text-gray-900">Settings</Text>
+      <View className="py-2">
+        <Text className="text-[18px] font-semibold text-[#101828]">Settings</Text>
+      </View>
 
       <Card>
         <View className="flex-row items-center">
@@ -55,6 +57,11 @@ export default function SettingsScreen({ navigation }: SettingsScreenProps<'Sett
       </Card>
 
       <Card>
+        <MenuRow
+          icon="file-invoice-dollar"
+          label="Billing & Payments"
+          onPress={() => navigation.navigate('Billing')}
+        />
         <MenuRow
           icon="user-friends"
           label="Staff Management"

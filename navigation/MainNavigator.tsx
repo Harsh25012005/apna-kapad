@@ -5,7 +5,6 @@ import { CustomTabBar } from './CustomTabBar';
 import { DashboardNavigator } from './DashboardNavigator';
 import { CustomersNavigator } from './CustomersNavigator';
 import { OrdersNavigator } from './OrdersNavigator';
-import { BillingNavigator } from './BillingNavigator';
 import { SettingsNavigator } from './SettingsNavigator';
 import type { MainTabParamList } from './types';
 
@@ -22,7 +21,6 @@ export function MainNavigator() {
           <Tab.Screen name="DashboardTab" component={DashboardNavigator} />
           <Tab.Screen name="CustomersTab" component={CustomersNavigator} />
           <Tab.Screen name="OrdersTab" component={OrdersNavigator} />
-          <Tab.Screen name="BillingTab" component={BillingNavigator} />
           <Tab.Screen name="SettingsTab" component={SettingsNavigator} />
         </Tab.Navigator>
       </AppGuideProvider>

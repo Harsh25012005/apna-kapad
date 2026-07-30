@@ -28,7 +28,7 @@ module.exports = {
     android: {
       package: 'com.apnakapad.app',
       adaptiveIcon: {
-        backgroundColor: '#E6F4FE',
+        backgroundColor: '#1D4ED8',
         foregroundImage: './assets/android-icon-foreground.png',
         backgroundImage: './assets/android-icon-background.png',
         monochromeImage: './assets/android-icon-monochrome.png',

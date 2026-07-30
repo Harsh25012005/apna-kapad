@@ -1,10 +1,12 @@
 import { Text, View } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { Button } from './Button';
 
 export type EmptyStateProps = {
   icon?: React.ComponentProps<typeof FontAwesome5>['name'];
-  title: string;
+  /** Defaults to a translated generic "nothing here yet" title. */
+  title?: string;
   description?: string;
   actionLabel?: string;
   onAction?: () => void;
@@ -24,6 +26,7 @@ export function EmptyState({
   onAction,
   variant = 'full',
 }: EmptyStateProps) {
+  const { t } = useTranslation('common');
   const isCompact = variant === 'compact';
 
   return (
@@ -46,7 +49,7 @@ export function EmptyState({
           isCompact ? 'mb-0.5 text-sm' : 'mb-1 text-base'
         }`}
       >
-        {title}
+        {title ?? t('empty.title')}
       </Text>
       {description ? (
         <Text

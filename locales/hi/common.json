@@ -1,0 +1,83 @@
+{
+  "nav": {
+    "dashboard": "होम",
+    "customers": "ग्राहक",
+    "orders": "ऑर्डर",
+    "settings": "प्रोफाइल"
+  },
+  "actions": {
+    "save": "सेव करें",
+    "cancel": "रद्द करें",
+    "edit": "एडिट करें",
+    "delete": "डिलीट करें",
+    "search": "खोजें",
+    "create": "बनाएं",
+    "back": "वापस",
+    "add": "जोड़ें",
+    "view": "देखें",
+    "close": "बंद करें",
+    "retry": "फिर कोशिश करें",
+    "confirm": "पुष्टि करें"
+  },
+  "labels": {
+    "name": "नाम",
+    "phone": "फोन",
+    "address": "पता",
+    "date": "तारीख",
+    "status": "स्थिति",
+    "amount": "राशि",
+    "notes": "नोट्स",
+    "loading": "लोड हो रहा है...",
+    "noResults": "कोई परिणाम नहीं मिला",
+    "searchPlaceholder": "खोजें..."
+  },
+  "language": {
+    "title": "भाषा",
+    "english": "अंग्रेज़ी",
+    "gujarati": "गुजराती",
+    "hindi": "हिंदी"
+  },
+  "status": {
+    "order": {
+      "order_taken": "ऑर्डर लिया",
+      "cutting": "कटाई",
+      "stitching": "सिलाई",
+      "ready": "तैयार",
+      "delivered": "डिलीवर हो गया"
+    },
+    "payment": {
+      "paid": "भुगतान हो गया",
+      "partial": "आंशिक",
+      "unpaid": "बाकी"
+    }
+  },
+  "fields": {
+    "selectDate": "तारीख चुनें",
+    "select": "चुनें",
+    "noOptions": "कोई विकल्प उपलब्ध नहीं"
+  },
+  "empty": {
+    "title": "यहां अभी कुछ नहीं है"
+  },
+  "months": {
+    "1": "जन",
+    "2": "फर",
+    "3": "मार्च",
+    "4": "अप्रैल",
+    "5": "मई",
+    "6": "जून",
+    "7": "जुल",
+    "8": "अग",
+    "9": "सित",
+    "10": "अक्टू",
+    "11": "नव",
+    "12": "दिस"
+  },
+  "whatsapp": {
+    "orderReady": "नमस्ते {{customerName}}, आपका ऑर्डर #{{orderNumber}} {{shopName}} पर तैयार है। सुविधा अनुसार ले जाइएगा। धन्यवाद!",
+    "bill": "नमस्ते {{customerName}}, {{shopName}} की ओर से आपके बिल का विवरण:\nकुल: ₹{{total}}\nभुगतान: ₹{{paid}}\nबाकी: ₹{{pending}}",
+    "paymentDue": "नमस्ते {{customerName}}, {{shopName}} पर आपके ₹{{pending}} बाकी हैं। सुविधा अनुसार चुका दीजिएगा। धन्यवाद!",
+    "errorNoPhone": "ग्राहक का फोन नंबर दर्ज नहीं है",
+    "errorNotAvailable": "इस फोन में व्हाट्सएप उपलब्ध नहीं है"
+  }
+}

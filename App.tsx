@@ -1,4 +1,5 @@
 import './global.css';
+import { useEffect, useState } from 'react';
 import { View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -12,11 +13,12 @@ import {
 import { LoadingSpinner, ToastProvider } from './components/ui';
 import { AuthProvider } from './context/AuthContext';
 import { RootNavigator } from './navigation/RootNavigator';
+import { initI18n } from './lib/i18n';
 
 /**
- * Paints the status bar strip black. Screens are white, so without this the
- * clock/battery row reads as a bright band above the app. Sits above the
- * navigator and ignores touches so it never blocks anything underneath.
+ * Paints the status bar strip white to match the app's white screens. Sits
+ * above the navigator and ignores touches so it never blocks anything
+ * underneath.
  */
 function StatusBarBackdrop() {
   const insets = useSafeAreaInsets();
@@ -29,7 +31,7 @@ function StatusBarBackdrop() {
         left: 0,
         right: 0,
         height: insets.top,
-        backgroundColor: '#050505',
+        backgroundColor: '#FFFFFF',
         zIndex: 999,
       }}
     />
@@ -43,10 +45,15 @@ export default function App() {
     GoogleSansFlex_600SemiBold,
     GoogleSansFlex_700Bold,
   });
+  const [i18nReady, setI18nReady] = useState(false);
+
+  useEffect(() => {
+    void initI18n().finally(() => setI18nReady(true));
+  }, []);
 
   // Render anyway if the fonts fail — falling back to the system font beats
   // showing a blank screen forever.
-  if (!fontsLoaded && !fontError) {
+  if ((!fontsLoaded && !fontError) || !i18nReady) {
     return <LoadingSpinner fullScreen />;
   }
 
@@ -58,8 +65,8 @@ export default function App() {
         </AuthProvider>
       </ToastProvider>
       <StatusBarBackdrop />
-      {/* Light icons, since the strip behind them is now black. */}
-      <StatusBar style="light" />
+      {/* Dark icons, since the strip behind them is now white. */}
+      <StatusBar style="dark" />
     </SafeAreaProvider>
   );
 }

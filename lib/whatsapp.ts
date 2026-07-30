@@ -1,4 +1,5 @@
 import { Linking } from 'react-native';
+import i18n from './i18n';
 
 function normalizePhone(phone: string | null | undefined): string {
   const digits = (phone || '').replace(/\D/g, '');
@@ -11,12 +12,30 @@ export async function sendWhatsAppMessage(
   message: string
 ): Promise<void> {
   const target = normalizePhone(phone);
-  if (!target) throw new Error('Customer has no phone number on file');
+  if (!target) throw new Error(i18n.t('whatsapp.errorNoPhone', { ns: 'common' }));
 
-  const url = `https://wa.me/${target}?text=${encodeURIComponent(message)}`;
-  const canOpen = await Linking.canOpenURL(url);
-  if (!canOpen) throw new Error('WhatsApp is not available on this device');
-  await Linking.openURL(url);
+  const text = encodeURIComponent(message);
+
+  // Android 11+ hides other installed apps unless they're declared in the
+  // manifest's <queries>, so canOpenURL answers false even when WhatsApp is
+  // installed. Opening optimistically and catching the failure is the only
+  // reliable check. The whatsapp:// scheme is tried first so the app opens
+  // directly; wa.me is the fallback and also covers WhatsApp Business.
+  const candidates = [
+    `whatsapp://send?phone=${target}&text=${text}`,
+    `https://wa.me/${target}?text=${text}`,
+  ];
+
+  for (const url of candidates) {
+    try {
+      await Linking.openURL(url);
+      return;
+    } catch {
+      // Try the next form.
+    }
+  }
+
+  throw new Error(i18n.t('whatsapp.errorNotAvailable', { ns: 'common' }));
 }
 
 export function buildOrderReadyMessage({
@@ -28,7 +47,7 @@ export function buildOrderReadyMessage({
   customerName: string;
   orderNumber: string;
 }): string {
-  return `Hi ${customerName}, your order #${orderNumber} at ${shopName} is ready for pickup!`;
+  return i18n.t('whatsapp.orderReady', { ns: 'common', shopName, customerName, orderNumber });
 }
 
 export function buildBillMessage({
@@ -44,7 +63,7 @@ export function buildBillMessage({
   paid: number;
   pending: number;
 }): string {
-  return `Hi ${customerName}, here's your bill summary from ${shopName}:\nTotal: ₹${total}\nPaid: ₹${paid}\nPending: ₹${pending}`;
+  return i18n.t('whatsapp.bill', { ns: 'common', shopName, customerName, total, paid, pending });
 }
 
 export function buildPaymentDueMessage({
@@ -56,5 +75,5 @@ export function buildPaymentDueMessage({
   customerName: string;
   pending: number;
 }): string {
-  return `Hi ${customerName}, a friendly reminder that ₹${pending} is pending at ${shopName}. Please clear it at your convenience. Thank you!`;
+  return i18n.t('whatsapp.paymentDue', { ns: 'common', shopName, customerName, pending });
 }

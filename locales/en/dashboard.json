@@ -1,0 +1,43 @@
+{
+  "loading": "Loading dashboard...",
+  "greeting": "Hi, {{name}}",
+  "defaultUser": "User",
+  "todaysCollections": "Today's collections",
+  "collectionsAsOf": "Collections — {{date}}",
+  "order": "Order",
+  "client": "Client",
+  "topClients": "Top Clients",
+  "add": "Add",
+  "transactionHistory": "Transaction history",
+  "viewAll": "View all",
+  "emptyTransactionsTitle": "No recent transactions",
+  "emptyTransactionsDescription": "New orders and payments will show up here",
+  "customer": "Customer",
+  "garmentOrder": "Garment Order",
+  "paid": "Paid",
+  "errorLoad": "Could not load dashboard",
+  "dueSoon": {
+    "title": "Orders Due Soon"
+  },
+  "pendingPayments": {
+    "title": "Pending Payments",
+    "subtitle_one": "{{count}} bill not fully paid",
+    "subtitle_other": "{{count}} bills not fully paid"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "loading": "Loading notifications...",
+    "emptyTitle": "No notifications yet",
+    "emptyDescription": "Order and payment reminders will show up here",
+    "errorLoad": "Could not load notifications",
+    "customer": "Customer",
+    "justNow": "Just now",
+    "minutesAgo": "{{count}}m ago",
+    "hoursAgo": "{{count}}h ago",
+    "daysAgo": "{{count}}d ago",
+    "types": {
+      "order_ready": "Order ready",
+      "payment_due": "Payment due"
+    }
+  }
+}

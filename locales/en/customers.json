@@ -1,0 +1,151 @@
+{
+  "list": {
+    "title": "Customers",
+    "searchPlaceholder": "Search by name or phone",
+    "noPhone": "No phone",
+    "settled": "Settled",
+    "loading": "Loading customers...",
+    "emptySearchTitle": "No matching customers",
+    "emptySearchDescription": "Try a different name or phone number",
+    "emptyTitle": "No customers yet",
+    "emptyDescription": "Add your first customer to get started",
+    "addCustomer": "Add Customer",
+    "loadError": "Could not load customers",
+    "hasBalanceFilter": "Has balance due"
+  },
+  "detail": {
+    "loading": "Loading customer...",
+    "noPhone": "No phone",
+    "outstandingBalance": "Outstanding Balance",
+    "sendPaymentReminder": "Send Payment Reminder",
+    "measurements": "Measurements",
+    "addShort": "+ Add",
+    "noMeasurementsTitle": "No measurements yet",
+    "noMeasurementsDescription": "Save a measurement set to speed up future orders",
+    "addMeasurement": "Add Measurement",
+    "updated": "Updated {{date}}",
+    "measurementSummary": "Chest {{chest}} · Waist {{waist}} · Shoulder {{shoulder}} · Length {{length}} · Sleeve {{sleeve}}",
+    "orderHistory": "Order History",
+    "newOrderShort": "+ New Order",
+    "noOrdersTitle": "No orders yet",
+    "noOrdersDescription": "Create this customer's first order to start tracking it",
+    "newOrder": "New Order",
+    "noClothType": "No cloth type",
+    "ordered": "Ordered {{date}}",
+    "loadError": "Could not load customer",
+    "whatsappError": "Could not open WhatsApp"
+  },
+  "form": {
+    "title": "New Customer",
+    "nameLabel": "Name",
+    "namePlaceholder": "Customer name",
+    "nameRequired": "Name is required",
+    "phoneLabel": "Phone",
+    "phonePlaceholder": "10-digit phone number",
+    "addressLabel": "Address",
+    "addressPlaceholder": "Address",
+    "saveCustomer": "Save Customer",
+    "saveSuccess": "Customer added",
+    "saveError": "Could not save customer",
+    "editTitle": "Edit Client",
+    "updateCustomer": "Update Client",
+    "updateSuccess": "Client updated",
+    "loading": "Loading client...",
+    "loadError": "Could not load client"
+  },
+  "measurementForm": {
+    "title": "New Measurement",
+    "editTitle": "Edit Measurement",
+    "loading": "Loading measurement...",
+    "loadError": "Could not load measurement",
+    "updateMeasurement": "Update Measurement",
+    "customFieldsLabel": "Custom Fields",
+    "addCustomField": "Add custom field",
+    "noCustomFields": "No custom fields added yet",
+    "customFieldLabelLabel": "Field Name",
+    "customFieldLabelPlaceholder": "e.g. Cuff Width",
+    "customFieldValueLabel": "Value",
+    "customFieldValuePlaceholder": "e.g. 2.5",
+    "garmentTypeLabel": "Garment Type",
+    "garmentTypePlaceholder": "Select garment type",
+    "garmentTypeRequired": "Garment type is required",
+    "notesLabel": "Notes",
+    "notesPlaceholder": "Any additional fitting notes",
+    "saveMeasurement": "Save Measurement",
+    "saveSuccess": "Measurement saved",
+    "saveError": "Could not save measurement",
+    "garmentTypes": {
+      "shirt": "Shirt",
+      "pant": "Pant",
+      "shirtPant": "Shirt + Pant"
+    },
+    "shirtSection": "Shirt Measurements",
+    "pantSection": "Pant Measurements",
+    "fields": {
+      "chest": {
+        "label": "Chest (in)",
+        "placeholder": "e.g. 38"
+      },
+      "shoulder": {
+        "label": "Shoulder (in)",
+        "placeholder": "e.g. 17"
+      },
+      "sleeve": {
+        "label": "Sleeve Length (in)",
+        "placeholder": "e.g. 24"
+      },
+      "shirtLength": {
+        "label": "Shirt Length (in)",
+        "placeholder": "e.g. 29"
+      },
+      "collar": {
+        "label": "Collar (in)",
+        "placeholder": "e.g. 15"
+      },
+      "cuff": {
+        "label": "Cuff (in)",
+        "placeholder": "e.g. 9"
+      },
+      "biceps": {
+        "label": "Biceps (in)",
+        "placeholder": "e.g. 14"
+      },
+      "stomach": {
+        "label": "Stomach (in)",
+        "placeholder": "e.g. 36"
+      },
+      "seat": {
+        "label": "Seat (in)",
+        "placeholder": "e.g. 38"
+      },
+      "waist": {
+        "label": "Waist (in)",
+        "placeholder": "e.g. 32"
+      },
+      "pantLength": {
+        "label": "Pant Length (in)",
+        "placeholder": "e.g. 40"
+      },
+      "hip": {
+        "label": "Hip (in)",
+        "placeholder": "e.g. 38"
+      },
+      "thigh": {
+        "label": "Thigh (in)",
+        "placeholder": "e.g. 22"
+      },
+      "knee": {
+        "label": "Knee (in)",
+        "placeholder": "e.g. 16"
+      },
+      "bottom": {
+        "label": "Bottom (in)",
+        "placeholder": "e.g. 14"
+      },
+      "crotch": {
+        "label": "Crotch (in)",
+        "placeholder": "e.g. 11"
+      }
+    }
+  }
+}

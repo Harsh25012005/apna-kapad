@@ -1,7 +1,9 @@
 import { useCallback, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { FontAwesome5 } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import {
   Badge,
   BottomSheet,
@@ -26,7 +28,9 @@ const PAYMENT_MODES = ['Cash', 'UPI', 'Card', 'Bank Transfer'] as const;
 export default function BillDetailScreen({ navigation, route }: BillingScreenProps<'BillDetail'>) {
   const { billId } = route.params;
   const shop = useShop();
+  const insets = useSafeAreaInsets();
   const showToast = useToast();
+  const { t } = useTranslation('billing');
 
   const [bill, setBill] = useState<BillWithRelations | null>(null);
   const [loading, setLoading] = useState(true);
@@ -46,7 +50,7 @@ export default function BillDetailScreen({ navigation, route }: BillingScreenPro
       if (error) throw error;
       setBill(data);
     } catch (err) {
-      showToast(err instanceof Error ? err.message : 'Could not load bill', 'error');
+      showToast(err instanceof Error ? err.message : t('detail.errorLoad'), 'error');
     } finally {
       setLoading(false);
     }
@@ -65,11 +69,11 @@ export default function BillDetailScreen({ navigation, route }: BillingScreenPro
     if (!bill) return;
     const value = Number(amount.trim());
     if (!Number.isFinite(value) || value <= 0) {
-      showToast('Enter a valid amount', 'error');
+      showToast(t('detail.errorInvalidAmount'), 'error');
       return;
     }
     if (value > pending) {
-      showToast(`Amount cannot exceed the pending ${formatCurrency(pending)}`, 'error');
+      showToast(t('detail.errorExceedsPending', { amount: formatCurrency(pending) }), 'error');
       return;
     }
     setSaving(true);
@@ -86,10 +90,10 @@ export default function BillDetailScreen({ navigation, route }: BillingScreenPro
       setSheetOpen(false);
       await load();
       haptics.success();
-      showToast('Payment recorded', 'success');
+      showToast(t('detail.successPayment'), 'success');
     } catch (err) {
       haptics.error();
-      showToast(err instanceof Error ? err.message : 'Could not record payment', 'error');
+      showToast(err instanceof Error ? err.message : t('detail.errorPayment'), 'error');
     } finally {
       setSaving(false);
     }
@@ -109,59 +113,101 @@ export default function BillDetailScreen({ navigation, route }: BillingScreenPro
         })
       );
     } catch (err) {
-      showToast(err instanceof Error ? err.message : 'Could not open WhatsApp', 'error');
+      showToast(err instanceof Error ? err.message : t('detail.errorWhatsapp'), 'error');
     }
   };
 
-  if (loading || !bill) return <LoadingSpinner fullScreen text="Loading bill..." />;
+  if (loading || !bill) return <LoadingSpinner fullScreen text={t('detail.loading')} />;
 
   return (
     <View className="flex-1 bg-gray-50">
-      <Header title={`Bill · ${bill.customers?.name}`} onBack={() => navigation.goBack()} />
-      <ScrollView contentContainerStyle={{ padding: 16, gap: 16 }}>
-        <Card>
-          <View className="mb-3 flex-row items-center justify-between">
-            <Text className="text-base font-semibold text-gray-900">{bill.customers?.name}</Text>
+      <Header title={t('detail.billTitle', { name: bill.customers?.name })} onBack={() => navigation.goBack()} />
+      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: insets.bottom + 160, gap: 16 }}>
+        {/* Hero card: total / paid / balance due */}
+        <View className="rounded-xl bg-[#101828] p-5">
+          <View className="mb-4 flex-row items-center justify-between">
+            <Text className="font-sans text-xs font-medium uppercase tracking-wide text-[#98A2B3]">
+              {t('detail.totalAmount')}
+            </Text>
             <Badge type="payment_status" value={bill.payment_status} />
           </View>
+          <Text className="text-[34px] font-medium text-white tracking-tight">
+            {formatCurrency(bill.total_amount)}
+          </Text>
 
-          <View className="gap-1.5">
-            <Row label="Fabric Cost" value={formatCurrency(bill.fabric_cost)} />
-            <Row label="Stitching Charge" value={formatCurrency(bill.stitching_charge)} />
-            <Row label="Tax" value={formatCurrency(bill.tax)} />
-            <Row label="Discount" value={`- ${formatCurrency(bill.discount)}`} />
-            <View className="my-2 h-px bg-gray-100" />
-            <Row label="Total Amount" value={formatCurrency(bill.total_amount)} bold />
-            <Row label="Paid" value={formatCurrency(paidTotal)} />
-            <Row
-              label="Pending"
-              value={formatCurrency(pending)}
-              bold
-              color={pending > 0 ? '#DC2626' : '#16A34A'}
-            />
+          <View className="mt-5 flex-row gap-3">
+            <View className="flex-1 rounded-lg bg-white/10 p-3">
+              <Text className="font-sans text-xs text-[#98A2B3]">{t('detail.paid')}</Text>
+              <Text className="mt-0.5 text-base font-semibold text-white">
+                {formatCurrency(paidTotal)}
+              </Text>
+            </View>
+            <View className="flex-1 rounded-lg bg-white/10 p-3">
+              <Text className="font-sans text-xs text-[#98A2B3]">{t('detail.balanceDue')}</Text>
+              <Text
+                className={`mt-0.5 text-base font-semibold ${
+                  pending > 0 ? 'text-[#F87171]' : 'text-[#4ADE80]'
+                }`}
+              >
+                {formatCurrency(pending)}
+              </Text>
+            </View>
           </View>
 
           {bill.customers?.phone ? (
             <Pressable
               onPress={handleShare}
-              className="mt-4 flex-row items-center justify-center rounded-lg bg-green-50 py-2.5"
+              className="mt-4 flex-row items-center justify-center rounded-lg bg-white/10 py-2.5 active:bg-white/20"
             >
-              <FontAwesome5 name="whatsapp" size={16} color="#16A34A" />
-              <Text className="ml-2 text-sm font-semibold text-green-700">
-                Share Bill via WhatsApp
-              </Text>
+              <FontAwesome5 name="whatsapp" size={16} color="#4ADE80" />
+              <Text className="ml-2 text-sm font-semibold text-white">{t('detail.shareWhatsapp')}</Text>
             </Pressable>
           ) : null}
+        </View>
+
+        {/* Customer info */}
+        <Card>
+          <Text className="mb-2 text-sm font-semibold text-gray-900">{t('detail.customer')}</Text>
+          <View className="gap-1.5">
+            <Row label={t('detail.name')} value={bill.customers?.name ?? '—'} />
+            {bill.customers?.phone ? <Row label={t('detail.phone')} value={bill.customers.phone} /> : null}
+          </View>
+        </Card>
+
+        {/* Related order */}
+        {bill.order_id ? (
+          <View className="flex-row items-center rounded-md border border-gray-200 bg-white p-4">
+            <View className="h-10 w-10 items-center justify-center rounded-full bg-primary-50">
+              <FontAwesome5 name="shopping-bag" size={14} color="#2563EB" />
+            </View>
+            <View className="ml-3 flex-1">
+              <Text className="text-sm font-semibold text-gray-900">{t('detail.linkedOrder')}</Text>
+              <Text className="font-sans text-xs text-gray-400">{t('detail.linkedOrderDesc')}</Text>
+            </View>
+          </View>
+        ) : null}
+
+        {/* Charge breakdown */}
+        <Card>
+          <Text className="mb-2 text-sm font-semibold text-gray-900">{t('detail.breakdown')}</Text>
+          <View className="gap-1.5">
+            <Row label={t('detail.fabricCost')} value={formatCurrency(bill.fabric_cost)} />
+            <Row label={t('detail.stitchingCharge')} value={formatCurrency(bill.stitching_charge)} />
+            <Row label={t('detail.tax')} value={formatCurrency(bill.tax)} />
+            <Row label={t('detail.discount')} value={`- ${formatCurrency(bill.discount)}`} />
+            <View className="my-2 h-px bg-gray-100" />
+            <Row label={t('detail.totalAmount')} value={formatCurrency(bill.total_amount)} bold />
+          </View>
         </Card>
 
         <View>
-          <Text className="mb-2 text-base font-semibold text-gray-900">Payment History</Text>
+          <Text className="mb-2 text-base font-semibold text-gray-900">{t('detail.paymentHistory')}</Text>
           {bill.payments.length === 0 ? (
             <EmptyState
               variant="compact"
               icon="receipt"
-              title="No payments recorded yet"
-              description={pending > 0 ? 'Record a payment once the customer pays' : undefined}
+              title={t('detail.noPayments')}
+              description={pending > 0 ? t('detail.recordPaymentHint') : undefined}
             />
           ) : (
             <View className="gap-2">
@@ -182,17 +228,16 @@ export default function BillDetailScreen({ navigation, route }: BillingScreenPro
           )}
         </View>
 
-        {pending > 0 ? <Button title="Record Payment" onPress={() => setSheetOpen(true)} /> : null}
+        {pending > 0 ? <Button title={t('detail.recordPayment')} onPress={() => setSheetOpen(true)} /> : null}
       </ScrollView>
 
-      <BottomSheet visible={sheetOpen} onClose={() => setSheetOpen(false)} title="Record Payment">
+      <BottomSheet visible={sheetOpen} onClose={() => setSheetOpen(false)} title={t('detail.recordPayment')}>
         <InputField
-          label="Amount"
+          label={t('detail.amount')}
           value={amount}
           onChangeText={setAmount}
           keyboardType="numeric"
-          leftIcon="rupee-sign"
-          placeholder={`Pending: ${formatCurrency(pending)}`}
+          placeholder={t('detail.pendingPlaceholder', { amount: formatCurrency(pending) })}
         />
         <View className="mb-4 flex-row flex-wrap gap-2">
           {PAYMENT_MODES.map((m) => (
@@ -208,12 +253,12 @@ export default function BillDetailScreen({ navigation, route }: BillingScreenPro
                   mode === m ? 'text-sm font-medium text-primary-700' : 'text-sm text-gray-600'
                 }
               >
-                {m}
+                {t(`detail.paymentModes.${m}`)}
               </Text>
             </Pressable>
           ))}
         </View>
-        <Button title="Save Payment" onPress={handleAddPayment} loading={saving} />
+        <Button title={t('detail.savePayment')} onPress={handleAddPayment} loading={saving} />
       </BottomSheet>
     </View>
   );

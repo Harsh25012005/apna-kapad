@@ -7,6 +7,10 @@ export type ImagePickerFieldProps = {
   uri?: string | null;
   onChange: (uri: string) => void;
   aspect?: [number, number];
+  /** Where the image comes from. Defaults to the photo library. */
+  source?: 'library' | 'camera';
+  /** Called when the required OS permission was refused. */
+  onPermissionDenied?: () => void;
 };
 
 export function ImagePickerField({
@@ -14,17 +18,29 @@ export function ImagePickerField({
   uri,
   onChange,
   aspect = [1, 1],
+  source = 'library',
+  onPermissionDenied,
 }: ImagePickerFieldProps) {
   const pickImage = async () => {
-    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permission.granted) return;
+    const permission =
+      source === 'camera'
+        ? await ImagePicker.requestCameraPermissionsAsync()
+        : await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permission.granted) {
+      onPermissionDenied?.();
+      return;
+    }
 
-    const result = await ImagePicker.launchImageLibraryAsync({
+    const options: ImagePicker.ImagePickerOptions = {
       mediaTypes: ['images'],
       allowsEditing: true,
       aspect,
       quality: 0.7,
-    });
+    };
+    const result =
+      source === 'camera'
+        ? await ImagePicker.launchCameraAsync(options)
+        : await ImagePicker.launchImageLibraryAsync(options);
 
     const pickedUri = result.assets?.[0]?.uri;
     if (!result.canceled && pickedUri) {
@@ -35,10 +51,7 @@ export function ImagePickerField({
   return (
     <View className="w-full mb-4">
       {label ? (
-        <Text
-          style={{ letterSpacing: 0.4 }}
-          className="mb-1.5 text-xs font-bold uppercase text-gray-500"
-        >
+        <Text className="mb-1.5 text-xs font-bold uppercase tracking-[0.4px] text-gray-500">
           {label}
         </Text>
       ) : null}

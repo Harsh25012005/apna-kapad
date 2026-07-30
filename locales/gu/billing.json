@@ -1,0 +1,70 @@
+{
+  "list": {
+    "title": "બિલિંગ",
+    "totalPending": "તમામ ગ્રાહકોની કુલ બાકી રકમ",
+    "searchPlaceholder": "ગ્રાહકનું નામ અથવા બિલ ID શોધો",
+    "filters": {
+      "paid": "ચૂકવેલ",
+      "partial": "આંશિક",
+      "unpaid": "બાકી"
+    },
+    "loading": "બિલ લોડ થઈ રહ્યા છે...",
+    "emptySearchTitle": "કોઈ મેળ ખાતું બિલ નથી",
+    "emptySearchDescription": "અલગ ગ્રાહકનું નામ અથવા બિલ ID અજમાવો",
+    "emptyTitle": "હજુ સુધી કોઈ બિલ નથી",
+    "emptyDescription": "ચુકવણી ટ્રેક કરવા માટે તમારું પહેલું બિલ બનાવો",
+    "newBill": "નવું બિલ",
+    "errorLoad": "બિલ લોડ કરી શકાયા નહીં"
+  },
+  "detail": {
+    "loading": "બિલ લોડ થઈ રહ્યું છે...",
+    "billTitle": "બિલ · {{name}}",
+    "totalAmount": "કુલ રકમ",
+    "paid": "ચૂકવેલ",
+    "balanceDue": "બાકી રકમ",
+    "shareWhatsapp": "WhatsApp પર બિલ શેર કરો",
+    "customer": "ગ્રાહક",
+    "name": "નામ",
+    "phone": "ફોન",
+    "linkedOrder": "ઓર્ડર સાથે જોડાયેલ",
+    "linkedOrderDesc": "આ બિલ ઓર્ડરમાંથી બનાવવામાં આવ્યું છે",
+    "breakdown": "બિલ વિગત",
+    "fabricCost": "કાપડનો ખર્ચ",
+    "stitchingCharge": "સિલાઈ ચાર્જ",
+    "tax": "ટેક્સ",
+    "discount": "ડિસ્કાઉન્ટ",
+    "paymentHistory": "ચુકવણી ઇતિહાસ",
+    "noPayments": "હજુ સુધી કોઈ ચુકવણી નોંધાઈ નથી",
+    "recordPaymentHint": "ગ્રાહક ચૂકવણી કરે ત્યારે ચુકવણી નોંધો",
+    "recordPayment": "ચુકવણી નોંધો",
+    "savePayment": "ચુકવણી સાચવો",
+    "amount": "રકમ",
+    "pendingPlaceholder": "બાકી: {{amount}}",
+    "errorLoad": "બિલ લોડ કરી શકાયું નહીં",
+    "errorInvalidAmount": "માન્ય રકમ દાખલ કરો",
+    "errorExceedsPending": "રકમ બાકી {{amount}} કરતાં વધુ ન હોવી જોઈએ",
+    "successPayment": "ચુકવણી નોંધાઈ",
+    "errorPayment": "ચુકવણી નોંધી શકાઈ નહીં",
+    "errorWhatsapp": "WhatsApp ખોલી શકાયું નહીં",
+    "paymentModes": {
+      "Cash": "રોકડ",
+      "UPI": "UPI",
+      "Card": "કાર્ડ",
+      "Bank Transfer": "બેંક ટ્રાન્સફર"
+    }
+  },
+  "form": {
+    "title": "નવું બિલ",
+    "customer": "ગ્રાહક",
+    "selectCustomer": "ગ્રાહક પસંદ કરો",
+    "customerRequired": "ગ્રાહક જરૂરી છે",
+    "fabricCost": "કાપડનો ખર્ચ",
+    "stitchingCharge": "સિલાઈ ચાર્જ",
+    "discount": "ડિસ્કાઉન્ટ",
+    "tax": "ટેક્સ",
+    "totalAmount": "કુલ રકમ",
+    "createBill": "બિલ બનાવો",
+    "successCreated": "બિલ બનાવવામાં આવ્યું",
+    "errorCreate": "બિલ બનાવી શકાયું નહીં"
+  }
+}

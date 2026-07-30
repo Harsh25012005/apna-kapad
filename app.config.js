@@ -12,6 +12,18 @@ module.exports = {
     ios: {
       supportsTablet: true,
       bundleIdentifier: 'com.apnakapad.app',
+      infoPlist: {
+        // Required for Linking.canOpenURL to detect these mail clients —
+        // without the allowlist iOS silently answers false for every scheme.
+        LSApplicationQueriesSchemes: [
+          'googlegmail',
+          'ms-outlook',
+          'ymail',
+          'protonmail',
+          'readdle-spark',
+          'message',
+        ],
+      },
     },
     android: {
       package: 'com.apnakapad.app',
@@ -29,7 +41,15 @@ module.exports = {
       'expo-web-browser',
       'expo-secure-store',
       'expo-font',
+      'expo-localization',
       '@react-native-community/datetimepicker',
+      [
+        'expo-image-picker',
+        {
+          photosPermission: 'Allow $(PRODUCT_NAME) to access your photos so you can attach design references to an order.',
+          cameraPermission: 'Allow $(PRODUCT_NAME) to use the camera so you can photograph a design for an order.',
+        },
+      ],
       [
         '@react-native-google-signin/google-signin',
         {

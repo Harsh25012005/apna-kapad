@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Modal, Pressable, Text, View } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { Button } from './ui';
 import { haptics } from '../lib/haptics';
 import { useTabBarHighlight } from '../context/TabBarHighlightContext';
@@ -9,39 +10,14 @@ import type { MainTabParamList } from '../navigation/types';
 type Step = {
   tab: keyof MainTabParamList;
   icon: React.ComponentProps<typeof FontAwesome5>['name'];
-  title: string;
-  description: string;
+  key: 'dashboard' | 'customers' | 'orders' | 'settings';
 };
 
 const STEPS: Step[] = [
-  {
-    tab: 'DashboardTab',
-    icon: 'home',
-    title: 'Your Dashboard',
-    description:
-      "Tap here anytime to see today's orders, today's collections, pending orders, and this month's sales.",
-  },
-  {
-    tab: 'CustomersTab',
-    icon: 'users',
-    title: 'Manage Customers',
-    description:
-      "Add customers, save their measurements, and check each customer's order history and outstanding balance.",
-  },
-  {
-    tab: 'OrdersTab',
-    icon: 'tshirt',
-    title: 'Track Every Order',
-    description:
-      'Create an order and move it through Cutting → Stitching → Ready → Delivered right from its detail page.',
-  },
-  {
-    tab: 'SettingsTab',
-    icon: 'file-invoice-dollar',
-    title: 'Billing, Staff & Settings',
-    description:
-      'Find Billing & Payments and Staff Management here — generate bills, record payments, and share them on WhatsApp.',
-  },
+  { tab: 'DashboardTab', icon: 'home', key: 'dashboard' },
+  { tab: 'CustomersTab', icon: 'users', key: 'customers' },
+  { tab: 'OrdersTab', icon: 'tshirt', key: 'orders' },
+  { tab: 'SettingsTab', icon: 'file-invoice-dollar', key: 'settings' },
 ];
 
 export type AppGuideProps = {
@@ -55,6 +31,7 @@ export type AppGuideProps = {
  * bottom-tab-bar icon for each section (see TabBarHighlightContext).
  */
 export function AppGuide({ visible, onDone }: AppGuideProps) {
+  const { t } = useTranslation('settings');
   const [index, setIndex] = useState(0);
   const { setHighlightedTab, tabBarHeight } = useTabBarHighlight();
   const step = STEPS[index];
@@ -100,32 +77,37 @@ export function AppGuide({ visible, onDone }: AppGuideProps) {
         <View className="flex-1 justify-end" pointerEvents="box-none">
           <View
             style={{ marginBottom: barSpace + 14 }}
-            className="mx-5 rounded-3xl border border-gray-200 bg-white p-5"
+            className="mx-5 rounded-3xl border border-gray-200 bg-white p-5 shadow-lg"
           >
-            <View className="mb-3 flex-row items-center justify-between">
-              <View className="h-11 w-11 items-center justify-center rounded-full bg-primary-50">
-                <FontAwesome5 name={step.icon} size={18} color="#2563EB" />
+            <View className="mb-4 flex-row items-center justify-between">
+              <View className="flex-row items-center">
+                <View className="h-11 w-11 items-center justify-center rounded-full bg-primary-50">
+                  <FontAwesome5 name={step.icon} size={18} color="#2563EB" />
+                </View>
+                <Text className="font-sans ml-3 text-xs font-semibold uppercase tracking-wide text-gray-400">
+                  {t('appGuide.stepOf', { current: index + 1, total: STEPS.length })}
+                </Text>
               </View>
-              <Pressable onPress={handleFinish} hitSlop={8}>
-                <Text className="text-sm font-medium text-gray-400">Skip</Text>
+              <Pressable onPress={handleFinish} hitSlop={8} className="rounded-full px-2 py-1 active:bg-gray-100">
+                <Text className="text-sm font-medium text-gray-400">{t('appGuide.skip')}</Text>
               </Pressable>
             </View>
 
-            <Text className="mb-1.5 text-lg font-bold text-gray-900">{step.title}</Text>
-            <Text className="font-sans mb-5 text-sm leading-5 text-gray-500">{step.description}</Text>
+            <Text className="mb-1.5 text-lg font-bold text-gray-900">{t(`appGuide.steps.${step.key}.title`)}</Text>
+            <Text className="font-sans mb-5 text-sm leading-5 text-gray-500">{t(`appGuide.steps.${step.key}.description`)}</Text>
 
             <View className="mb-4 flex-row justify-center gap-1.5">
               {STEPS.map((s, i) => (
                 <View
                   key={s.tab}
                   className={`h-1.5 rounded-full ${
-                    i === index ? 'w-5 bg-primary-600' : 'w-1.5 bg-gray-200'
+                    i === index ? 'w-5 bg-primary-600' : i < index ? 'w-1.5 bg-primary-200' : 'w-1.5 bg-gray-200'
                   }`}
                 />
               ))}
             </View>
 
-            <Button title={isLast ? 'Get Started' : 'Next'} onPress={handleNext} />
+            <Button title={isLast ? t('appGuide.getStarted') : t('appGuide.next')} onPress={handleNext} />
           </View>
         </View>
       </View>

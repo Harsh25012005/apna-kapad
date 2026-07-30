@@ -96,6 +96,13 @@ export const QUICK_ACTIONS: Array<{
     },
   ];
 
+const TAB_ROOT_SCREENS: Record<string, string> = {
+  DashboardTab: 'Dashboard',
+  CustomersTab: 'CustomerList',
+  OrdersTab: 'OrderList',
+  SettingsTab: 'SettingsHome',
+};
+
 const ACTIVE = '#2563EB';
 const INACTIVE = '#8A8A8A';
 const FAB_SIZE = 54;
@@ -291,9 +298,16 @@ export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
                 target: route.key,
                 canPreventDefault: true,
               });
-              if (state.index !== routeIndex && !event.defaultPrevented) {
+              if (!event.defaultPrevented) {
                 haptics.tap();
-                navigation.navigate(route.name);
+                const rootScreen = TAB_ROOT_SCREENS[route.name];
+                if (rootScreen) {
+                  (navigation as any).navigate(route.name, {
+                    screen: rootScreen,
+                  });
+                } else {
+                  navigation.navigate(route.name);
+                }
               }
             };
 

@@ -1,0 +1,83 @@
+{
+  "nav": {
+    "dashboard": "હોમ",
+    "customers": "ગ્રાહકો",
+    "orders": "ઓર્ડર",
+    "settings": "પ્રોફાઇલ"
+  },
+  "actions": {
+    "save": "સેવ કરો",
+    "cancel": "રદ કરો",
+    "edit": "એડિટ કરો",
+    "delete": "ડિલીટ કરો",
+    "search": "શોધો",
+    "create": "બનાવો",
+    "back": "પાછળ",
+    "add": "ઉમેરો",
+    "view": "જુઓ",
+    "close": "બંધ કરો",
+    "retry": "ફરી પ્રયત્ન કરો",
+    "confirm": "કન્ફર્મ કરો"
+  },
+  "labels": {
+    "name": "નામ",
+    "phone": "ફોન",
+    "address": "સરનામું",
+    "date": "તારીખ",
+    "status": "સ્ટેટસ",
+    "amount": "રકમ",
+    "notes": "નોંધ",
+    "loading": "લોડ થઈ રહ્યું છે...",
+    "noResults": "કોઈ પરિણામ મળ્યું નથી",
+    "searchPlaceholder": "શોધો..."
+  },
+  "language": {
+    "title": "ભાષા",
+    "english": "અંગ્રેજી",
+    "gujarati": "ગુજરાતી",
+    "hindi": "હિન્દી"
+  },
+  "status": {
+    "order": {
+      "order_taken": "ઓર્ડર લીધો",
+      "cutting": "કટિંગ",
+      "stitching": "સિલાઈ",
+      "ready": "તૈયાર",
+      "delivered": "ડિલિવર થયું"
+    },
+    "payment": {
+      "paid": "ચૂકવાયું",
+      "partial": "આંશિક",
+      "unpaid": "બાકી"
+    }
+  },
+  "fields": {
+    "selectDate": "તારીખ પસંદ કરો",
+    "select": "પસંદ કરો",
+    "noOptions": "કોઈ વિકલ્પ ઉપલબ્ધ નથી"
+  },
+  "empty": {
+    "title": "અહીં હજી કંઈ નથી"
+  },
+  "months": {
+    "1": "જાન્યુ",
+    "2": "ફેબ્રુ",
+    "3": "માર્ચ",
+    "4": "એપ્રિલ",
+    "5": "મે",
+    "6": "જૂન",
+    "7": "જુલાઈ",
+    "8": "ઓગસ્ટ",
+    "9": "સપ્ટે",
+    "10": "ઓક્ટો",
+    "11": "નવે",
+    "12": "ડિસે"
+  },
+  "whatsapp": {
+    "orderReady": "નમસ્તે {{customerName}}, તમારો ઓર્ડર #{{orderNumber}} {{shopName}} માં તૈયાર છે. અનુકૂળતાએ લઈ જશો. આભાર!",
+    "bill": "નમસ્તે {{customerName}}, {{shopName}} તરફથી તમારા બિલની વિગત:\nકુલ: ₹{{total}}\nચૂકવાયું: ₹{{paid}}\nબાકી: ₹{{pending}}",
+    "paymentDue": "નમસ્તે {{customerName}}, {{shopName}} માં તમારા ₹{{pending}} બાકી છે. અનુકૂળતાએ ચૂકવી દેશો. આભાર!",
+    "errorNoPhone": "ગ્રાહકનો ફોન નંબર નોંધાયેલ નથી",
+    "errorNotAvailable": "આ ફોનમાં વોટ્સએપ ઉપલબ્ધ નથી"
+  }
+}

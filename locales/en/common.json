@@ -1,0 +1,83 @@
+{
+  "nav": {
+    "dashboard": "Home",
+    "customers": "Clients",
+    "orders": "Orders",
+    "settings": "Profile"
+  },
+  "actions": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "edit": "Edit",
+    "delete": "Delete",
+    "search": "Search",
+    "create": "Create",
+    "back": "Back",
+    "add": "Add",
+    "view": "View",
+    "close": "Close",
+    "retry": "Retry",
+    "confirm": "Confirm"
+  },
+  "labels": {
+    "name": "Name",
+    "phone": "Phone",
+    "address": "Address",
+    "date": "Date",
+    "status": "Status",
+    "amount": "Amount",
+    "notes": "Notes",
+    "loading": "Loading...",
+    "noResults": "No results found",
+    "searchPlaceholder": "Search..."
+  },
+  "language": {
+    "title": "Language",
+    "english": "English",
+    "gujarati": "Gujarati",
+    "hindi": "Hindi"
+  },
+  "status": {
+    "order": {
+      "order_taken": "Order Taken",
+      "cutting": "Cutting",
+      "stitching": "Stitching",
+      "ready": "Ready",
+      "delivered": "Delivered"
+    },
+    "payment": {
+      "paid": "Paid",
+      "partial": "Partial",
+      "unpaid": "Unpaid"
+    }
+  },
+  "fields": {
+    "selectDate": "Select date",
+    "select": "Select",
+    "noOptions": "No options available"
+  },
+  "empty": {
+    "title": "Nothing here yet"
+  },
+  "months": {
+    "1": "Jan",
+    "2": "Feb",
+    "3": "Mar",
+    "4": "Apr",
+    "5": "May",
+    "6": "Jun",
+    "7": "Jul",
+    "8": "Aug",
+    "9": "Sep",
+    "10": "Oct",
+    "11": "Nov",
+    "12": "Dec"
+  },
+  "whatsapp": {
+    "orderReady": "Hi {{customerName}}, your order #{{orderNumber}} at {{shopName}} is ready for pickup!",
+    "bill": "Hi {{customerName}}, here's your bill summary from {{shopName}}:\nTotal: ₹{{total}}\nPaid: ₹{{paid}}\nPending: ₹{{pending}}",
+    "paymentDue": "Hi {{customerName}}, a friendly reminder that ₹{{pending}} is pending at {{shopName}}. Please clear it at your convenience. Thank you!",
+    "errorNoPhone": "Customer has no phone number on file",
+    "errorNotAvailable": "WhatsApp is not available on this device"
+  }
+}

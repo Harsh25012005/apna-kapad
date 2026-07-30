@@ -4,6 +4,7 @@ export type AuthStackParamList = {
   Login: undefined;
   Signup: undefined;
   ForgotPassword: undefined;
+  ConfirmEmail: { email: string };
   ComponentShowcase: undefined;
 };
 
@@ -17,8 +18,8 @@ type SharedOrderRoutes = {
 export type CustomersStackParamList = SharedOrderRoutes & {
   CustomerList: undefined;
   CustomerDetail: { customerId: string };
-  CustomerForm: undefined;
-  MeasurementForm: { customerId: string };
+  CustomerForm: { customerId?: string } | undefined;
+  MeasurementForm: { customerId: string; measurementId?: string };
 };
 
 export type OrdersStackParamList = SharedOrderRoutes & {
@@ -33,12 +34,16 @@ export type BillingStackParamList = {
 
 export type DashboardStackParamList = SharedOrderRoutes & {
   Dashboard: undefined;
+  Notifications: undefined;
 };
 
 export type SettingsStackParamList = {
   SettingsHome: undefined;
   Staff: undefined;
   StaffForm: { staffId?: string } | undefined;
+  StaffDetail: { staffId: string };
+  StaffWorkEntryForm: { staffId: string };
+  Revenue: undefined;
   /** The whole Billing stack, nested here since Billing is no longer a tab. */
   Billing: undefined;
 };

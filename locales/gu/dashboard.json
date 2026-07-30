@@ -1,0 +1,43 @@
+{
+  "loading": "ડેશબોર્ડ લોડ થઈ રહ્યું છે...",
+  "greeting": "નમસ્તે, {{name}}",
+  "defaultUser": "યુઝર",
+  "todaysCollections": "આજની વસૂલાત",
+  "collectionsAsOf": "વસૂલાત — {{date}}",
+  "order": "ઓર્ડર",
+  "client": "ગ્રાહક",
+  "topClients": "મુખ્ય ગ્રાહકો",
+  "add": "ઉમેરો",
+  "transactionHistory": "વ્યવહાર ઇતિહાસ",
+  "viewAll": "બધું જુઓ",
+  "emptyTransactionsTitle": "તાજેતરના કોઈ વ્યવહાર નથી",
+  "emptyTransactionsDescription": "નવા ઓર્ડર અને ચુકવણી અહીં દેખાશે",
+  "customer": "ગ્રાહક",
+  "garmentOrder": "કપડાં ઓર્ડર",
+  "paid": "ચૂકવેલ",
+  "errorLoad": "ડેશબોર્ડ લોડ કરી શકાયું નહીં",
+  "dueSoon": {
+    "title": "ટૂંક સમયમાં ડિલિવરી થનારા ઓર્ડર"
+  },
+  "pendingPayments": {
+    "title": "બાકી ચુકવણીઓ",
+    "subtitle_one": "{{count}} બિલની ચુકવણી બાકી",
+    "subtitle_other": "{{count}} બિલોની ચુકવણી બાકી"
+  },
+  "notifications": {
+    "title": "સૂચનાઓ",
+    "loading": "સૂચનાઓ લોડ થઈ રહી છે...",
+    "emptyTitle": "હજુ સુધી કોઈ સૂચના નથી",
+    "emptyDescription": "ઓર્ડર અને ચુકવણી રિમાઇન્ડર્સ અહીં દેખાશે",
+    "errorLoad": "સૂચનાઓ લોડ કરી શકાઈ નહીં",
+    "customer": "ગ્રાહક",
+    "justNow": "હમણાં જ",
+    "minutesAgo": "{{count}} મિનિટ પહેલા",
+    "hoursAgo": "{{count}} કલાક પહેલા",
+    "daysAgo": "{{count}} દિવસ પહેલા",
+    "types": {
+      "order_ready": "ઓર્ડર તૈયાર છે",
+      "payment_due": "ચુકવણી બાકી છે"
+    }
+  }
+}

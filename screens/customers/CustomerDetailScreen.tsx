@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react';
 import { ScrollView, Text, View, Pressable } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import { useFocusEffect } from '@react-navigation/native';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { Avatar, Badge, Card, EmptyState, Header, LoadingSpinner, useToast } from '../../components/ui';
@@ -14,6 +15,7 @@ export default function CustomerDetailScreen({
   navigation,
   route,
 }: CustomersScreenProps<'CustomerDetail'>) {
+  const { t } = useTranslation('customers');
   const { customerId } = route.params;
   const shop = useShop();
   const showToast = useToast();
@@ -57,7 +59,7 @@ export default function CustomerDetailScreen({
       }, 0);
       setBalance(totalBalance);
     } catch (err) {
-      showToast(err instanceof Error ? err.message : 'Could not load customer', 'error');
+      showToast(err instanceof Error ? err.message : t('detail.loadError'), 'error');
     } finally {
       setLoading(false);
     }
@@ -81,30 +83,42 @@ export default function CustomerDetailScreen({
         })
       );
     } catch (err) {
-      showToast(err instanceof Error ? err.message : 'Could not open WhatsApp', 'error');
+      showToast(err instanceof Error ? err.message : t('detail.whatsappError'), 'error');
     }
   };
 
-  if (loading || !customer) return <LoadingSpinner fullScreen text="Loading customer..." />;
+  if (loading || !customer) return <LoadingSpinner fullScreen text={t('detail.loading')} />;
 
   return (
     <View className="flex-1 bg-gray-50">
-      <Header title={customer.name} onBack={() => navigation.goBack()} />
-      <ScrollView contentContainerStyle={{ padding: 16, gap: 16 }}>
+      <Header
+        title={customer.name}
+        onBack={() => navigation.goBack()}
+        right={
+          <Pressable
+            onPress={() => navigation.navigate('CustomerForm', { customerId })}
+            hitSlop={8}
+            className="h-10 w-10 items-center justify-center rounded-full active:bg-gray-100"
+          >
+            <FontAwesome5 name="pen" size={15} color="#1D4ED8" />
+          </Pressable>
+        }
+      />
+      <ScrollView contentContainerStyle={{ padding: 16, gap: 16, paddingBottom: 160 }}>
         <Card>
           <View className="flex-row items-center">
             <Avatar name={customer.name} size="lg" />
             <View className="ml-4 flex-1">
               <Text className="text-lg font-semibold text-gray-900">{customer.name}</Text>
-              <Text className="font-sans text-sm text-gray-500">{customer.phone ?? 'No phone'}</Text>
+              <Text className="font-sans text-sm text-gray-500">{customer.phone ?? t('detail.noPhone')}</Text>
               {customer.address ? (
                 <Text className="font-sans text-sm text-gray-500">{customer.address}</Text>
               ) : null}
             </View>
           </View>
 
-          <View className="mt-4 flex-row items-center justify-between rounded-lg bg-gray-50 p-3">
-            <Text className="font-sans text-sm text-gray-600">Outstanding Balance</Text>
+          <View className="mt-4 flex-row items-center justify-between rounded-md bg-gray-50 p-3">
+            <Text className="font-sans text-sm text-gray-600">{t('detail.outstandingBalance')}</Text>
             <Text className={`text-base font-bold ${balance > 0 ? 'text-danger' : 'text-success'}`}>
               {formatCurrency(balance)}
             </Text>
@@ -117,7 +131,7 @@ export default function CustomerDetailScreen({
             >
               <FontAwesome5 name="whatsapp" size={16} color="#16A34A" />
               <Text className="ml-2 text-sm font-semibold text-green-700">
-                Send Payment Reminder
+                {t('detail.sendPaymentReminder')}
               </Text>
             </Pressable>
           ) : null}
@@ -125,50 +139,96 @@ export default function CustomerDetailScreen({
 
         <View>
           <View className="mb-2 flex-row items-center justify-between">
-            <Text className="text-base font-semibold text-gray-900">Measurements</Text>
-            <Pressable onPress={() => navigation.navigate('MeasurementForm', { customerId })}>
-              <Text className="text-sm font-medium text-primary-600">+ Add</Text>
+            <View className="flex-row items-center">
+              <FontAwesome5 name="ruler-combined" size={13} color="#6B7280" />
+              <Text className="ml-2 text-base font-semibold text-gray-900">{t('detail.measurements')}</Text>
+            </View>
+            <Pressable
+              onPress={() => navigation.navigate('MeasurementForm', { customerId })}
+              className="rounded-md bg-primary-50 px-3 py-1.5"
+            >
+              <Text className="text-sm font-semibold text-primary-600">{t('detail.addShort')}</Text>
             </Pressable>
           </View>
           {measurements.length === 0 ? (
             <EmptyState
               variant="compact"
               icon="ruler-combined"
-              title="No measurements yet"
-              description="Save a measurement set to speed up future orders"
-              actionLabel="Add Measurement"
+              title={t('detail.noMeasurementsTitle')}
+              description={t('detail.noMeasurementsDescription')}
+              actionLabel={t('detail.addMeasurement')}
               onAction={() => navigation.navigate('MeasurementForm', { customerId })}
             />
           ) : (
             <View className="gap-2">
-              {measurements.map((m) => (
-                <Card key={m.id}>
-                  <Text className="mb-1 text-sm font-semibold text-gray-900">{m.garment_type}</Text>
-                  <Text className="font-sans text-xs text-gray-500">
-                    Chest {m.chest ?? '—'} · Waist {m.waist ?? '—'} · Shoulder {m.shoulder ?? '—'} ·
-                    Length {m.length ?? '—'} · Sleeve {m.sleeve ?? '—'}
-                  </Text>
-                  {m.notes ? <Text className="font-sans mt-1 text-xs text-gray-400">{m.notes}</Text> : null}
-                </Card>
-              ))}
+              {measurements.map((m) => {
+                const customFields = Array.isArray(m.custom_fields)
+                  ? (m.custom_fields as unknown as { label: string; value: string }[])
+                  : [];
+                return (
+                  <Card
+                    key={m.id}
+                    onPress={() =>
+                      navigation.navigate('MeasurementForm', { customerId, measurementId: m.id })
+                    }
+                  >
+                    <View className="flex-row items-center justify-between">
+                      <Text className="text-sm font-semibold text-gray-900">{m.garment_type}</Text>
+                      <View className="flex-row items-center">
+                        <Text className="font-sans text-xs text-gray-400">
+                          {t('detail.updated', { date: formatDate(m.updated_at) })}
+                        </Text>
+                        <FontAwesome5 name="chevron-right" size={11} color="#9CA3AF" className="ml-2" />
+                      </View>
+                    </View>
+                    <Text className="font-sans mt-1.5 text-xs leading-5 text-gray-500">
+                      {t('detail.measurementSummary', {
+                        chest: m.chest ?? '—',
+                        waist: m.waist ?? '—',
+                        shoulder: m.shoulder ?? '—',
+                        length: m.length ?? '—',
+                        sleeve: m.sleeve ?? '—',
+                      })}
+                    </Text>
+                    {customFields.length > 0 ? (
+                      <View className="mt-2 flex-row flex-wrap gap-1.5">
+                        {customFields.map((f, i) => (
+                          <View key={i} className="rounded-md bg-gray-50 px-2 py-1">
+                            <Text className="font-sans text-[11px] text-gray-600">
+                              {f.label}: <Text className="font-semibold text-gray-800">{f.value}</Text>
+                            </Text>
+                          </View>
+                        ))}
+                      </View>
+                    ) : null}
+                    {m.notes ? <Text className="font-sans mt-1 text-xs text-gray-400">{m.notes}</Text> : null}
+                  </Card>
+                );
+              })}
             </View>
           )}
         </View>
 
         <View>
           <View className="mb-2 flex-row items-center justify-between">
-            <Text className="text-base font-semibold text-gray-900">Order History</Text>
-            <Pressable onPress={() => navigation.navigate('OrderForm', { customerId })}>
-              <Text className="text-sm font-medium text-primary-600">+ New Order</Text>
+            <View className="flex-row items-center">
+              <FontAwesome5 name="tshirt" size={13} color="#6B7280" />
+              <Text className="ml-2 text-base font-semibold text-gray-900">{t('detail.orderHistory')}</Text>
+            </View>
+            <Pressable
+              onPress={() => navigation.navigate('OrderForm', { customerId })}
+              className="rounded-md bg-primary-50 px-3 py-1.5"
+            >
+              <Text className="text-sm font-semibold text-primary-600">{t('detail.newOrderShort')}</Text>
             </Pressable>
           </View>
           {orders.length === 0 ? (
             <EmptyState
               variant="compact"
               icon="tshirt"
-              title="No orders yet"
-              description="Create this customer's first order to start tracking it"
-              actionLabel="New Order"
+              title={t('detail.noOrdersTitle')}
+              description={t('detail.noOrdersDescription')}
+              actionLabel={t('detail.newOrder')}
               onAction={() => navigation.navigate('OrderForm', { customerId })}
             />
           ) : (
@@ -183,7 +243,7 @@ export default function CustomerDetailScreen({
                     <Badge type="order_status" value={o.status} />
                   </View>
                   <Text className="font-sans mt-1 text-xs text-gray-500">
-                    {o.cloth_type ?? 'No cloth type'} · Ordered {formatDate(o.order_date)}
+                    {o.cloth_type ?? t('detail.noClothType')} · {t('detail.ordered', { date: formatDate(o.order_date) })}
                   </Text>
                 </Card>
               ))}

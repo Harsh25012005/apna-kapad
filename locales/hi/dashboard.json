@@ -1,0 +1,43 @@
+{
+  "loading": "डैशबोर्ड लोड हो रहा है...",
+  "greeting": "नमस्ते, {{name}}",
+  "defaultUser": "यूज़र",
+  "todaysCollections": "आज की वसूली",
+  "collectionsAsOf": "वसूली — {{date}}",
+  "order": "ऑर्डर",
+  "client": "ग्राहक",
+  "topClients": "प्रमुख ग्राहक",
+  "add": "जोड़ें",
+  "transactionHistory": "लेन-देन इतिहास",
+  "viewAll": "सभी देखें",
+  "emptyTransactionsTitle": "हाल का कोई लेन-देन नहीं",
+  "emptyTransactionsDescription": "नए ऑर्डर और भुगतान यहां दिखेंगे",
+  "customer": "ग्राहक",
+  "garmentOrder": "गारमेंट ऑर्डर",
+  "paid": "भुगतान किया गया",
+  "errorLoad": "डैशबोर्ड लोड नहीं हो सका",
+  "dueSoon": {
+    "title": "जल्द डिलीवरी वाले ऑर्डर"
+  },
+  "pendingPayments": {
+    "title": "बकाया भुगतान",
+    "subtitle_one": "{{count}} बिल का भुगतान बाकी",
+    "subtitle_other": "{{count}} बिलों का भुगतान बाकी"
+  },
+  "notifications": {
+    "title": "सूचनाएं",
+    "loading": "सूचनाएं लोड हो रही हैं...",
+    "emptyTitle": "अभी तक कोई सूचना नहीं",
+    "emptyDescription": "ऑर्डर और भुगतान रिमाइंडर यहां दिखेंगे",
+    "errorLoad": "सूचनाएं लोड नहीं हो सकीं",
+    "customer": "ग्राहक",
+    "justNow": "अभी अभी",
+    "minutesAgo": "{{count}} मिनट पहले",
+    "hoursAgo": "{{count}} घंटे पहले",
+    "daysAgo": "{{count}} दिन पहले",
+    "types": {
+      "order_ready": "ऑर्डर तैयार है",
+      "payment_due": "भुगतान बकाया है"
+    }
+  }
+}

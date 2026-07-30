@@ -1,13 +1,17 @@
 import { useState } from 'react';
 import { Text, View, Pressable, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FontAwesome5 } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { Button, GoogleIcon, InputField, useToast } from '../../components/ui';
 import { useAuth } from '../../context/AuthContext';
 import type { AuthScreenProps } from '../../navigation/types';
 
 export default function LoginScreen({ navigation }: AuthScreenProps<'Login'>) {
   const { signInWithEmail, signInWithGoogle } = useAuth();
+  const insets = useSafeAreaInsets();
   const showToast = useToast();
+  const { t } = useTranslation('auth');
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -17,8 +21,8 @@ export default function LoginScreen({ navigation }: AuthScreenProps<'Login'>) {
 
   const validate = () => {
     const next: { email?: string; password?: string } = {};
-    if (!email.trim()) next.email = 'Email is required';
-    if (!password) next.password = 'Password is required';
+    if (!email.trim()) next.email = t('login.errorEmailRequired');
+    if (!password) next.password = t('login.errorPasswordRequired');
     setErrors(next);
     return Object.keys(next).length === 0;
   };
@@ -29,7 +33,24 @@ export default function LoginScreen({ navigation }: AuthScreenProps<'Login'>) {
     try {
       await signInWithEmail(email.trim(), password);
     } catch (err) {
-      showToast(err instanceof Error ? err.message : 'Could not sign in', 'error');
+      // Supabase refuses the sign-in until the address is verified — send the
+      // user to the confirmation screen instead of a dead-end error toast.
+      const message = err instanceof Error ? err.message : '';
+      if (/email not confirmed|not confirmed/i.test(message)) {
+        navigation.navigate('ConfirmEmail', { email: email.trim() });
+        return;
+      }
+
+      // Supabase returns the same "invalid credentials" for a wrong password
+      // and for an address that was never registered — it won't reveal which,
+      // by design. So the message has to cover both and point at sign-up.
+      if (/invalid login credentials|invalid_credentials/i.test(message)) {
+        setErrors({ password: t('login.errorNoAccountOrPassword') });
+        showToast(t('login.errorNoAccountOrPassword'), 'error');
+        return;
+      }
+
+      showToast(message || t('login.errorSignIn'), 'error');
     } finally {
       setLoading(false);
     }
@@ -40,7 +61,7 @@ export default function LoginScreen({ navigation }: AuthScreenProps<'Login'>) {
     try {
       await signInWithGoogle();
     } catch (err) {
-      showToast(err instanceof Error ? err.message : 'Google sign-in failed', 'error');
+      showToast(err instanceof Error ? err.message : t('login.errorGoogle'), 'error');
     } finally {
       setGoogleLoading(false);
     }
@@ -51,23 +72,29 @@ export default function LoginScreen({ navigation }: AuthScreenProps<'Login'>) {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       className="flex-1 bg-white"
     >
-      <ScrollView contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled">
+      <ScrollView
+        contentContainerStyle={{ flexGrow: 1, paddingTop: insets.top, paddingBottom: insets.bottom }}
+        keyboardShouldPersistTaps="handled"
+      >
         <View className="flex-1 justify-center px-6 py-10">
-          <Text className="mb-1 text-2xl font-bold text-gray-900">Apna Kapad</Text>
-          <Text className="font-sans mb-8 text-base text-gray-500">Sign in to manage your shop</Text>
+          <View className="mb-6 h-14 w-14 items-center justify-center rounded-md bg-primary-50">
+            <FontAwesome5 name="tshirt" size={22} color="#1D4ED8" />
+          </View>
+          <Text className="mb-1 text-2xl font-bold text-gray-900">{t('login.appName')}</Text>
+          <Text className="font-sans mb-8 text-base text-gray-500">{t('login.subtitle')}</Text>
 
           <InputField
-            label="Email"
+            label={t('login.email')}
             value={email}
             onChangeText={setEmail}
-            placeholder="you@example.com"
+            placeholder={t('login.emailPlaceholder')}
             keyboardType="email-address"
             autoCapitalize="none"
             error={errors.email}
           />
 
           <InputField
-            label="Password"
+            label={t('login.password')}
             value={password}
             onChangeText={setPassword}
             placeholder="••••••••"
@@ -79,29 +106,29 @@ export default function LoginScreen({ navigation }: AuthScreenProps<'Login'>) {
             onPress={() => navigation.navigate('ForgotPassword')}
             className="mb-6 self-end"
           >
-            <Text className="text-sm font-medium text-primary-600">Forgot Password?</Text>
+            <Text className="text-sm font-medium text-primary-600">{t('login.forgotPassword')}</Text>
           </Pressable>
 
-          <Button title="Sign In" onPress={handleLogin} loading={loading} />
+          <Button title={t('login.signIn')} onPress={handleLogin} loading={loading} />
 
           <View className="my-6 flex-row items-center">
             <View className="h-px flex-1 bg-gray-200" />
-            <Text className="font-sans mx-3 text-xs text-gray-400">OR</Text>
+            <Text className="font-sans mx-3 text-xs text-gray-400">{t('login.or')}</Text>
             <View className="h-px flex-1 bg-gray-200" />
           </View>
 
           <Button
-            title="Continue with Google"
+            title={t('login.continueWithGoogle')}
             variant="google"
             onPress={handleGoogle}
             loading={googleLoading}
             icon={<GoogleIcon size={20} />}
           />
 
-          <View className="mt-8 flex-row justify-center">
-            <Text className="font-sans text-sm text-gray-500">Don&apos;t have an account? </Text>
+          <View className="mt-8 flex-row items-center justify-center gap-1">
+            <Text className="font-sans text-sm text-gray-500">{t('login.noAccount')}</Text>
             <Pressable onPress={() => navigation.navigate('Signup')}>
-              <Text className="text-sm font-semibold text-primary-600">Sign Up</Text>
+              <Text className="text-sm font-semibold text-primary-600">{t('login.signUp')}</Text>
             </Pressable>
           </View>
         </View>

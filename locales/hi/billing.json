@@ -1,0 +1,70 @@
+{
+  "list": {
+    "title": "बिलिंग",
+    "totalPending": "सभी ग्राहकों की कुल बकाया राशि",
+    "searchPlaceholder": "ग्राहक का नाम या बिल ID खोजें",
+    "filters": {
+      "paid": "भुगतान हुआ",
+      "partial": "आंशिक",
+      "unpaid": "बकाया"
+    },
+    "loading": "बिल लोड हो रहे हैं...",
+    "emptySearchTitle": "कोई मिलता-जुलता बिल नहीं",
+    "emptySearchDescription": "किसी दूसरे ग्राहक नाम या बिल ID से खोजें",
+    "emptyTitle": "अभी तक कोई बिल नहीं",
+    "emptyDescription": "भुगतान ट्रैक करने के लिए अपना पहला बिल बनाएं",
+    "newBill": "नया बिल",
+    "errorLoad": "बिल लोड नहीं हो सके"
+  },
+  "detail": {
+    "loading": "बिल लोड हो रहा है...",
+    "billTitle": "बिल · {{name}}",
+    "totalAmount": "कुल राशि",
+    "paid": "भुगतान किया गया",
+    "balanceDue": "बकाया राशि",
+    "shareWhatsapp": "WhatsApp पर बिल शेयर करें",
+    "customer": "ग्राहक",
+    "name": "नाम",
+    "phone": "फोन",
+    "linkedOrder": "ऑर्डर से जुड़ा हुआ",
+    "linkedOrderDesc": "यह बिल एक ऑर्डर से बनाया गया है",
+    "breakdown": "बिल विवरण",
+    "fabricCost": "कपड़े की लागत",
+    "stitchingCharge": "सिलाई शुल्क",
+    "tax": "टैक्स",
+    "discount": "छूट",
+    "paymentHistory": "भुगतान इतिहास",
+    "noPayments": "अभी तक कोई भुगतान दर्ज नहीं हुआ",
+    "recordPaymentHint": "ग्राहक भुगतान करे तो उसे दर्ज करें",
+    "recordPayment": "भुगतान दर्ज करें",
+    "savePayment": "भुगतान सेव करें",
+    "amount": "राशि",
+    "pendingPlaceholder": "बकाया: {{amount}}",
+    "errorLoad": "बिल लोड नहीं हो सका",
+    "errorInvalidAmount": "मान्य राशि दर्ज करें",
+    "errorExceedsPending": "राशि बकाया {{amount}} से अधिक नहीं हो सकती",
+    "successPayment": "भुगतान दर्ज हुआ",
+    "errorPayment": "भुगतान दर्ज नहीं हो सका",
+    "errorWhatsapp": "WhatsApp नहीं खुल सका",
+    "paymentModes": {
+      "Cash": "नकद",
+      "UPI": "UPI",
+      "Card": "कार्ड",
+      "Bank Transfer": "बैंक ट्रांसफर"
+    }
+  },
+  "form": {
+    "title": "नया बिल",
+    "customer": "ग्राहक",
+    "selectCustomer": "ग्राहक चुनें",
+    "customerRequired": "ग्राहक आवश्यक है",
+    "fabricCost": "कपड़े की लागत",
+    "stitchingCharge": "सिलाई शुल्क",
+    "discount": "छूट",
+    "tax": "टैक्स",
+    "totalAmount": "कुल राशि",
+    "createBill": "बिल बनाएं",
+    "successCreated": "बिल बन गया",
+    "errorCreate": "बिल नहीं बन सका"
+  }
+}

@@ -1,11 +1,16 @@
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { ScrollView } from 'react-native';
-import { Button, Header, InputField, useToast } from '../../components/ui';
+import { useTranslation } from 'react-i18next';
+import { Button, Header, InputField, LoadingSpinner, useToast } from '../../components/ui';
 import { supabase } from '../../lib/supabase';
 import { useShop } from '../../context/AuthContext';
 import type { CustomersScreenProps } from '../../navigation/types';
 
-export default function CustomerFormScreen({ navigation }: CustomersScreenProps<'CustomerForm'>) {
+export default function CustomerFormScreen({ navigation, route }: CustomersScreenProps<'CustomerForm'>) {
+  const customerId = route.params?.customerId;
+  const isEditing = Boolean(customerId);
+
+  const { t } = useTranslation('customers');
   const shop = useShop();
   const showToast = useToast();
 
@@ -14,60 +19,103 @@ export default function CustomerFormScreen({ navigation }: CustomersScreenProps<
   const [address, setAddress] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [fetching, setFetching] = useState(isEditing);
+
+  const load = useCallback(async () => {
+    if (!customerId) return;
+    try {
+      const { data, error: fetchError } = await supabase
+        .from('customers')
+        .select('name, phone, address')
+        .eq('id', customerId)
+        .single();
+      if (fetchError) throw fetchError;
+
+      setName(data.name ?? '');
+      setPhone(data.phone ?? '');
+      setAddress(data.address ?? '');
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : t('form.loadError'), 'error');
+    } finally {
+      setFetching(false);
+    }
+  }, [customerId, showToast, t]);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
 
   const handleSave = async () => {
     if (!name.trim()) {
-      setError('Name is required');
+      setError(t('form.nameRequired'));
       return;
     }
     setError('');
     setLoading(true);
     try {
-      const { error: insertError } = await supabase.from('customers').insert({
-        shop_id: shop.id,
+      const payload = {
         name: name.trim(),
         phone: phone.trim() || null,
         address: address.trim() || null,
-      });
-      if (insertError) throw insertError;
-      showToast('Customer added', 'success');
+      };
+
+      if (isEditing) {
+        const { error: updateError } = await supabase
+          .from('customers')
+          .update(payload)
+          .eq('id', customerId!);
+        if (updateError) throw updateError;
+      } else {
+        const { error: insertError } = await supabase
+          .from('customers')
+          .insert({ shop_id: shop.id, ...payload });
+        if (insertError) throw insertError;
+      }
+
+      showToast(t(isEditing ? 'form.updateSuccess' : 'form.saveSuccess'), 'success');
       navigation.goBack();
     } catch (err) {
-      showToast(err instanceof Error ? err.message : 'Could not save customer', 'error');
+      showToast(err instanceof Error ? err.message : t('form.saveError'), 'error');
     } finally {
       setLoading(false);
     }
   };
 
+  if (fetching) return <LoadingSpinner fullScreen text={t('form.loading')} />;
+
   return (
     <>
-      <Header title="New Customer" onBack={() => navigation.goBack()} />
-      <ScrollView className="flex-1 bg-white" contentContainerStyle={{ padding: 20 }}>
+      <Header
+        title={t(isEditing ? 'form.editTitle' : 'form.title')}
+        onBack={() => navigation.goBack()}
+      />
+      <ScrollView className="flex-1 bg-white" contentContainerStyle={{ padding: 20, paddingBottom: 160 }}>
         <InputField
-          label="Name"
+          label={t('form.nameLabel')}
           value={name}
           onChangeText={setName}
-          placeholder="Customer name"
-          leftIcon="user"
+          placeholder={t('form.namePlaceholder')}
           error={error}
         />
         <InputField
-          label="Phone"
+          label={t('form.phoneLabel')}
           value={phone}
           onChangeText={setPhone}
-          placeholder="10-digit phone number"
-          leftIcon="phone"
+          placeholder={t('form.phonePlaceholder')}
           keyboardType="phone-pad"
         />
         <InputField
-          label="Address"
+          label={t('form.addressLabel')}
           value={address}
           onChangeText={setAddress}
-          placeholder="Address"
-          leftIcon="map-marker-alt"
+          placeholder={t('form.addressPlaceholder')}
           multiline
         />
-        <Button title="Save Customer" onPress={handleSave} loading={loading} />
+        <Button
+          title={t(isEditing ? 'form.updateCustomer' : 'form.saveCustomer')}
+          onPress={handleSave}
+          loading={loading}
+        />
       </ScrollView>
     </>
   );

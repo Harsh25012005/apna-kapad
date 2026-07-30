@@ -15,3 +15,4 @@ export { EmptyState, type EmptyStateProps } from './EmptyState';
 export { LoadingSpinner, type LoadingSpinnerProps } from './LoadingSpinner';
 export { ToastProvider, useToast, type ToastType } from './Toast';
 export { GoogleIcon } from './GoogleIcon';
+export { SearchBar, type SearchBarProps } from './SearchBar';

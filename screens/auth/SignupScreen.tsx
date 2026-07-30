@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Text, View, Pressable, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FontAwesome5 } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { Button, GoogleIcon, InputField, useToast } from '../../components/ui';
 import { useAuth } from '../../context/AuthContext';
 import type { AuthScreenProps } from '../../navigation/types';
@@ -9,7 +11,9 @@ type SignupErrors = { email?: string; password?: string; confirmPassword?: strin
 
 export default function SignupScreen({ navigation }: AuthScreenProps<'Signup'>) {
   const { signUpWithEmail, signInWithGoogle } = useAuth();
+  const insets = useSafeAreaInsets();
   const showToast = useToast();
+  const { t } = useTranslation('auth');
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -20,10 +24,10 @@ export default function SignupScreen({ navigation }: AuthScreenProps<'Signup'>) 
 
   const validate = () => {
     const next: SignupErrors = {};
-    if (!email.trim()) next.email = 'Email is required';
-    if (!password) next.password = 'Password is required';
-    else if (password.length < 6) next.password = 'At least 6 characters';
-    if (confirmPassword !== password) next.confirmPassword = 'Passwords do not match';
+    if (!email.trim()) next.email = t('signup.errorEmailRequired');
+    if (!password) next.password = t('signup.errorPasswordRequired');
+    else if (password.length < 6) next.password = t('signup.errorPasswordLength');
+    if (confirmPassword !== password) next.confirmPassword = t('signup.errorPasswordMismatch');
     setErrors(next);
     return Object.keys(next).length === 0;
   };
@@ -32,10 +36,15 @@ export default function SignupScreen({ navigation }: AuthScreenProps<'Signup'>) 
     if (!validate()) return;
     setLoading(true);
     try {
-      await signUpWithEmail(email.trim(), password);
-      showToast('Account created! Check your email to confirm.', 'success');
+      const { alreadyRegistered } = await signUpWithEmail(email.trim(), password);
+      if (alreadyRegistered) {
+        setErrors({ email: t('signup.errorAlreadyRegistered') });
+        showToast(t('signup.errorAlreadyRegistered'), 'error');
+        return;
+      }
+      navigation.navigate('ConfirmEmail', { email: email.trim() });
     } catch (err) {
-      showToast(err instanceof Error ? err.message : 'Could not sign up', 'error');
+      showToast(err instanceof Error ? err.message : t('signup.errorSignUp'), 'error');
     } finally {
       setLoading(false);
     }
@@ -46,7 +55,7 @@ export default function SignupScreen({ navigation }: AuthScreenProps<'Signup'>) 
     try {
       await signInWithGoogle();
     } catch (err) {
-      showToast(err instanceof Error ? err.message : 'Google sign-in failed', 'error');
+      showToast(err instanceof Error ? err.message : t('signup.errorGoogle'), 'error');
     } finally {
       setGoogleLoading(false);
     }
@@ -57,23 +66,29 @@ export default function SignupScreen({ navigation }: AuthScreenProps<'Signup'>) 
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       className="flex-1 bg-white"
     >
-      <ScrollView contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled">
+      <ScrollView
+        contentContainerStyle={{ flexGrow: 1, paddingTop: insets.top, paddingBottom: insets.bottom + 16 }}
+        keyboardShouldPersistTaps="handled"
+      >
         <View className="flex-1 justify-center px-6 py-10">
-          <Text className="mb-1 text-2xl font-bold text-gray-900">Create Account</Text>
-          <Text className="font-sans mb-8 text-base text-gray-500">Set up your shop in a few steps</Text>
+          <View className="mb-6 h-14 w-14 items-center justify-center rounded-md bg-primary-50">
+            <FontAwesome5 name="tshirt" size={22} color="#1D4ED8" />
+          </View>
+          <Text className="mb-1 text-2xl font-bold text-gray-900">{t('signup.title')}</Text>
+          <Text className="font-sans mb-8 text-base text-gray-500">{t('signup.subtitle')}</Text>
 
           <InputField
-            label="Email"
+            label={t('signup.email')}
             value={email}
             onChangeText={setEmail}
-            placeholder="you@example.com"
+            placeholder={t('signup.emailPlaceholder')}
             keyboardType="email-address"
             autoCapitalize="none"
             error={errors.email}
           />
 
           <InputField
-            label="Password"
+            label={t('signup.password')}
             value={password}
             onChangeText={setPassword}
             placeholder="••••••••"
@@ -82,7 +97,7 @@ export default function SignupScreen({ navigation }: AuthScreenProps<'Signup'>) 
           />
 
           <InputField
-            label="Confirm Password"
+            label={t('signup.confirmPassword')}
             value={confirmPassword}
             onChangeText={setConfirmPassword}
             placeholder="••••••••"
@@ -90,26 +105,26 @@ export default function SignupScreen({ navigation }: AuthScreenProps<'Signup'>) 
             error={errors.confirmPassword}
           />
 
-          <Button title="Sign Up" onPress={handleSignup} loading={loading} />
+          <Button title={t('signup.signUp')} onPress={handleSignup} loading={loading} />
 
           <View className="my-6 flex-row items-center">
             <View className="h-px flex-1 bg-gray-200" />
-            <Text className="font-sans mx-3 text-xs text-gray-400">OR</Text>
+            <Text className="font-sans mx-3 text-xs text-gray-400">{t('signup.or')}</Text>
             <View className="h-px flex-1 bg-gray-200" />
           </View>
 
           <Button
-            title="Continue with Google"
+            title={t('signup.continueWithGoogle')}
             variant="google"
             onPress={handleGoogle}
             loading={googleLoading}
             icon={<GoogleIcon size={20} />}
           />
 
-          <View className="mt-8 flex-row justify-center">
-            <Text className="font-sans text-sm text-gray-500">Already have an account? </Text>
+          <View className="mt-8 flex-row items-center justify-center gap-1">
+            <Text className="font-sans text-sm text-gray-500">{t('signup.haveAccount')}</Text>
             <Pressable onPress={() => navigation.navigate('Login')}>
-              <Text className="text-sm font-semibold text-primary-600">Sign In</Text>
+              <Text className="text-sm font-semibold text-primary-600">{t('signup.signIn')}</Text>
             </Pressable>
           </View>
         </View>

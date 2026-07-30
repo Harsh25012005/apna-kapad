@@ -53,6 +53,16 @@ export function InputField({
         className={`flex-row items-center rounded-md border px-4 ${borderColor} ${bgColor} ${multiline ? 'min-h-[96px] items-start py-3' : 'h-[52px]'
           }`}
       >
+        {leftIcon ? (
+          <View className={`mr-3 ${multiline ? 'pt-1' : ''}`}>
+            <FontAwesome5
+              name={leftIcon}
+              size={15}
+              color={error ? '#DC2626' : isFocused ? '#2563EB' : '#9CA3AF'}
+            />
+          </View>
+        ) : null}
+
         <TextInput
           value={value}
           onChangeText={onChangeText}
@@ -63,9 +73,12 @@ export function InputField({
           autoCapitalize={autoCapitalize}
           editable={editable}
           multiline={multiline}
+          textAlignVertical={multiline ? 'top' : 'center'}
+          // Belt-and-suspenders for react-native & web to force top alignment
+          style={multiline ? { textAlignVertical: 'top', verticalAlign: 'top', paddingTop: 0 } : undefined}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
-          className="font-sans flex-1 text-base text-gray-900"
+          className={`font-sans flex-1 text-base text-gray-900 ${multiline ? 'pt-0 align-top' : ''}`}
         />
 
         {secureTextEntry ? (

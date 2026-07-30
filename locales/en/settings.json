@@ -1,0 +1,42 @@
+{
+  "title": "Settings",
+  "shop": "Shop",
+  "business": "Business",
+  "help": "Help",
+  "tailoringEnabled": "Tailoring Enabled",
+  "yes": "Yes",
+  "no": "No",
+  "billingAndPayments": "Billing & Payments",
+  "staffManagement": "Staff Management",
+  "howToUse": "How to Use This App",
+  "signOut": "Sign Out",
+  "signOutConfirmTitle": "Sign out?",
+  "signOutConfirmMessage": "You can sign back in anytime with your email or Google account.",
+  "cancel": "Cancel",
+  "errorChangeLanguage": "Could not change language",
+  "errorSignOut": "Could not sign out",
+  "appGuide": {
+    "skip": "Skip",
+    "next": "Next",
+    "getStarted": "Get Started",
+    "stepOf": "Step {{current}} of {{total}}",
+    "steps": {
+      "dashboard": {
+        "title": "Welcome to your Dashboard",
+        "description": "This is home base. Check today's collections, see what orders came in today, and track pending work and this month's sales — all in one glance."
+      },
+      "customers": {
+        "title": "Keep customers organised",
+        "description": "Add a new customer in seconds, save their measurements once, and reuse them for every future order. Each profile also shows order history and any balance owed."
+      },
+      "orders": {
+        "title": "Track every order to delivery",
+        "description": "Create an order and move it through Cutting → Stitching → Ready → Delivered with a single tap from its detail page. You always know exactly where an order stands."
+      },
+      "settings": {
+        "title": "Billing, staff & more",
+        "description": "Generate bills and record payments under Billing & Payments, manage your tailors under Staff Management, and fine-tune your shop profile — all from Settings."
+      }
+    }
+  }
+}

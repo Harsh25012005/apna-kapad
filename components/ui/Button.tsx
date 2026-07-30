@@ -82,8 +82,7 @@ export function Button({
         <>
           {icon}
           <Text
-            style={{ letterSpacing: 0.2 }}
-            className={`font-semibold ${sizeStyle.text} ${variantStyle.text} ${icon ? 'ml-2' : ''}`}
+            className={`font-semibold tracking-[0.2px] ${sizeStyle.text} ${variantStyle.text} ${icon ? 'ml-2' : ''}`}
           >
             {title}
           </Text>

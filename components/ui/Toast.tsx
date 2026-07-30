@@ -82,8 +82,8 @@ export function ToastProvider({ children }: { children: ReactNode }) {
           className="absolute left-4 right-4 z-50 flex-row items-center rounded-md px-4 py-3"
         >
           <View
-            className="absolute inset-0 rounded-md"
-            style={{ backgroundColor: TYPE_STYLES[toast.type].bg, opacity: 0.95 }}
+            className="absolute inset-0 rounded-md opacity-95"
+            style={{ backgroundColor: TYPE_STYLES[toast.type].bg }}
           />
           <FontAwesome5 name={TYPE_STYLES[toast.type].icon} size={16} color="#FFFFFF" />
           <Text className="ml-2 flex-1 text-sm font-medium text-white">{toast.message}</Text>

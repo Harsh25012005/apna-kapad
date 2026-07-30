@@ -1,0 +1,18 @@
+{
+  "menuTitle": "Revenue & Earnings",
+  "title": "Revenue",
+  "loading": "Loading revenue...",
+  "loadError": "Could not load revenue",
+  "totalRevenue": "Total Revenue",
+  "revenueNote": "Based on payments actually received",
+  "thisMonth": "This Month",
+  "today": "Today",
+  "summary": "Summary",
+  "received": "Payments received",
+  "staffCost": "Staff piece work cost",
+  "net": "Net earnings",
+  "outstanding": "Outstanding from customers",
+  "byMonth": "Month by Month",
+  "emptyTitle": "No revenue yet",
+  "emptyDescription": "Once you record payments, your monthly earnings will show up here"
+}

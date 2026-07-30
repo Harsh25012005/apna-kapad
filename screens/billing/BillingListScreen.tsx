@@ -1,21 +1,28 @@
-import { useCallback, useState } from 'react';
-import { FlatList, Pressable, RefreshControl, Text, View } from 'react-native';
+import { useCallback, useMemo, useState } from 'react';
+import { FlatList, Modal, Pressable, RefreshControl, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
-import { FontAwesome5, Ionicons } from '@expo/vector-icons';
-import { Badge, Card, EmptyState, LoadingSpinner, useToast } from '../../components/ui';
+import { FontAwesome5 } from '@expo/vector-icons';
+import { Badge, Card, EmptyState, Header, LoadingSpinner, SearchBar, useToast } from '../../components/ui';
 import { supabase } from '../../lib/supabase';
 import { formatCurrency, formatDate } from '../../lib/format';
-import { haptics } from '../../lib/haptics';
+import { useTranslation } from 'react-i18next';
 import type { BillingScreenProps } from '../../navigation/types';
 import type { BillWithRelations } from '../../types';
+import type { PaymentStatus } from '../../types';
+
+const PAYMENT_FILTERS: PaymentStatus[] = ['paid', 'partial', 'unpaid'];
 
 export default function BillingListScreen({ navigation }: BillingScreenProps<'BillingList'>) {
   const insets = useSafeAreaInsets();
   const showToast = useToast();
+  const { t } = useTranslation('billing');
   const [bills, setBills] = useState<BillWithRelations[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState<PaymentStatus | null>(null);
+  const [showFilterModal, setShowFilterModal] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -26,7 +33,7 @@ export default function BillingListScreen({ navigation }: BillingScreenProps<'Bi
       if (error) throw error;
       setBills(data ?? []);
     } catch (err) {
-      showToast(err instanceof Error ? err.message : 'Could not load bills', 'error');
+      showToast(err instanceof Error ? err.message : t('list.errorLoad'), 'error');
     }
   }, [showToast]);
 
@@ -43,39 +50,132 @@ export default function BillingListScreen({ navigation }: BillingScreenProps<'Bi
     setRefreshing(false);
   };
 
+  const filteredBills = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    return bills.filter((bill) => {
+      if (statusFilter && bill.payment_status !== statusFilter) return false;
+      if (!query) return true;
+      const name = bill.customers?.name?.toLowerCase() ?? '';
+      return name.includes(query) || bill.id.toLowerCase().includes(query);
+    });
+  }, [bills, search, statusFilter]);
+
   const totalPending = bills.reduce((sum, bill) => {
     const paid = bill.payments.reduce((s, p) => s + Number(p.amount_paid), 0);
     return sum + Math.max(Number(bill.total_amount ?? 0) - paid, 0);
   }, 0);
 
-  if (loading) return <LoadingSpinner fullScreen text="Loading bills..." />;
+  const hasActiveFilters = Boolean(statusFilter);
+
+  if (loading) return <LoadingSpinner fullScreen text={t('list.loading')} />;
 
   return (
-    <View className="flex-1 bg-white px-5" style={{ paddingTop: insets.top + 8 }}>
-      <View className="mb-3 flex-row items-center justify-between py-2">
-        <Text className="text-[18px] font-semibold text-[#101828]">Billing</Text>
+    <View className="flex-1 bg-white">
+      <Header
+        showBack={false}
+        title={t('list.title')}
+        searchProps={{
+          value: search,
+          onChangeText: setSearch,
+          placeholder: t('list.searchPlaceholder'),
+          onFilterPress: () => setShowFilterModal(true),
+          hasActiveFilter: hasActiveFilters,
+        }}
+      />
+
+      <View className="px-5 pt-3">
+        <Card className="mb-3">
+          <Text className="font-sans text-sm text-gray-500">{t('list.totalPending')}</Text>
+          <Text className="mt-1 text-2xl font-bold text-danger">{formatCurrency(totalPending)}</Text>
+        </Card>
       </View>
 
-      <Card className="mb-3">
-        <Text className="font-sans text-sm text-gray-500">Total Pending Across All Customers</Text>
-        <Text className="mt-1 text-2xl font-bold text-danger">{formatCurrency(totalPending)}</Text>
-      </Card>
+      {/* Filter Modal */}
+      <Modal
+        visible={showFilterModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowFilterModal(false)}
+      >
+        <Pressable
+          className="flex-1 justify-end bg-black/40"
+          onPress={() => setShowFilterModal(false)}
+        >
+          <Pressable className="rounded-t-2xl bg-white p-5 gap-4" onPress={() => {}}>
+            <View className="flex-row items-center justify-between border-b border-gray-100 pb-3">
+              <Text className="text-base font-semibold text-gray-900">Filter Bills</Text>
+              {hasActiveFilters ? (
+                <Pressable onPress={() => setStatusFilter(null)}>
+                  <Text className="text-xs font-semibold text-primary-600">Reset</Text>
+                </Pressable>
+              ) : null}
+            </View>
+
+            <View className="gap-2">
+              <Pressable
+                onPress={() => {
+                  setStatusFilter(null);
+                  setShowFilterModal(false);
+                }}
+                className={`flex-row items-center justify-between rounded-lg border p-3.5 ${
+                  !statusFilter ? 'border-primary-600 bg-primary-50' : 'border-gray-200 bg-gray-50'
+                }`}
+              >
+                <Text className={`text-sm font-semibold ${!statusFilter ? 'text-primary-700' : 'text-gray-700'}`}>
+                  All Bills
+                </Text>
+                {!statusFilter ? <FontAwesome5 name="check" size={14} color="#1D4ED8" /> : null}
+              </Pressable>
+
+              {PAYMENT_FILTERS.map((status) => {
+                const active = statusFilter === status;
+                return (
+                  <Pressable
+                    key={status}
+                    onPress={() => {
+                      setStatusFilter(active ? null : status);
+                      setShowFilterModal(false);
+                    }}
+                    className={`flex-row items-center justify-between rounded-lg border p-3.5 ${
+                      active ? 'border-primary-600 bg-primary-50' : 'border-gray-200 bg-gray-50'
+                    }`}
+                  >
+                    <Text className={`text-sm font-semibold capitalize ${active ? 'text-primary-700' : 'text-gray-700'}`}>
+                      {t(`list.filters.${status}`)}
+                    </Text>
+                    {active ? <FontAwesome5 name="check" size={14} color="#1D4ED8" /> : null}
+                  </Pressable>
+                );
+              })}
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
 
       <FlatList
-        data={bills}
+        data={filteredBills}
         keyExtractor={(item) => item.id}
-        contentContainerStyle={bills.length === 0 ? { flexGrow: 1 } : { paddingBottom: 130, gap: 10 }}
+        className="px-5"
+        contentContainerStyle={filteredBills.length === 0 ? { flexGrow: 1 } : { paddingBottom: 160, gap: 10 }}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor="#1D4ED8" />
         }
         ListEmptyComponent={
-          <EmptyState
-            icon="file-invoice"
-            title="No bills yet"
-            description="Create your first bill to start tracking payments"
-            actionLabel="New Bill"
-            onAction={() => navigation.navigate('BillForm', {})}
-          />
+          search.trim() || statusFilter ? (
+            <EmptyState
+              icon="search"
+              title={t('list.emptySearchTitle')}
+              description={t('list.emptySearchDescription')}
+            />
+          ) : (
+            <EmptyState
+              icon="file-invoice"
+              title={t('list.emptyTitle')}
+              description={t('list.emptyDescription')}
+              actionLabel={t('list.newBill')}
+              onAction={() => navigation.navigate('BillForm', {})}
+            />
+          )
         }
         renderItem={({ item }) => (
           <Card onPress={() => navigation.navigate('BillDetail', { billId: item.id })}>

@@ -1,0 +1,151 @@
+{
+  "list": {
+    "title": "ગ્રાહકો",
+    "searchPlaceholder": "નામ અથવા ફોન નંબરથી શોધો",
+    "noPhone": "ફોન નથી",
+    "settled": "ચૂકવેલ",
+    "loading": "ગ્રાહકો લોડ થઈ રહ્યા છે...",
+    "emptySearchTitle": "કોઈ મળતા ગ્રાહકો નથી",
+    "emptySearchDescription": "અલગ નામ અથવા ફોન નંબર અજમાવો",
+    "emptyTitle": "હજુ સુધી કોઈ ગ્રાહકો નથી",
+    "emptyDescription": "શરૂ કરવા માટે તમારો પ્રથમ ગ્રાહક ઉમેરો",
+    "addCustomer": "ગ્રાહક ઉમેરો",
+    "loadError": "ગ્રાહકો લોડ કરી શકાયા નથી",
+    "hasBalanceFilter": "બાકી રકમ ધરાવે છે"
+  },
+  "detail": {
+    "loading": "ગ્રાહક લોડ થઈ રહ્યો છે...",
+    "noPhone": "ફોન નથી",
+    "outstandingBalance": "બાકી રકમ",
+    "sendPaymentReminder": "પેમેન્ટ રિમાઇન્ડર મોકલો",
+    "measurements": "માપ",
+    "addShort": "+ ઉમેરો",
+    "noMeasurementsTitle": "હજુ સુધી કોઈ માપ નથી",
+    "noMeasurementsDescription": "ભાવિ ઓર્ડર ઝડપી બનાવવા માટે માપ સેટ સેવ કરો",
+    "addMeasurement": "માપ ઉમેરો",
+    "updated": "અપડેટ {{date}}",
+    "measurementSummary": "છાતી {{chest}} · કમર {{waist}} · ખભા {{shoulder}} · લંબાઈ {{length}} · સ્લીવ {{sleeve}}",
+    "orderHistory": "ઓર્ડર ઇતિહાસ",
+    "newOrderShort": "+ નવો ઓર્ડર",
+    "noOrdersTitle": "હજુ સુધી કોઈ ઓર્ડર નથી",
+    "noOrdersDescription": "ટ્રેકિંગ શરૂ કરવા માટે આ ગ્રાહકનો પ્રથમ ઓર્ડર બનાવો",
+    "newOrder": "નવો ઓર્ડર",
+    "noClothType": "કાપડનો પ્રકાર નથી",
+    "ordered": "ઓર્ડર કર્યો {{date}}",
+    "loadError": "ગ્રાહક લોડ કરી શકાયો નથી",
+    "whatsappError": "WhatsApp ખોલી શકાયું નથી"
+  },
+  "form": {
+    "title": "નવો ગ્રાહક",
+    "nameLabel": "નામ",
+    "namePlaceholder": "ગ્રાહકનું નામ",
+    "nameRequired": "નામ જરૂરી છે",
+    "phoneLabel": "ફોન",
+    "phonePlaceholder": "10-અંકનો ફોન નંબર",
+    "addressLabel": "સરનામું",
+    "addressPlaceholder": "સરનામું",
+    "saveCustomer": "ગ્રાહક સેવ કરો",
+    "saveSuccess": "ગ્રાહક ઉમેરાયો",
+    "saveError": "ગ્રાહક સેવ કરી શકાયો નથી",
+    "editTitle": "ગ્રાહક એડિટ કરો",
+    "updateCustomer": "ગ્રાહક અપડેટ કરો",
+    "updateSuccess": "ગ્રાહક અપડેટ થયો",
+    "loading": "ગ્રાહક લોડ થઈ રહ્યો છે...",
+    "loadError": "ગ્રાહક લોડ કરી શકાયો નહીં"
+  },
+  "measurementForm": {
+    "title": "નવું માપ",
+    "editTitle": "માપ સંપાદિત કરો",
+    "loading": "માપ લોડ થઈ રહ્યું છે...",
+    "loadError": "માપ લોડ કરી શકાયું નથી",
+    "updateMeasurement": "માપ અપડેટ કરો",
+    "customFieldsLabel": "કસ્ટમ ફિલ્ડ્સ",
+    "addCustomField": "કસ્ટમ ફિલ્ડ ઉમેરો",
+    "noCustomFields": "હજુ સુધી કોઈ કસ્ટમ ફિલ્ડ ઉમેર્યું નથી",
+    "customFieldLabelLabel": "ફિલ્ડનું નામ",
+    "customFieldLabelPlaceholder": "દા.ત. કફ પહોળાઈ",
+    "customFieldValueLabel": "કિંમત",
+    "customFieldValuePlaceholder": "દા.ત. 2.5",
+    "garmentTypeLabel": "કપડાનો પ્રકાર",
+    "garmentTypePlaceholder": "કપડાનો પ્રકાર પસંદ કરો",
+    "garmentTypeRequired": "કપડાનો પ્રકાર જરૂરી છે",
+    "notesLabel": "નોંધ",
+    "notesPlaceholder": "કોઈપણ વધારાની ફિટિંગ નોંધ",
+    "saveMeasurement": "માપ સેવ કરો",
+    "saveSuccess": "માપ સેવ થયું",
+    "saveError": "માપ સેવ કરી શકાયું નથી",
+    "garmentTypes": {
+      "shirt": "શર્ટ",
+      "pant": "પેન્ટ",
+      "shirtPant": "શર્ટ + પેન્ટ"
+    },
+    "shirtSection": "શર્ટનું માપ",
+    "pantSection": "પેન્ટનું માપ",
+    "fields": {
+      "chest": {
+        "label": "છાતી (ઇંચ)",
+        "placeholder": "દા.ત. 38"
+      },
+      "shoulder": {
+        "label": "ખભા (ઇંચ)",
+        "placeholder": "દા.ત. 17"
+      },
+      "sleeve": {
+        "label": "બાંયની લંબાઈ (ઇંચ)",
+        "placeholder": "દા.ત. 24"
+      },
+      "shirtLength": {
+        "label": "શર્ટની લંબાઈ (ઇંચ)",
+        "placeholder": "દા.ત. 29"
+      },
+      "collar": {
+        "label": "કોલર (ઇંચ)",
+        "placeholder": "દા.ત. 15"
+      },
+      "cuff": {
+        "label": "કફ (ઇંચ)",
+        "placeholder": "દા.ત. 9"
+      },
+      "biceps": {
+        "label": "બાવડું (ઇંચ)",
+        "placeholder": "દા.ત. 14"
+      },
+      "stomach": {
+        "label": "પેટ (ઇંચ)",
+        "placeholder": "દા.ત. 36"
+      },
+      "seat": {
+        "label": "બેઠક (ઇંચ)",
+        "placeholder": "દા.ત. 38"
+      },
+      "waist": {
+        "label": "કમર (ઇંચ)",
+        "placeholder": "દા.ત. 32"
+      },
+      "pantLength": {
+        "label": "પેન્ટની લંબાઈ (ઇંચ)",
+        "placeholder": "દા.ત. 40"
+      },
+      "hip": {
+        "label": "થાપા (ઇંચ)",
+        "placeholder": "દા.ત. 38"
+      },
+      "thigh": {
+        "label": "સાથળ (ઇંચ)",
+        "placeholder": "દા.ત. 22"
+      },
+      "knee": {
+        "label": "ઘૂંટણ (ઇંચ)",
+        "placeholder": "દા.ત. 16"
+      },
+      "bottom": {
+        "label": "મોરી (ઇંચ)",
+        "placeholder": "દા.ત. 14"
+      },
+      "crotch": {
+        "label": "ચડ્ડી/ક્રોચ (ઇંચ)",
+        "placeholder": "દા.ત. 11"
+      }
+    }
+  }
+}

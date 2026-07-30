@@ -4,10 +4,7 @@ import DateTimePicker, {
   type DateTimePickerEvent,
 } from '@react-native-community/datetimepicker';
 import { FontAwesome5 } from '@expo/vector-icons';
-
-function formatDate(date: Date): string {
-  return date.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
-}
+import { useTranslation } from 'react-i18next';
 
 export type DatePickerFieldProps = {
   label?: string;
@@ -26,9 +23,14 @@ export function DatePickerField({
   minimumDate,
   maximumDate,
   error,
-  placeholder = 'Select date',
+  placeholder,
 }: DatePickerFieldProps) {
+  const { t } = useTranslation('common');
   const [show, setShow] = useState(false);
+
+  // Digits stay Western on purpose; only the month name is localised.
+  const formatDate = (date: Date): string =>
+    `${String(date.getDate()).padStart(2, '0')} ${t(`months.${date.getMonth() + 1}`)} ${date.getFullYear()}`;
 
   const handleChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
     if (Platform.OS !== 'ios') setShow(false);
@@ -40,10 +42,7 @@ export function DatePickerField({
   return (
     <View className="w-full mb-4">
       {label ? (
-        <Text
-          style={{ letterSpacing: 0.4 }}
-          className="mb-1.5 text-xs font-bold uppercase text-gray-500"
-        >
+        <Text className="mb-1.5 text-xs font-bold uppercase tracking-[0.4px] text-gray-500">
           {label}
         </Text>
       ) : null}
@@ -55,7 +54,7 @@ export function DatePickerField({
         }`}
       >
         <Text className={value ? 'text-base text-gray-900' : 'text-base text-gray-400'}>
-          {value ? formatDate(value) : placeholder}
+          {value ? formatDate(value) : placeholder ?? t('fields.selectDate')}
         </Text>
         <FontAwesome5 name="calendar-alt" size={16} color="#6B7280" />
       </Pressable>

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Animated, Dimensions, Easing, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Animated, Easing, Pressable, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -94,7 +94,9 @@ export function QuickAddMenu({ visible, onClose, actions, bottomOffset }: QuickA
   const [mounted, setMounted] = useState(visible);
   const progress = useRef(new Animated.Value(0)).current;
 
-  const { width: screenW, height: screenH } = Dimensions.get('window');
+  // Reactive, unlike Dimensions.get('window') which is captured once at
+  // mount and goes stale if the viewport resizes (web resize, rotation).
+  const { width: screenW, height: screenH } = useWindowDimensions();
   const cardW = screenW - H_MARGIN * 2;
   // Derived rather than measured, so the SVG can be drawn on the first frame
   // instead of flashing an unpainted card while onLayout resolves.

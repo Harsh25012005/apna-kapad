@@ -1,33 +1,53 @@
 import { useCallback, useState } from 'react';
-import { FlatList, Pressable, RefreshControl, Text, View } from 'react-native';
+import { FlatList, Modal, Pressable, RefreshControl, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
-import { Ionicons } from '@expo/vector-icons';
-import { Badge, Card, Dropdown, EmptyState, LoadingSpinner, useToast } from '../../components/ui';
+import { useTranslation } from 'react-i18next';
+import { FontAwesome5 } from '@expo/vector-icons';
+import {
+  Badge,
+  Card,
+  EmptyState,
+  Header,
+  LoadingSpinner,
+  SearchBar,
+  useToast,
+} from '../../components/ui';
 import { supabase } from '../../lib/supabase';
 import { formatDate } from '../../lib/format';
-import { haptics } from '../../lib/haptics';
 import type { OrdersScreenProps } from '../../navigation/types';
-import type { OrderListItem, OrderStatus } from '../../types';
+import type { OrderListItem, OrderPriority, OrderStatus } from '../../types';
 
 type StatusFilter = OrderStatus | 'all';
-
-const STATUS_FILTERS: { label: string; value: StatusFilter }[] = [
-  { label: 'All Orders', value: 'all' },
-  { label: 'Order Taken', value: 'order_taken' },
-  { label: 'Cutting', value: 'cutting' },
-  { label: 'Stitching', value: 'stitching' },
-  { label: 'Ready', value: 'ready' },
-  { label: 'Delivered', value: 'delivered' },
-];
+type PriorityFilter = OrderPriority | 'all';
 
 export default function OrderListScreen({ navigation }: OrdersScreenProps<'OrderList'>) {
   const insets = useSafeAreaInsets();
   const showToast = useToast();
+  const { t } = useTranslation('orders');
+
+  const STATUS_FILTERS: { label: string; value: StatusFilter }[] = [
+    { label: t('list.filterAll'), value: 'all' },
+    { label: t('list.filterOrderTaken'), value: 'order_taken' },
+    { label: t('list.filterCutting'), value: 'cutting' },
+    { label: t('list.filterStitching'), value: 'stitching' },
+    { label: t('list.filterReady'), value: 'ready' },
+    { label: t('list.filterDelivered'), value: 'delivered' },
+  ];
+
+  const PRIORITY_FILTERS: { label: string; value: PriorityFilter }[] = [
+    { label: t('list.filterAllPriority'), value: 'all' },
+    { label: t('list.priorityNormal'), value: 'normal' },
+    { label: t('list.priorityUrgent'), value: 'urgent' },
+  ];
+
   const [orders, setOrders] = useState<OrderListItem[]>([]);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  const [priorityFilter, setPriorityFilter] = useState<PriorityFilter>('all');
+  const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [showFilterModal, setShowFilterModal] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -38,7 +58,7 @@ export default function OrderListScreen({ navigation }: OrdersScreenProps<'Order
       if (error) throw error;
       setOrders(data ?? []);
     } catch (err) {
-      showToast(err instanceof Error ? err.message : 'Could not load orders', 'error');
+      showToast(err instanceof Error ? err.message : t('list.loadOrdersFailed'), 'error');
     }
   }, [showToast]);
 
@@ -55,29 +75,140 @@ export default function OrderListScreen({ navigation }: OrdersScreenProps<'Order
     setRefreshing(false);
   };
 
+  const bySearch = orders.filter(
+    (o) =>
+      o.order_number.toLowerCase().includes(search.toLowerCase()) ||
+      (o.customers?.name ?? '').toLowerCase().includes(search.toLowerCase())
+  );
+  const byStatus =
+    statusFilter === 'all' ? bySearch : bySearch.filter((o) => o.status === statusFilter);
   const filtered =
-    statusFilter === 'all' ? orders : orders.filter((o) => o.status === statusFilter);
+    priorityFilter === 'all' ? byStatus : byStatus.filter((o) => o.priority === priorityFilter);
 
-  if (loading) return <LoadingSpinner fullScreen text="Loading orders..." />;
+  const hasActiveFilters = statusFilter !== 'all' || priorityFilter !== 'all';
+
+  if (loading) return <LoadingSpinner fullScreen text={t('list.loadingOrders')} />;
 
   return (
-    <View className="flex-1 bg-white px-5" style={{ paddingTop: insets.top + 8 }}>
-      <View className="mb-3 flex-row items-center justify-between py-2">
-        <Text className="text-[18px] font-semibold text-[#101828]">Orders</Text>
-      </View>
-
-      <Dropdown
-        value={statusFilter}
-        onChange={setStatusFilter}
-        options={STATUS_FILTERS}
-        placeholder="Filter by status"
+    <View className="flex-1 bg-white">
+      <Header
+        showBack={false}
+        title={t('list.title')}
+        searchProps={{
+          value: search,
+          onChangeText: setSearch,
+          placeholder: t('list.searchPlaceholder'),
+          onFilterPress: () => setShowFilterModal(true),
+          hasActiveFilter: hasActiveFilters,
+        }}
       />
+
+      {/* Filter Dropdown Modal */}
+      <Modal
+        visible={showFilterModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowFilterModal(false)}
+      >
+        <Pressable
+          className="flex-1 justify-end bg-black/40"
+          onPress={() => setShowFilterModal(false)}
+        >
+          <Pressable className="rounded-t-2xl bg-white p-5 gap-4" onPress={() => {}}>
+            <View className="flex-row items-center justify-between border-b border-gray-100 pb-3">
+              <Text className="text-base font-semibold text-gray-900">Filter Orders</Text>
+              {hasActiveFilters ? (
+                <Pressable
+                  onPress={() => {
+                    setStatusFilter('all');
+                    setPriorityFilter('all');
+                  }}
+                >
+                  <Text className="text-xs font-semibold text-primary-600">Reset</Text>
+                </Pressable>
+              ) : null}
+            </View>
+
+            {/* Status Section */}
+            <View>
+              <Text className="mb-2 text-xs font-bold uppercase tracking-wider text-gray-500">
+                Status
+              </Text>
+              <View className="flex-row flex-wrap gap-2">
+                {STATUS_FILTERS.map((item) => {
+                  const active = statusFilter === item.value;
+                  return (
+                    <Pressable
+                      key={item.value}
+                      onPress={() => setStatusFilter(item.value)}
+                      className={`rounded-full border px-3.5 py-2 ${
+                        active
+                          ? 'border-primary-600 bg-primary-600'
+                          : 'border-gray-200 bg-gray-50'
+                      }`}
+                    >
+                      <Text
+                        className={`text-xs font-semibold ${
+                          active ? 'text-white' : 'text-gray-600'
+                        }`}
+                      >
+                        {item.label}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            </View>
+
+            {/* Priority Section */}
+            <View>
+              <Text className="mb-2 text-xs font-bold uppercase tracking-wider text-gray-500">
+                Priority
+              </Text>
+              <View className="flex-row flex-wrap gap-2">
+                {PRIORITY_FILTERS.map((item) => {
+                  const active = priorityFilter === item.value;
+                  return (
+                    <Pressable
+                      key={item.value}
+                      onPress={() => setPriorityFilter(item.value)}
+                      className={`rounded-full border px-3.5 py-2 ${
+                        active
+                          ? 'border-primary-600 bg-primary-600'
+                          : 'border-gray-200 bg-gray-50'
+                      }`}
+                    >
+                      <Text
+                        className={`text-xs font-semibold ${
+                          active ? 'text-white' : 'text-gray-600'
+                        }`}
+                      >
+                        {item.label}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            </View>
+
+            <Pressable
+              onPress={() => setShowFilterModal(false)}
+              className="mt-2 items-center rounded-md bg-primary-600 py-3 active:bg-primary-700"
+            >
+              <Text className="text-sm font-semibold text-white">Apply Filters</Text>
+            </Pressable>
+          </Pressable>
+        </Pressable>
+      </Modal>
 
       <FlatList
         data={filtered}
         keyExtractor={(item) => item.id}
+        className="px-5"
         contentContainerStyle={
-          filtered.length === 0 ? { flexGrow: 1 } : { paddingBottom: 130, gap: 10 }
+          filtered.length === 0
+            ? { flexGrow: 1, paddingTop: 12 }
+            : { paddingTop: 12, paddingBottom: 160, gap: 10 }
         }
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor="#1D4ED8" />
@@ -85,14 +216,10 @@ export default function OrderListScreen({ navigation }: OrdersScreenProps<'Order
         ListEmptyComponent={
           <EmptyState
             icon="tshirt"
-            title={statusFilter === 'all' ? 'No orders yet' : 'No orders with this status'}
-            description={
-              statusFilter === 'all'
-                ? 'Create a new order to start tracking it'
-                : 'Try a different status filter'
-            }
-            actionLabel={statusFilter === 'all' ? 'New Order' : undefined}
-            onAction={statusFilter === 'all' ? () => navigation.navigate('OrderForm', {}) : undefined}
+            title={hasActiveFilters ? t('list.noOrdersWithStatus') : t('list.noOrdersYet')}
+            description={hasActiveFilters ? t('list.tryDifferentFilter') : t('list.createOrderHint')}
+            actionLabel={!hasActiveFilters ? t('list.newOrder') : undefined}
+            onAction={!hasActiveFilters ? () => navigation.navigate('OrderForm', {}) : undefined}
           />
         }
         renderItem={({ item }) => (
@@ -103,20 +230,23 @@ export default function OrderListScreen({ navigation }: OrdersScreenProps<'Order
             </View>
             <Text className="font-sans mt-1 text-sm text-gray-600">{item.customers?.name}</Text>
             <View className="mt-1 flex-row items-center justify-between">
-              <Text className="font-sans text-xs text-gray-400">{item.cloth_type ?? 'No cloth type'}</Text>
               <Text className="font-sans text-xs text-gray-400">
-                Delivery {formatDate(item.delivery_date)}
+                {item.cloth_count != null
+                  ? t('list.pieces', { count: item.cloth_count })
+                  : t('list.noClothCount')}
+              </Text>
+              <Text className="font-sans text-xs text-gray-400">
+                {t('list.delivery', { date: formatDate(item.delivery_date) })}
               </Text>
             </View>
             {item.priority === 'urgent' ? (
               <View className="mt-2 self-start rounded-full bg-red-50 px-2 py-0.5">
-                <Text className="text-xs font-semibold text-danger">Urgent</Text>
+                <Text className="text-xs font-semibold text-danger">{t('list.urgent')}</Text>
               </View>
             ) : null}
           </Card>
         )}
       />
-
     </View>
   );
 }

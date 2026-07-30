@@ -1,8 +1,68 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
 import Constants, { ExecutionEnvironment } from 'expo-constants';
-import type { Session, User } from '@supabase/supabase-js';
+import * as Linking from 'expo-linking';
+import type { EmailOtpType, Session, User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import type { Shop } from '../types';
+
+/** Where Supabase sends the user back to after they tap the email link. */
+export const EMAIL_CONFIRM_REDIRECT = 'apnakapad://confirm-email';
+
+/**
+ * Turns the deep link Supabase opens the app with into a real session.
+ *
+ * Which shape the link takes depends on the project's flow type and email
+ * template, so all three are handled: implicit (tokens in the URL fragment),
+ * PKCE (`?code=`), and the newer hashed-token templates (`?token_hash=&type=`).
+ * Returns true if the URL actually carried credentials.
+ */
+async function completeSessionFromUrl(url: string): Promise<boolean> {
+  // Logged without the token values themselves so the Metro console shows
+  // which shape the link arrived in when confirmation doesn't take.
+  const shape = {
+    hasFragment: url.includes('#'),
+    hasCode: url.includes('code='),
+    hasTokenHash: url.includes('token_hash='),
+    hasAccessToken: url.includes('access_token='),
+    hasError: url.includes('error'),
+  };
+  console.log('[auth] deep link received', url.split('?')[0].split('#')[0], shape);
+
+  const hashIndex = url.indexOf('#');
+  if (hashIndex >= 0) {
+    const fragment = new URLSearchParams(url.slice(hashIndex + 1));
+    const access_token = fragment.get('access_token');
+    const refresh_token = fragment.get('refresh_token');
+    if (access_token && refresh_token) {
+      const { error } = await supabase.auth.setSession({ access_token, refresh_token });
+      if (error) throw error;
+      return true;
+    }
+  }
+
+  const { queryParams } = Linking.parse(url);
+
+  const code = queryParams?.code;
+  if (typeof code === 'string') {
+    const { error } = await supabase.auth.exchangeCodeForSession(code);
+    if (error) throw error;
+    return true;
+  }
+
+  const tokenHash = queryParams?.token_hash;
+  if (typeof tokenHash === 'string') {
+    const rawType = queryParams?.type;
+    const { error } = await supabase.auth.verifyOtp({
+      token_hash: tokenHash,
+      type: (typeof rawType === 'string' ? rawType : 'email') as EmailOtpType,
+    });
+    if (error) throw error;
+    return true;
+  }
+
+  console.log('[auth] deep link carried no credentials — nothing to exchange');
+  return false;
+}
 
 /**
  * @react-native-google-signin/google-signin is a native module — it isn't
@@ -44,10 +104,11 @@ type AuthContextValue = {
   user: User | null;
   shop: Shop | null;
   loading: boolean;
-  signUpWithEmail: (email: string, password: string) => Promise<void>;
+  signUpWithEmail: (email: string, password: string) => Promise<{ alreadyRegistered: boolean }>;
   signInWithEmail: (email: string, password: string) => Promise<void>;
   signInWithGoogle: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
+  resendConfirmationEmail: (email: string) => Promise<void>;
   signOut: () => Promise<void>;
   refreshShop: () => Promise<void>;
 };
@@ -112,8 +173,45 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, [loadShop]);
 
+  // Completes email confirmation when the user taps the link in their inbox,
+  // both for a cold start (app was closed) and while it's already running.
+  useEffect(() => {
+    const handle = (url: string) => {
+      void completeSessionFromUrl(url).catch((err) => {
+        console.warn('[auth] could not complete confirmation from link:', err?.message ?? err);
+      });
+    };
+
+    void Linking.getInitialURL().then((url) => {
+      if (url) handle(url);
+    });
+
+    const subscription = Linking.addEventListener('url', ({ url }) => handle(url));
+
+    return () => subscription.remove();
+  }, []);
+
   const signUpWithEmail = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signUp({ email, password });
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { emailRedirectTo: EMAIL_CONFIRM_REDIRECT },
+    });
+    if (error) throw error;
+
+    // With email confirmation on, Supabase deliberately doesn't error for an
+    // address that's already registered — it returns a decoy user with an
+    // empty `identities` array instead, to avoid leaking who has an account.
+    // That empty array is the documented way to detect the collision.
+    return { alreadyRegistered: (data.user?.identities?.length ?? 0) === 0 };
+  };
+
+  const resendConfirmationEmail = async (email: string) => {
+    const { error } = await supabase.auth.resend({
+      type: 'signup',
+      email,
+      options: { emailRedirectTo: EMAIL_CONFIRM_REDIRECT },
+    });
     if (error) throw error;
   };
 
@@ -202,6 +300,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         signInWithEmail,
         signInWithGoogle,
         resetPassword,
+        resendConfirmationEmail,
         signOut,
         refreshShop,
       }}

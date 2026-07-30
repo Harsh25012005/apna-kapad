@@ -1,0 +1,70 @@
+{
+  "list": {
+    "title": "Billing",
+    "totalPending": "Total Pending Across All Customers",
+    "searchPlaceholder": "Search by customer or bill ID",
+    "filters": {
+      "paid": "Paid",
+      "partial": "Partial",
+      "unpaid": "Unpaid"
+    },
+    "loading": "Loading bills...",
+    "emptySearchTitle": "No matching bills",
+    "emptySearchDescription": "Try a different customer name or bill ID",
+    "emptyTitle": "No bills yet",
+    "emptyDescription": "Create your first bill to start tracking payments",
+    "newBill": "New Bill",
+    "errorLoad": "Could not load bills"
+  },
+  "detail": {
+    "loading": "Loading bill...",
+    "billTitle": "Bill · {{name}}",
+    "totalAmount": "Total Amount",
+    "paid": "Paid",
+    "balanceDue": "Balance Due",
+    "shareWhatsapp": "Share Bill via WhatsApp",
+    "customer": "Customer",
+    "name": "Name",
+    "phone": "Phone",
+    "linkedOrder": "Linked to an Order",
+    "linkedOrderDesc": "This bill was generated from an order",
+    "breakdown": "Bill Breakdown",
+    "fabricCost": "Fabric Cost",
+    "stitchingCharge": "Stitching Charge",
+    "tax": "Tax",
+    "discount": "Discount",
+    "paymentHistory": "Payment History",
+    "noPayments": "No payments recorded yet",
+    "recordPaymentHint": "Record a payment once the customer pays",
+    "recordPayment": "Record Payment",
+    "savePayment": "Save Payment",
+    "amount": "Amount",
+    "pendingPlaceholder": "Pending: {{amount}}",
+    "errorLoad": "Could not load bill",
+    "errorInvalidAmount": "Enter a valid amount",
+    "errorExceedsPending": "Amount cannot exceed the pending {{amount}}",
+    "successPayment": "Payment recorded",
+    "errorPayment": "Could not record payment",
+    "errorWhatsapp": "Could not open WhatsApp",
+    "paymentModes": {
+      "Cash": "Cash",
+      "UPI": "UPI",
+      "Card": "Card",
+      "Bank Transfer": "Bank Transfer"
+    }
+  },
+  "form": {
+    "title": "New Bill",
+    "customer": "Customer",
+    "selectCustomer": "Select customer",
+    "customerRequired": "Customer is required",
+    "fabricCost": "Fabric Cost",
+    "stitchingCharge": "Stitching Charge",
+    "discount": "Discount",
+    "tax": "Tax",
+    "totalAmount": "Total Amount",
+    "createBill": "Create Bill",
+    "successCreated": "Bill created",
+    "errorCreate": "Could not create bill"
+  }
+}

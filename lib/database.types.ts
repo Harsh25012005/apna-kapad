@@ -7,6 +7,8 @@ export type Json =
   | Json[]
 
 export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "14.5"
   }
@@ -114,11 +116,14 @@ export type Database = {
       measurements: {
         Row: {
           chest: number | null
+          custom_fields: Json
           customer_id: string
           garment_type: string
           id: string
           length: number | null
           notes: string | null
+          pant_cloth: number | null
+          shirt_cloth: number | null
           shop_id: string
           shoulder: number | null
           sleeve: number | null
@@ -127,11 +132,14 @@ export type Database = {
         }
         Insert: {
           chest?: number | null
+          custom_fields?: Json
           customer_id: string
           garment_type: string
           id?: string
           length?: number | null
           notes?: string | null
+          pant_cloth?: number | null
+          shirt_cloth?: number | null
           shop_id: string
           shoulder?: number | null
           sleeve?: number | null
@@ -140,11 +148,14 @@ export type Database = {
         }
         Update: {
           chest?: number | null
+          custom_fields?: Json
           customer_id?: string
           garment_type?: string
           id?: string
           length?: number | null
           notes?: string | null
+          pant_cloth?: number | null
+          shirt_cloth?: number | null
           shop_id?: string
           shoulder?: number | null
           sleeve?: number | null
@@ -213,48 +224,66 @@ export type Database = {
       orders: {
         Row: {
           assigned_staff_id: string | null
+          bill_book_number: string | null
+          cloth_count: number | null
           cloth_type: string | null
           created_at: string
           customer_id: string
           delivery_date: string | null
           design_photo_url: string | null
+          design_photo_urls: string[]
           id: string
           measurement_id: string | null
           order_date: string
           order_number: string
+          paid_amount: number
+          payment_mode: string | null
           priority: Database["public"]["Enums"]["order_priority"]
           shop_id: string
           status: Database["public"]["Enums"]["order_status"]
+          total_amount: number | null
         }
         Insert: {
           assigned_staff_id?: string | null
+          bill_book_number?: string | null
+          cloth_count?: number | null
           cloth_type?: string | null
           created_at?: string
           customer_id: string
           delivery_date?: string | null
           design_photo_url?: string | null
+          design_photo_urls?: string[]
           id?: string
           measurement_id?: string | null
           order_date?: string
           order_number: string
+          paid_amount?: number
+          payment_mode?: string | null
           priority?: Database["public"]["Enums"]["order_priority"]
           shop_id: string
           status?: Database["public"]["Enums"]["order_status"]
+          total_amount?: number | null
         }
         Update: {
           assigned_staff_id?: string | null
+          bill_book_number?: string | null
+          cloth_count?: number | null
           cloth_type?: string | null
           created_at?: string
           customer_id?: string
           delivery_date?: string | null
           design_photo_url?: string | null
+          design_photo_urls?: string[]
           id?: string
           measurement_id?: string | null
           order_date?: string
           order_number?: string
+          paid_amount?: number
+          payment_mode?: string | null
           priority?: Database["public"]["Enums"]["order_priority"]
           shop_id?: string
           status?: Database["public"]["Enums"]["order_status"]
+          total_amount?: number | null
         }
         Relationships: [
           {
@@ -344,6 +373,7 @@ export type Database = {
           address: string | null
           created_at: string
           has_tailoring: boolean
+          has_seen_guide: boolean
           id: string
           logo_url: string | null
           owner_id: string
@@ -356,6 +386,7 @@ export type Database = {
           address?: string | null
           created_at?: string
           has_tailoring?: boolean
+          has_seen_guide?: boolean
           id?: string
           logo_url?: string | null
           owner_id: string
@@ -368,6 +399,7 @@ export type Database = {
           address?: string | null
           created_at?: string
           has_tailoring?: boolean
+          has_seen_guide?: boolean
           id?: string
           logo_url?: string | null
           owner_id?: string
@@ -387,6 +419,9 @@ export type Database = {
           role: string | null
           shop_id: string
           wage_amount: number
+          wage_amount_pair: number | null
+          wage_amount_pant: number | null
+          wage_amount_shirt: number | null
           wage_type: Database["public"]["Enums"]["wage_type"]
         }
         Insert: {
@@ -397,6 +432,9 @@ export type Database = {
           role?: string | null
           shop_id: string
           wage_amount?: number
+          wage_amount_pair?: number | null
+          wage_amount_pant?: number | null
+          wage_amount_shirt?: number | null
           wage_type?: Database["public"]["Enums"]["wage_type"]
         }
         Update: {
@@ -407,6 +445,9 @@ export type Database = {
           role?: string | null
           shop_id?: string
           wage_amount?: number
+          wage_amount_pair?: number | null
+          wage_amount_pant?: number | null
+          wage_amount_shirt?: number | null
           wage_type?: Database["public"]["Enums"]["wage_type"]
         }
         Relationships: [
@@ -468,6 +509,54 @@ export type Database = {
           },
         ]
       }
+      staff_work_entries: {
+        Row: {
+          created_at: string
+          id: string
+          quantity: number
+          rate_applied: number
+          shop_id: string
+          staff_id: string
+          work_date: string
+          work_type: Database["public"]["Enums"]["work_item_type"]
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          quantity?: number
+          rate_applied?: number
+          shop_id: string
+          staff_id: string
+          work_date?: string
+          work_type: Database["public"]["Enums"]["work_item_type"]
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          quantity?: number
+          rate_applied?: number
+          shop_id?: string
+          staff_id?: string
+          work_date?: string
+          work_type?: Database["public"]["Enums"]["work_item_type"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_work_entries_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staff_work_entries_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -487,6 +576,7 @@ export type Database = {
         | "delivered"
       payment_status: "paid" | "partial" | "unpaid"
       wage_type: "daily" | "monthly" | "per_piece"
+      work_item_type: "pant" | "shirt" | "pant_shirt"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -496,7 +586,7 @@ export type Database = {
 
 type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
 
-type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
+type DefaultSchema = DatabaseWithoutInternals["public"]
 
 export type Tables<
   DefaultSchemaTableNameOrOptions extends
@@ -594,6 +684,23 @@ export type Enums<
     ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
     : never
 
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof DefaultSchema["CompositeTypes"]
+    | { schema: keyof DatabaseWithoutInternals },
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never = never,
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never
+
 export const Constants = {
   public: {
     Enums: {
@@ -609,6 +716,7 @@ export const Constants = {
       ],
       payment_status: ["paid", "partial", "unpaid"],
       wage_type: ["daily", "monthly", "per_piece"],
+      work_item_type: ["pant", "shirt", "pant_shirt"],
     },
   },
 } as const

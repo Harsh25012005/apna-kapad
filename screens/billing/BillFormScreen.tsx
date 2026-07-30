@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ScrollView, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 import { Button, Dropdown, Header, InputField, useToast } from '../../components/ui';
 import { supabase } from '../../lib/supabase';
 import { formatCurrency } from '../../lib/format';
@@ -17,7 +19,9 @@ export default function BillFormScreen({ navigation, route }: AppScreenProps<'Bi
   const orderId = route.params?.orderId;
   const presetCustomerId = route.params?.customerId;
   const shop = useShop();
+  const insets = useSafeAreaInsets();
   const showToast = useToast();
+  const { t } = useTranslation('billing');
 
   const [customers, setCustomers] = useState<Option[]>([]);
   const [customerId, setCustomerId] = useState<string>(presetCustomerId ?? '');
@@ -43,7 +47,7 @@ export default function BillFormScreen({ navigation, route }: AppScreenProps<'Bi
 
   const handleSave = async () => {
     if (!customerId) {
-      setError('Customer is required');
+      setError(t('form.customerRequired'));
       return;
     }
     setError('');
@@ -59,10 +63,10 @@ export default function BillFormScreen({ navigation, route }: AppScreenProps<'Bi
         tax: toAmount(tax),
       });
       if (insertError) throw insertError;
-      showToast('Bill created', 'success');
+      showToast(t('form.successCreated'), 'success');
       navigation.goBack();
     } catch (err) {
-      showToast(err instanceof Error ? err.message : 'Could not create bill', 'error');
+      showToast(err instanceof Error ? err.message : t('form.errorCreate'), 'error');
     } finally {
       setLoading(false);
     }
@@ -70,52 +74,52 @@ export default function BillFormScreen({ navigation, route }: AppScreenProps<'Bi
 
   return (
     <>
-      <Header title="New Bill" onBack={() => navigation.goBack()} />
-      <ScrollView className="flex-1 bg-white" contentContainerStyle={{ padding: 20 }}>
+      <Header title={t('form.title')} onBack={() => navigation.goBack()} />
+      <ScrollView
+        className="flex-1 bg-white"
+        contentContainerStyle={{ padding: 20, paddingBottom: insets.bottom + 160 }}
+        keyboardShouldPersistTaps="handled"
+      >
         <Dropdown
-          label="Customer"
+          label={t('form.customer')}
           value={customerId}
           onChange={setCustomerId}
           options={customers}
-          placeholder="Select customer"
+          placeholder={t('form.selectCustomer')}
           error={error}
         />
 
         <InputField
-          label="Fabric Cost"
+          label={t('form.fabricCost')}
           value={fabricCost}
           onChangeText={setFabricCost}
           keyboardType="numeric"
-          leftIcon="rupee-sign"
         />
         <InputField
-          label="Stitching Charge"
+          label={t('form.stitchingCharge')}
           value={stitchingCharge}
           onChangeText={setStitchingCharge}
           keyboardType="numeric"
-          leftIcon="rupee-sign"
         />
         <InputField
-          label="Discount"
+          label={t('form.discount')}
           value={discount}
           onChangeText={setDiscount}
           keyboardType="numeric"
-          leftIcon="rupee-sign"
         />
         <InputField
-          label="Tax"
+          label={t('form.tax')}
           value={tax}
           onChangeText={setTax}
           keyboardType="numeric"
-          leftIcon="rupee-sign"
         />
 
         <View className="mb-6 flex-row items-center justify-between rounded-lg bg-primary-50 p-4">
-          <Text className="text-sm font-medium text-primary-700">Total Amount</Text>
+          <Text className="text-sm font-medium text-primary-700">{t('form.totalAmount')}</Text>
           <Text className="text-xl font-bold text-primary-700">{formatCurrency(total)}</Text>
         </View>
 
-        <Button title="Create Bill" onPress={handleSave} loading={loading} />
+        <Button title={t('form.createBill')} onPress={handleSave} loading={loading} />
       </ScrollView>
     </>
   );

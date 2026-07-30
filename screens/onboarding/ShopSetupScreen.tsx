@@ -1,29 +1,41 @@
 import { useState } from 'react';
-import { ScrollView, Text, View } from 'react-native';
-import { Button, ImagePickerField, InputField, Toggle, useToast } from '../../components/ui';
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
+import { Button, ImagePickerField, InputField, useToast } from '../../components/ui';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabase';
 import { uploadImage } from '../../lib/storage';
+import { setAppLanguage, SUPPORTED_LANGUAGES, type AppLanguage } from '../../lib/i18n';
 
 type ShopSetupErrors = { shopName?: string; ownerName?: string };
 
+/** Endonyms — deliberately not translated, each option shows its own script. */
+const LANGUAGE_ENDONYMS: Record<AppLanguage, string> = {
+  en: 'English',
+  gu: 'ગુજરાતી',
+  hi: 'हिन्दी',
+};
+
 export default function ShopSetupScreen() {
   const { user, refreshShop } = useAuth();
+  const insets = useSafeAreaInsets();
   const showToast = useToast();
+  const { t, i18n } = useTranslation('auth');
+  const currentLanguage = (i18n.language as AppLanguage) || 'en';
 
   const [shopName, setShopName] = useState('');
   const [ownerName, setOwnerName] = useState('');
   const [address, setAddress] = useState('');
   const [phone, setPhone] = useState('');
-  const [hasTailoring, setHasTailoring] = useState(true);
   const [logoUri, setLogoUri] = useState<string | null>(null);
   const [errors, setErrors] = useState<ShopSetupErrors>({});
   const [loading, setLoading] = useState(false);
 
   const validate = () => {
     const next: ShopSetupErrors = {};
-    if (!shopName.trim()) next.shopName = 'Shop name is required';
-    if (!ownerName.trim()) next.ownerName = 'Owner name is required';
+    if (!shopName.trim()) next.shopName = t('shopSetup.errorShopNameRequired');
+    if (!ownerName.trim()) next.ownerName = t('shopSetup.errorOwnerNameRequired');
     setErrors(next);
     return Object.keys(next).length === 0;
   };
@@ -40,7 +52,6 @@ export default function ShopSetupScreen() {
           owner_name: ownerName.trim(),
           address: address.trim() || null,
           phone: phone.trim() || null,
-          has_tailoring: hasTailoring,
         })
         .select()
         .single();
@@ -58,72 +69,95 @@ export default function ShopSetupScreen() {
         } catch {
           // The shop row is already saved — a failed logo upload shouldn't
           // block onboarding. The owner can re-upload from Settings later.
-          showToast('Shop saved, but the logo could not be uploaded', 'info');
+          showToast(t('shopSetup.logoUploadFailed'), 'info');
         }
       }
 
       await refreshShop();
     } catch (err) {
-      showToast(err instanceof Error ? err.message : 'Could not save shop details', 'error');
+      showToast(err instanceof Error ? err.message : t('shopSetup.errorSave'), 'error');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <ScrollView className="flex-1 bg-white" contentContainerStyle={{ padding: 24 }}>
-      <Text className="mb-1 text-2xl font-bold text-gray-900">Set up your shop</Text>
-      <Text className="font-sans mb-6 text-sm text-gray-500">
-        Tell us a bit about your shop to get started.
-      </Text>
+    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} className="flex-1 bg-white">
+      <ScrollView
+        className="flex-1 bg-white"
+        contentContainerStyle={{ padding: 24, paddingTop: insets.top + 24, paddingBottom: insets.bottom + 32 }}
+        keyboardShouldPersistTaps="handled"
+      >
+        <Text className="mb-1 text-2xl font-bold text-gray-900">{t('shopSetup.title')}</Text>
+        <Text className="font-sans mb-6 text-sm text-gray-500">
+          {t('shopSetup.subtitle')}
+        </Text>
 
-      <ImagePickerField label="Shop Logo" uri={logoUri} onChange={setLogoUri} />
-
-      <InputField
-        label="Shop Name"
-        value={shopName}
-        onChangeText={setShopName}
-        placeholder="e.g. Vaghela Tailors"
-        leftIcon="store"
-        error={errors.shopName}
-      />
-
-      <InputField
-        label="Owner Name"
-        value={ownerName}
-        onChangeText={setOwnerName}
-        placeholder="e.g. Harsh Vaghela"
-        leftIcon="user"
-        error={errors.ownerName}
-      />
-
-      <InputField
-        label="Address"
-        value={address}
-        onChangeText={setAddress}
-        placeholder="Shop address"
-        leftIcon="map-marker-alt"
-        multiline
-      />
-
-      <InputField
-        label="Phone"
-        value={phone}
-        onChangeText={setPhone}
-        placeholder="10-digit phone number"
-        leftIcon="phone"
-        keyboardType="phone-pad"
-      />
-
-      <View className="mb-6 flex-row items-center justify-between rounded-lg border border-gray-200 bg-white px-4 py-3">
-        <View className="flex-1 pr-4">
-          <Text className="font-sans text-base text-gray-800">Do you also do tailoring?</Text>
-          <Text className="font-sans text-xs text-gray-500">Enables order tracking & measurements</Text>
+        <View className="mb-6">
+          <Text className="mb-1.5 text-xs font-bold uppercase tracking-[0.4px] text-gray-500">
+            {t('shopSetup.language')}
+          </Text>
+          <View className="flex-row gap-2">
+            {SUPPORTED_LANGUAGES.map((lang) => {
+              const active = lang === currentLanguage;
+              return (
+                <Pressable
+                  key={lang}
+                  onPress={() => setAppLanguage(lang)}
+                  className={`flex-1 items-center rounded-md border py-2.5 ${
+                    active ? 'border-primary-600 bg-primary-50' : 'border-gray-200 bg-white'
+                  }`}
+                >
+                  <Text
+                    className={`font-sans text-sm font-medium ${
+                      active ? 'text-primary-600' : 'text-gray-600'
+                    }`}
+                  >
+                    {LANGUAGE_ENDONYMS[lang]}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+          <Text className="font-sans mt-1.5 text-xs text-gray-400">{t('shopSetup.languageHint')}</Text>
         </View>
-        <Toggle value={hasTailoring} onChange={setHasTailoring} />
-      </View>
 
-      <Button title="Continue" onPress={handleSave} loading={loading} />
-    </ScrollView>
+        <ImagePickerField label={t('shopSetup.shopLogo')} uri={logoUri} onChange={setLogoUri} />
+
+        <InputField
+          label={t('shopSetup.shopName')}
+          value={shopName}
+          onChangeText={setShopName}
+          placeholder={t('shopSetup.shopNamePlaceholder')}
+          error={errors.shopName}
+        />
+
+        <InputField
+          label={t('shopSetup.ownerName')}
+          value={ownerName}
+          onChangeText={setOwnerName}
+          placeholder={t('shopSetup.ownerNamePlaceholder')}
+          error={errors.ownerName}
+        />
+
+        <InputField
+          label={t('shopSetup.address')}
+          value={address}
+          onChangeText={setAddress}
+          placeholder={t('shopSetup.addressPlaceholder')}
+          multiline
+        />
+
+        <InputField
+          label={t('shopSetup.phone')}
+          value={phone}
+          onChangeText={setPhone}
+          placeholder={t('shopSetup.phonePlaceholder')}
+          keyboardType="phone-pad"
+        />
+
+        <Button title={t('shopSetup.continue')} onPress={handleSave} loading={loading} />
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }

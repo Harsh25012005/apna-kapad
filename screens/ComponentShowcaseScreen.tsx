@@ -268,7 +268,7 @@ export default function ComponentShowcaseScreen() {
           <View className="flex-row items-center gap-4">
             <Avatar name="Harsh Parmar" size="sm" />
             <Avatar name="Rahul Sharma" size="md" />
-            <Avatar name="Apna Kapad" size="lg" />
+            <Avatar name="MeasuresOne" size="lg" />
           </View>
         </Section>
 

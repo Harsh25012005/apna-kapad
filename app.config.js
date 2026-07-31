@@ -2,7 +2,7 @@ require('dotenv/config');
 
 module.exports = {
   expo: {
-    name: 'apna-kapd',
+    name: 'MeasuresOne',
     slug: 'apna-kapd',
     version: '1.0.0',
     orientation: 'portrait',

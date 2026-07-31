@@ -3,15 +3,16 @@ require('dotenv/config');
 module.exports = {
   expo: {
     name: 'MeasuresOne',
-    slug: 'apna-kapd',
+    slug: 'measuresone',
+    owner: 'is_harsh2501',
     version: '1.0.0',
     orientation: 'portrait',
     icon: './assets/icon.png',
     userInterfaceStyle: 'light',
-    scheme: 'apnakapad',
+    scheme: 'measuresone',
     ios: {
       supportsTablet: true,
-      bundleIdentifier: 'com.apnakapad.app',
+      bundleIdentifier: 'com.measuresone.app',
       infoPlist: {
         // Required for Linking.canOpenURL to detect these mail clients —
         // without the allowlist iOS silently answers false for every scheme.
@@ -26,9 +27,9 @@ module.exports = {
       },
     },
     android: {
-      package: 'com.apnakapad.app',
+      package: 'com.measuresone.app',
       adaptiveIcon: {
-        backgroundColor: '#1D4ED8',
+        backgroundColor: '#FFFFFF',
         foregroundImage: './assets/android-icon-foreground.png',
         backgroundImage: './assets/android-icon-background.png',
         monochromeImage: './assets/android-icon-monochrome.png',
@@ -38,6 +39,17 @@ module.exports = {
       favicon: './assets/favicon.png',
     },
     plugins: [
+      [
+        'expo-splash-screen',
+        {
+          image: './assets/splash-icon.png',
+          // The logo art already carries its own generous margin, so a
+          // modest width keeps it from dominating the screen.
+          imageWidth: 160,
+          resizeMode: 'contain',
+          backgroundColor: '#FFFFFF',
+        },
+      ],
       'expo-web-browser',
       'expo-secure-store',
       'expo-font',
@@ -64,7 +76,7 @@ module.exports = {
       supabasePublishableKey: process.env.SUPABASE_PUBLISHABLE_KEY,
       googleWebClientId: process.env.GOOGLE_WEB_CLIENT_ID,
       eas: {
-        projectId: 'ca988b3c-e174-4e4e-81c8-5d3ce6e7040b',
+        projectId: '4623e4e2-cc7b-421b-8aff-d3021c25c452',
       },
     },
   },

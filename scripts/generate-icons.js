@@ -72,12 +72,22 @@ async function main() {
   const to = sampleAt(source, (box.x + box.w) / source.bitmap.width - 0.05, (box.y + box.h) / source.bitmap.height - 0.05);
   console.log('gradient', from, '→', to);
 
-  // --- icon.png / splash-icon.png: source as-is (white background, no transparency) ---
-  await source.clone().resize(1024, 1024).writeAsync(path.join(ASSETS, 'icon.png'));
-  await source.clone().resize(1024, 1024).writeAsync(path.join(ASSETS, 'splash-icon.png'));
+  // --- icon.png / splash-icon.png: glyph padded down to ~55% of the canvas
+  // on a white background. The source's own margin (~66%) reads as too
+  // large once iOS/Android apply their corner rounding on top of it. ---
+  const ICON = 1024;
+  const iconSafe = Math.round(ICON * 0.55);
+  const iconScale = iconSafe / Math.max(box.w, box.h);
+  const iw = Math.round(box.w * iconScale);
+  const ih = Math.round(box.h * iconScale);
+  const iconGlyph = source.clone().crop(box.x, box.y, box.w, box.h).resize(iw, ih);
+  const iconCanvas = new Jimp(ICON, ICON, 0xFFFFFFFF);
+  iconCanvas.composite(iconGlyph, Math.round((ICON - iw) / 2), Math.round((ICON - ih) / 2));
+  await iconCanvas.clone().writeAsync(path.join(ASSETS, 'icon.png'));
+  await iconCanvas.clone().writeAsync(path.join(ASSETS, 'splash-icon.png'));
 
   // --- favicon ---
-  await source.clone().resize(48, 48).writeAsync(path.join(ASSETS, 'favicon.png'));
+  await iconCanvas.clone().resize(48, 48).writeAsync(path.join(ASSETS, 'favicon.png'));
 
   // --- Glyph with background keyed out to transparency, cropped tight ---
   const glyph = source.clone().crop(box.x, box.y, box.w, box.h);
@@ -87,9 +97,12 @@ async function main() {
     if (isBackground(gd[o], gd[o + 1], gd[o + 2])) gd[o + 3] = 0;
   }
 
-  // --- Android adaptive foreground: glyph fitted inside the safe zone ---
+  // --- Android adaptive foreground: glyph fitted inside the safe zone.
+  // 0.45 rather than the 0.66 safe-zone maximum — the launcher crops to a
+  // circle/squircle, so a glyph sized to the full safe zone reads as
+  // oversized and crowds the mask edge. ---
   const FG = 512;
-  const safe = Math.round(FG * 0.6);
+  const safe = Math.round(FG * 0.45);
   const scale = safe / Math.max(gw, gh);
   const fgw = Math.round(gw * scale);
   const fgh = Math.round(gh * scale);
@@ -97,13 +110,15 @@ async function main() {
   foreground.composite(glyph.clone().resize(fgw, fgh), Math.round((FG - fgw) / 2), Math.round((FG - fgh) / 2));
   await foreground.writeAsync(path.join(ASSETS, 'android-icon-foreground.png'));
 
-  // --- Android adaptive background: flat brand-blue gradient ---
-  const background = gradientCanvas(512, from, to);
+  // --- Android adaptive background: flat white, matching the source art's
+  // own background. A blue background would make the blue glyph vanish
+  // into it once the two layers are composited (blue-on-blue). ---
+  const background = new Jimp(512, 512, 0xFFFFFFFF);
   await background.writeAsync(path.join(ASSETS, 'android-icon-background.png'));
 
   // --- Monochrome (themed icons): white silhouette on transparent ---
   const MONO = 432;
-  const monoSafe = Math.round(MONO * 0.6);
+  const monoSafe = Math.round(MONO * 0.45);
   const monoScale = monoSafe / Math.max(gw, gh);
   const mw2 = Math.round(gw * monoScale);
   const mh2 = Math.round(gh * monoScale);

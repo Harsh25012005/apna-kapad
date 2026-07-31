@@ -6,7 +6,7 @@ import { supabase } from '../lib/supabase';
 import type { Shop } from '../types';
 
 /** Where Supabase sends the user back to after they tap the email link. */
-export const EMAIL_CONFIRM_REDIRECT = 'apnakapad://confirm-email';
+export const EMAIL_CONFIRM_REDIRECT = 'measuresone://confirm-email';
 
 /**
  * Turns the deep link Supabase opens the app with into a real session.
@@ -265,7 +265,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const resetPassword = async (email: string) => {
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: 'apnakapad://reset-password',
+      redirectTo: 'measuresone://reset-password',
     });
     if (error) throw error;
   };

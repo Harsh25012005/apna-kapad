@@ -1,4 +1,15 @@
 {
+  "leaderboard": {
+    "title": "स्टाफ लीडरबोर्ड",
+    "loading": "लीडरबोर्ड लोड हो रहा है...",
+    "loadError": "लीडरबोर्ड लोड नहीं हो सका",
+    "week": "इस सप्ताह",
+    "month": "इस महीने",
+    "ordersCompleted": "{{count}} ऑर्डर पूरे हुए",
+    "avgTurnaround": "औसत {{hours}} घंटे",
+    "emptyTitle": "अभी तक कोई ऑर्डर पूरा नहीं हुआ",
+    "emptyDescription": "इस अवधि में पूरे हुए ऑर्डर यहाँ दिखेंगे।"
+  },
   "wageUnit": {
     "daily": "/दिन",
     "monthly": "/महीना",

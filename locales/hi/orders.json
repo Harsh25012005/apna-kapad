@@ -1,4 +1,14 @@
 {
+  "bulk": {
+    "title": "बल्क ऑर्डर",
+    "customersRequired": "कम से कम एक ग्राहक चुनें",
+    "garmentTypeRequired": "गारमेंट प्रकार दर्ज करें",
+    "selectCustomers": "ग्राहक ({{count}} चयनित)",
+    "grandTotal": "कुल राशि: {{total}}",
+    "createOrders": "{{count}} ऑर्डर बनाएं",
+    "success": "{{count}} ऑर्डर बनाए गए",
+    "error": "बल्क ऑर्डर नहीं बन सके"
+  },
   "form": {
     "title": "नया ऑर्डर",
     "customer": "ग्राहक",
@@ -7,6 +17,24 @@
     "clothCountPlaceholder": "उदा. 2",
     "designPhotos": "डिज़ाइन फ़ोटो",
     "piece": "टुकड़ा {{number}}",
+    "itemsRequired": "कम से कम एक गारमेंट और टुकड़ों की संख्या जोड़ें",
+    "garments": "गारमेंट्स",
+    "garmentNumber": "गारमेंट {{number}}",
+    "garmentType": "गारमेंट प्रकार",
+    "garmentTypePlaceholder": "जैसे शर्ट, पैंट",
+    "defaultGarmentType": "गारमेंट",
+    "pieceCount": "टुकड़े",
+    "unitPrice": "प्रति टुकड़ा कीमत",
+    "addGarment": "+ गारमेंट जोड़ें",
+    "deliverySuggested": "मौजूदा काम के बोझ के आधार पर सुझाया गया — बदलने के लिए टैप करें",
+    "rushOrder": "रश ऑर्डर",
+    "rushYes": "हाँ",
+    "rushNo": "नहीं",
+    "rushFee": "रश शुल्क",
+    "itemNotes": "नोट्स",
+    "itemNotesPlaceholder": "विशेष निर्देश (या माइक पर टैप करें)",
+    "dictationFailed": "सुन नहीं पाया, कृपया फिर से कोशिश करें",
+    "microphonePermissionDenied": "नोट्स बोलने के लिए माइक्रोफोन अनुमति चाहिए",
     "measurement": "माप",
     "selectMeasurement": "सहेजा गया माप चुनें",
     "measurementSection": {
@@ -114,6 +142,8 @@
     "deleteFailed": "ऑर्डर हटाया नहीं जा सका",
     "cancel": "रद्द करें",
     "delete": "हटाएं",
+    "pushReadyTitle": "ऑर्डर तैयार है",
+    "pushReadyBody": "{{customerName}} के लिए ऑर्डर #{{number}} पिकअप के लिए तैयार है",
     "whatsapp": {
       "sectionTitle": "ग्राहक को संदेश",
       "sendCompletion": "तैयार होने का संदेश भेजें",

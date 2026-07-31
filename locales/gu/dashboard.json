@@ -1,4 +1,26 @@
 {
+  "checklist": {
+    "title": "શરૂઆત કરો",
+    "progress": "સેટઅપ ({{done}}/{{total}})",
+    "nextStep": "આગળનું પગલું",
+    "addNow": "હમણાં ઉમેરો",
+    "steps": {
+      "addedFirstCustomer": "તમારો પ્રથમ ગ્રાહક ઉમેરો",
+      "createdFirstOrder": "તમારો પ્રથમ ઓર્ડર બનાવો",
+      "addedFirstStaff": "એક સ્ટાફ સભ્ય ઉમેરો",
+      "sentFirstBill": "તમારું પ્રથમ બિલ બનાવો"
+    }
+  },
+  "calendar": {
+    "title": "કેલેન્ડર",
+    "loading": "કેલેન્ડર લોડ થઈ રહ્યું છે...",
+    "loadError": "કેલેન્ડર લોડ થઈ શક્યું નથી",
+    "deliveryLabel": "ડિલિવરી — #{{number}}",
+    "trialLabel": "ટ્રાયલ — #{{number}}",
+    "leaveLabel": "{{name}} રજા પર",
+    "emptyTitle": "કંઈ નિર્ધારિત નથી",
+    "emptyDescription": "આ દિવસ માટે ડિલિવરી, ટ્રાયલ અને સ્ટાફ રજા અહીં દેખાશે."
+  },
   "loading": "ડેશબોર્ડ લોડ થઈ રહ્યું છે...",
   "greeting": "નમસ્તે, {{name}}",
   "defaultUser": "યુઝર",

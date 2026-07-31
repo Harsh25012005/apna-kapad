@@ -1,4 +1,15 @@
 {
+  "leaderboard": {
+    "title": "Staff Leaderboard",
+    "loading": "Loading leaderboard...",
+    "loadError": "Could not load leaderboard",
+    "week": "This week",
+    "month": "This month",
+    "ordersCompleted": "{{count}} orders completed",
+    "avgTurnaround": "{{hours}}h avg",
+    "emptyTitle": "No completed orders yet",
+    "emptyDescription": "Completed orders in this period will show up here."
+  },
   "wageUnit": {
     "daily": "/day",
     "monthly": "/month",

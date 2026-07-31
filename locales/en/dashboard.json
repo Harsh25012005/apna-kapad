@@ -1,4 +1,26 @@
 {
+  "checklist": {
+    "title": "Get started",
+    "progress": "Setup ({{done}}/{{total}})",
+    "nextStep": "Next step",
+    "addNow": "Add now",
+    "steps": {
+      "addedFirstCustomer": "Add your first customer",
+      "createdFirstOrder": "Create your first order",
+      "addedFirstStaff": "Add a staff member",
+      "sentFirstBill": "Create your first bill"
+    }
+  },
+  "calendar": {
+    "title": "Calendar",
+    "loading": "Loading calendar...",
+    "loadError": "Could not load calendar",
+    "deliveryLabel": "Delivery — #{{number}}",
+    "trialLabel": "Trial — #{{number}}",
+    "leaveLabel": "{{name}} off",
+    "emptyTitle": "Nothing scheduled",
+    "emptyDescription": "Deliveries, trials, and staff leave for this day will show up here."
+  },
   "loading": "Loading dashboard...",
   "greeting": "Hi, {{name}}",
   "defaultUser": "User",

@@ -5,11 +5,20 @@ import { Ionicons } from '@expo/vector-icons';
 import Svg, { Defs, Path, RadialGradient, Stop, Ellipse } from 'react-native-svg';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { useTranslation } from 'react-i18next';
-import { useTabBarHighlight } from '../context/TabBarHighlightContext';
 import { useTheme } from '../context/ThemeContext';
+import { useProductTour, TOUR_STEPS, type TourStep } from '../context/ProductTourContext';
 import { QuickAddMenu, NOTCH, notchCurve } from '../components/QuickAddMenu';
+import { ProductTourSpotlight } from '../components/ProductTourSpotlight';
 import { haptics } from '../lib/haptics';
 import type { MainTabParamList } from './types';
+
+/** Maps a tour step to the quick-add action it should spotlight. */
+const TOUR_STEP_TO_ACTION_KEY: Record<TourStep, string> = {
+  customers: 'client',
+  orders: 'order',
+  billing: 'bill',
+  staff: 'staff',
+};
 
 type IconName = React.ComponentProps<typeof Ionicons>['name'];
 
@@ -167,10 +176,12 @@ function AnimatedTabIcon({
 
 export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
-  const { highlightedTab, setTabBarHeight } = useTabBarHighlight();
   const [isAddMenuOpen, setIsAddMenuOpen] = useState(false);
   const { t } = useTranslation('common');
   const { scheme } = useTheme();
+  const tour = useProductTour();
+  const tourStep = TOUR_STEPS.includes(tour.step as TourStep) ? (tour.step as TourStep) : null;
+  const menuOpen = isAddMenuOpen || tourStep !== null;
   // Pure black reads as a deliberate dark dock on a light page. In dark mode
   // the page itself goes near-black, so the bar needs to be a shade lighter
   // than the page (not pure black) or it visually disappears into it.
@@ -186,14 +197,15 @@ export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
   const fabT = useRef(new Animated.Value(0)).current;
   useEffect(() => {
     Animated.spring(fabT, {
-      toValue: isAddMenuOpen ? 1 : 0,
+      toValue: menuOpen ? 1 : 0,
       useNativeDriver: true,
       friction: 6,
       tension: 140,
     }).start();
-  }, [isAddMenuOpen, fabT]);
+  }, [menuOpen, fabT]);
 
   const toggleAddMenu = () => {
+    if (tourStep) return;
     haptics.tap();
     setIsAddMenuOpen((prev) => !prev);
   };
@@ -208,20 +220,21 @@ export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
     });
 
   return (
-    <View
-      pointerEvents="box-none"
-      style={styles.wrapper}
-      onLayout={(e) => setTabBarHeight(e.nativeEvent.layout.height)}
-    >
+    <View pointerEvents="box-none" style={styles.wrapper}>
       <QuickAddMenu
-        visible={isAddMenuOpen}
-        onClose={() => setIsAddMenuOpen(false)}
+        visible={menuOpen}
+        onClose={() => {
+          if (tourStep) return;
+          setIsAddMenuOpen(false);
+        }}
         bottomOffset={totalBarHeight + 22}
         cardFill={barFill}
+        highlightedKey={tourStep ? TOUR_STEP_TO_ACTION_KEY[tourStep] : undefined}
         actions={QUICK_ACTIONS.map((a) => ({
           ...a,
           label: t(a.labelKey),
           onPress: () => {
+            if (tourStep) return;
             setIsAddMenuOpen(false);
             haptics.tap();
             jumpTo(a.tab, a.screen);
@@ -229,11 +242,30 @@ export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
         }))}
       />
 
+      {tourStep ? (
+        <ProductTourSpotlight
+          step={tourStep}
+          actionCount={QUICK_ACTIONS.length}
+          bottomOffset={totalBarHeight + 22}
+          onBack={tour.back}
+          onNext={tour.next}
+          onSkip={tour.finish}
+          onTryItNow={() => {
+            const action = QUICK_ACTIONS.find((a) => a.key === TOUR_STEP_TO_ACTION_KEY[tourStep]);
+            tour.finish();
+            if (action) {
+              haptics.tap();
+              jumpTo(action.tab, action.screen);
+            }
+          }}
+        />
+      ) : null}
+
       <View style={{ width: navWidth, height: totalBarHeight }}>
         <Svg width={navWidth} height={totalBarHeight} style={StyleSheet.absoluteFill}>
           <Defs>
             <RadialGradient id="notchGlow" cx="50%" cy="50%" r="50%">
-              <Stop offset="0" stopColor={ACTIVE} stopOpacity={isAddMenuOpen ? 0.4 : 0.18} />
+              <Stop offset="0" stopColor={ACTIVE} stopOpacity={menuOpen ? 0.4 : 0.18} />
               <Stop offset="1" stopColor={ACTIVE} stopOpacity="0" />
             </RadialGradient>
           </Defs>
@@ -283,9 +315,9 @@ export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
                   <Text
                     style={[
                       styles.tabLabel,
-                      { color: isAddMenuOpen ? '#FFFFFF' : INACTIVE, marginTop: 14 },
+                      { color: menuOpen ? '#FFFFFF' : INACTIVE, marginTop: 14 },
                     ]}
-                    className={isAddMenuOpen ? 'font-semibold' : 'font-medium'}
+                    className={menuOpen ? 'font-semibold' : 'font-medium'}
                     numberOfLines={1}
                   >
                     {t(item.labelKey)}
@@ -298,10 +330,10 @@ export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
             const route = state.routes[routeIndex];
             if (!route) return null;
 
-            const isFocused = state.index === routeIndex && !isAddMenuOpen;
-            const isHighlighted = highlightedTab === item.routeName;
+            const isFocused = state.index === routeIndex && !menuOpen;
 
             const onPress = () => {
+              if (tourStep) return;
               if (isAddMenuOpen) setIsAddMenuOpen(false);
               const event = navigation.emit({
                 type: 'tabPress',
@@ -321,7 +353,7 @@ export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
               }
             };
 
-            const tint = isFocused || isHighlighted ? ACTIVE : INACTIVE;
+            const tint = isFocused ? ACTIVE : INACTIVE;
 
             return (
               <Pressable key={route.key} onPress={onPress} style={styles.tabItem}>

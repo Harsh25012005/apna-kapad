@@ -24,6 +24,7 @@ export type CustomersStackParamList = SharedOrderRoutes & {
 
 export type OrdersStackParamList = SharedOrderRoutes & {
   OrderList: undefined;
+  BulkOrderForm: undefined;
 };
 
 export type BillingStackParamList = {
@@ -35,6 +36,7 @@ export type BillingStackParamList = {
 export type DashboardStackParamList = SharedOrderRoutes & {
   Dashboard: undefined;
   Notifications: undefined;
+  Calendar: undefined;
 };
 
 export type SettingsStackParamList = {

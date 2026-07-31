@@ -27,6 +27,7 @@ export type Database = {
           stitching_charge: number
           tax: number
           total_amount: number | null
+          updated_at: string
         }
         Insert: {
           created_at?: string
@@ -40,6 +41,7 @@ export type Database = {
           stitching_charge?: number
           tax?: number
           total_amount?: number | null
+          updated_at?: string
         }
         Update: {
           created_at?: string
@@ -53,6 +55,7 @@ export type Database = {
           stitching_charge?: number
           tax?: number
           total_amount?: number | null
+          updated_at?: string
         }
         Relationships: [
           {
@@ -86,6 +89,7 @@ export type Database = {
           name: string
           phone: string | null
           shop_id: string
+          updated_at: string
         }
         Insert: {
           address?: string | null
@@ -94,6 +98,7 @@ export type Database = {
           name: string
           phone?: string | null
           shop_id: string
+          updated_at?: string
         }
         Update: {
           address?: string | null
@@ -102,6 +107,7 @@ export type Database = {
           name?: string
           phone?: string | null
           shop_id?: string
+          updated_at?: string
         }
         Relationships: [
           {
@@ -109,6 +115,48 @@ export type Database = {
             columns: ["shop_id"]
             isOneToOne: false
             referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      device_tokens: {
+        Row: {
+          created_at: string
+          expo_push_token: string
+          id: string
+          platform: string
+          shop_id: string
+          staff_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          expo_push_token: string
+          id?: string
+          platform: string
+          shop_id: string
+          staff_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          expo_push_token?: string
+          id?: string
+          platform?: string
+          shop_id?: string
+          staff_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "device_tokens_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "device_tokens_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff"
             referencedColumns: ["id"]
           },
         ]
@@ -221,6 +269,64 @@ export type Database = {
           },
         ]
       }
+      order_items: {
+        Row: {
+          cloth_count: number
+          created_at: string
+          garment_type: string
+          id: string
+          measurement_id: string | null
+          notes: string | null
+          order_id: string
+          shop_id: string
+          unit_price: number
+        }
+        Insert: {
+          cloth_count?: number
+          created_at?: string
+          garment_type: string
+          id?: string
+          measurement_id?: string | null
+          notes?: string | null
+          order_id: string
+          shop_id: string
+          unit_price?: number
+        }
+        Update: {
+          cloth_count?: number
+          created_at?: string
+          garment_type?: string
+          id?: string
+          measurement_id?: string | null
+          notes?: string | null
+          order_id?: string
+          shop_id?: string
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_items_measurement_id_fkey"
+            columns: ["measurement_id"]
+            isOneToOne: false
+            referencedRelation: "measurements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_items_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       orders: {
         Row: {
           assigned_staff_id: string | null
@@ -233,15 +339,19 @@ export type Database = {
           design_photo_url: string | null
           design_photo_urls: string[]
           id: string
+          is_rush: boolean
           measurement_id: string | null
           order_date: string
           order_number: string
           paid_amount: number
           payment_mode: string | null
           priority: Database["public"]["Enums"]["order_priority"]
+          rush_fee: number | null
           shop_id: string
           status: Database["public"]["Enums"]["order_status"]
           total_amount: number | null
+          trial_date: string | null
+          updated_at: string
         }
         Insert: {
           assigned_staff_id?: string | null
@@ -254,15 +364,19 @@ export type Database = {
           design_photo_url?: string | null
           design_photo_urls?: string[]
           id?: string
+          is_rush?: boolean
           measurement_id?: string | null
           order_date?: string
           order_number: string
           paid_amount?: number
           payment_mode?: string | null
           priority?: Database["public"]["Enums"]["order_priority"]
+          rush_fee?: number | null
           shop_id: string
           status?: Database["public"]["Enums"]["order_status"]
           total_amount?: number | null
+          trial_date?: string | null
+          updated_at?: string
         }
         Update: {
           assigned_staff_id?: string | null
@@ -275,15 +389,19 @@ export type Database = {
           design_photo_url?: string | null
           design_photo_urls?: string[]
           id?: string
+          is_rush?: boolean
           measurement_id?: string | null
           order_date?: string
           order_number?: string
           paid_amount?: number
           payment_mode?: string | null
           priority?: Database["public"]["Enums"]["order_priority"]
+          rush_fee?: number | null
           shop_id?: string
           status?: Database["public"]["Enums"]["order_status"]
           total_amount?: number | null
+          trial_date?: string | null
+          updated_at?: string
         }
         Relationships: [
           {
@@ -372,40 +490,46 @@ export type Database = {
         Row: {
           address: string | null
           created_at: string
-          has_tailoring: boolean
           has_seen_guide: boolean
+          has_tailoring: boolean
           id: string
           logo_url: string | null
+          onboarding_checklist: Json
           owner_id: string
           owner_name: string
           phone: string | null
           primary_color: string
+          rush_fee_percent: number
           shop_name: string
         }
         Insert: {
           address?: string | null
           created_at?: string
-          has_tailoring?: boolean
           has_seen_guide?: boolean
+          has_tailoring?: boolean
           id?: string
           logo_url?: string | null
+          onboarding_checklist?: Json
           owner_id: string
           owner_name: string
           phone?: string | null
           primary_color?: string
+          rush_fee_percent?: number
           shop_name: string
         }
         Update: {
           address?: string | null
           created_at?: string
-          has_tailoring?: boolean
           has_seen_guide?: boolean
+          has_tailoring?: boolean
           id?: string
           logo_url?: string | null
+          onboarding_checklist?: Json
           owner_id?: string
           owner_name?: string
           phone?: string | null
           primary_color?: string
+          rush_fee_percent?: number
           shop_name?: string
         }
         Relationships: []
@@ -414,10 +538,12 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          is_active: boolean
           name: string
           phone: string | null
           role: string | null
           shop_id: string
+          updated_at: string
           wage_amount: number
           wage_amount_pair: number | null
           wage_amount_pant: number | null
@@ -427,10 +553,12 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          is_active?: boolean
           name: string
           phone?: string | null
           role?: string | null
           shop_id: string
+          updated_at?: string
           wage_amount?: number
           wage_amount_pair?: number | null
           wage_amount_pant?: number | null
@@ -440,10 +568,12 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          is_active?: boolean
           name?: string
           phone?: string | null
           role?: string | null
           shop_id?: string
+          updated_at?: string
           wage_amount?: number
           wage_amount_pair?: number | null
           wage_amount_pant?: number | null
@@ -460,8 +590,51 @@ export type Database = {
           },
         ]
       }
+      staff_leave: {
+        Row: {
+          created_at: string
+          id: string
+          leave_date: string
+          reason: string | null
+          shop_id: string
+          staff_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          leave_date: string
+          reason?: string | null
+          shop_id: string
+          staff_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          leave_date?: string
+          reason?: string | null
+          shop_id?: string
+          staff_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_leave_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staff_leave_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       staff_orders: {
         Row: {
+          assigned_at: string | null
           completed_at: string | null
           id: string
           order_id: string
@@ -470,6 +643,7 @@ export type Database = {
           task: string | null
         }
         Insert: {
+          assigned_at?: string | null
           completed_at?: string | null
           id?: string
           order_id: string
@@ -478,6 +652,7 @@ export type Database = {
           task?: string | null
         }
         Update: {
+          assigned_at?: string | null
           completed_at?: string | null
           id?: string
           order_id?: string
@@ -557,6 +732,57 @@ export type Database = {
           },
         ]
       }
+      till_entries: {
+        Row: {
+          cash_out: number
+          closing_cash: number | null
+          created_at: string
+          entry_date: string
+          id: string
+          notes: string | null
+          opening_cash: number
+          reconciled_by: string | null
+          shop_id: string
+        }
+        Insert: {
+          cash_out?: number
+          closing_cash?: number | null
+          created_at?: string
+          entry_date?: string
+          id?: string
+          notes?: string | null
+          opening_cash?: number
+          reconciled_by?: string | null
+          shop_id: string
+        }
+        Update: {
+          cash_out?: number
+          closing_cash?: number | null
+          created_at?: string
+          entry_date?: string
+          id?: string
+          notes?: string | null
+          opening_cash?: number
+          reconciled_by?: string | null
+          shop_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "till_entries_reconciled_by_fkey"
+            columns: ["reconciled_by"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "till_entries_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -586,7 +812,7 @@ export type Database = {
 
 type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
 
-type DefaultSchema = DatabaseWithoutInternals["public"]
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
 
 export type Tables<
   DefaultSchemaTableNameOrOptions extends

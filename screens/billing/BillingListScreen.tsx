@@ -4,7 +4,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { Badge, Card, EmptyState, Header, LoadingSpinner, SearchBar, useToast } from '../../components/ui';
-import { supabase } from '../../lib/supabase';
+import { billsRepo } from '../../lib/data/repository';
+import { useShop } from '../../context/AuthContext';
 import { formatCurrency, formatDate } from '../../lib/format';
 import { useTranslation } from 'react-i18next';
 import type { BillingScreenProps } from '../../navigation/types';
@@ -16,6 +17,7 @@ const PAYMENT_FILTERS: PaymentStatus[] = ['paid', 'partial', 'unpaid'];
 export default function BillingListScreen({ navigation }: BillingScreenProps<'BillingList'>) {
   const insets = useSafeAreaInsets();
   const showToast = useToast();
+  const shop = useShop();
   const { t } = useTranslation('billing');
   const [bills, setBills] = useState<BillWithRelations[]>([]);
   const [loading, setLoading] = useState(true);
@@ -26,16 +28,11 @@ export default function BillingListScreen({ navigation }: BillingScreenProps<'Bi
 
   const load = useCallback(async () => {
     try {
-      const { data, error } = await supabase
-        .from('bills')
-        .select('*, customers(name, phone), payments(*)')
-        .order('created_at', { ascending: false });
-      if (error) throw error;
-      setBills(data ?? []);
+      setBills((await billsRepo.listWithRelations(shop.id)) as unknown as BillWithRelations[]);
     } catch (err) {
       showToast(err instanceof Error ? err.message : t('list.errorLoad'), 'error');
     }
-  }, [showToast]);
+  }, [showToast, shop.id]);
 
   useFocusEffect(
     useCallback(() => {

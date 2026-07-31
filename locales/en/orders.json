@@ -1,4 +1,14 @@
 {
+  "bulk": {
+    "title": "Bulk Order",
+    "customersRequired": "Select at least one customer",
+    "garmentTypeRequired": "Enter a garment type",
+    "selectCustomers": "Customers ({{count}} selected)",
+    "grandTotal": "Grand total: {{total}}",
+    "createOrders": "Create {{count}} orders",
+    "success": "Created {{count}} orders",
+    "error": "Could not create bulk orders"
+  },
   "form": {
     "title": "New Order",
     "customer": "Customer",
@@ -7,6 +17,24 @@
     "clothCountPlaceholder": "e.g. 2",
     "designPhotos": "Design Photos",
     "piece": "Piece {{number}}",
+    "itemsRequired": "Add at least one garment with a piece count",
+    "garments": "Garments",
+    "garmentNumber": "Garment {{number}}",
+    "garmentType": "Garment Type",
+    "garmentTypePlaceholder": "e.g. Shirt, Pant",
+    "defaultGarmentType": "Garment",
+    "pieceCount": "Pieces",
+    "unitPrice": "Price per piece",
+    "addGarment": "+ Add garment",
+    "deliverySuggested": "Suggested based on current workload — tap to change",
+    "rushOrder": "Rush order",
+    "rushYes": "Yes",
+    "rushNo": "No",
+    "rushFee": "Rush fee",
+    "itemNotes": "Notes",
+    "itemNotesPlaceholder": "Special instructions (or tap the mic)",
+    "dictationFailed": "Could not hear that, please try again",
+    "microphonePermissionDenied": "Microphone permission is needed to dictate notes",
     "measurement": "Measurement",
     "selectMeasurement": "Select saved measurement",
     "measurementSection": {
@@ -114,6 +142,8 @@
     "deleteFailed": "Could not delete order",
     "cancel": "Cancel",
     "delete": "Delete",
+    "pushReadyTitle": "Order ready",
+    "pushReadyBody": "Order #{{number}} for {{customerName}} is ready for pickup",
     "whatsapp": {
       "sectionTitle": "Customer messages",
       "sendCompletion": "Send completion message",

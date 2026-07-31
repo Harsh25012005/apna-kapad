@@ -18,6 +18,10 @@ export const NOTCH = {
   depth: 24,
 };
 
+/** Row layout constants, reused by callers that need to position tooltips
+ * over a specific action row (see the product tour spotlight). */
+export const MENU_LAYOUT = { H_MARGIN: 12, HEADER_H: 40, ROW_H: 64, FOOT_H: 34 } as const;
+
 /**
  * Half of the notch, as a cubic. Control points are expressed as fractions of
  * `flare` so the scoop stays smooth and symmetric at any size — hand-picked
@@ -53,16 +57,14 @@ export type QuickAddMenuProps = {
   bottomOffset: number;
   /** Matches the tab bar's own fill so the two read as one dock. */
   cardFill?: string;
+  /** During the product tour, dims every row except this one. */
+  highlightedKey?: string;
 };
 
 const OPEN_MS = 240;
 const CLOSE_MS = 160;
 
-const H_MARGIN = 12;
-const HEADER_H = 40;
-const ROW_H = 64;
-/** Clear space under the last row so the notch never overlaps content. */
-const FOOT_H = 34;
+const { H_MARGIN, HEADER_H, ROW_H, FOOT_H } = MENU_LAYOUT;
 const CARD_RADIUS = 28;
 
 /** Rounded rect with a concave notch cut into the bottom-centre edge. */
@@ -91,7 +93,14 @@ function cardPath(w: number, h: number) {
  * (never Reanimated) — Reanimated worklets segfault inside Expo Go, and this
  * needs to stay usable there.
  */
-export function QuickAddMenu({ visible, onClose, actions, bottomOffset, cardFill = '#050505' }: QuickAddMenuProps) {
+export function QuickAddMenu({
+  visible,
+  onClose,
+  actions,
+  bottomOffset,
+  cardFill = '#050505',
+  highlightedKey,
+}: QuickAddMenuProps) {
   // Kept mounted for the duration of the exit animation.
   const [mounted, setMounted] = useState(visible);
   const progress = useRef(new Animated.Value(0)).current;
@@ -168,11 +177,17 @@ export function QuickAddMenu({ visible, onClose, actions, bottomOffset, cardFill
               extrapolate: 'clamp' as const,
             };
 
+            const isDimmed = !!highlightedKey && highlightedKey !== action.key;
+            const isSpotlit = highlightedKey === action.key;
+
             return (
               <Animated.View
                 key={action.key}
                 style={{
-                  opacity: progress.interpolate({ ...range, outputRange: [0, 1] }),
+                  opacity: Animated.multiply(
+                    progress.interpolate({ ...range, outputRange: [0, 1] }),
+                    isDimmed ? 0.35 : 1
+                  ),
                   transform: [
                     { translateY: progress.interpolate({ ...range, outputRange: [14, 0] }) },
                   ],
@@ -183,7 +198,7 @@ export function QuickAddMenu({ visible, onClose, actions, bottomOffset, cardFill
                     silently left the row with no flexDirection or padding. */}
                 <Pressable
                   onPress={action.onPress}
-                  style={styles.row}
+                  style={[styles.row, isSpotlit && styles.rowSpotlit]}
                   android_ripple={{ color: 'rgba(255,255,255,0.10)' }}
                 >
                   <View style={[styles.iconCircle, { backgroundColor: action.bg }]}>
@@ -230,6 +245,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 20,
     gap: 14,
+  },
+  rowSpotlit: {
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    borderRadius: 16,
+    marginHorizontal: 6,
   },
   iconCircle: {
     width: 40,

@@ -31,6 +31,7 @@
     "addressPlaceholder": "Shop address",
     "phone": "Phone",
     "phonePlaceholder": "10-digit phone number",
+    "rushFeePercent": "Rush order fee (%)",
     "save": "Save Changes",
     "errorShopNameRequired": "Shop name is required",
     "errorOwnerNameRequired": "Owner name is required",
@@ -40,25 +41,31 @@
   },
   "appGuide": {
     "skip": "Skip",
+    "back": "Back",
     "next": "Next",
     "getStarted": "Get Started",
-    "stepOf": "Step {{current}} of {{total}}",
+    "tryItNow": "Try it now",
+    "welcome": {
+      "title": "Let's take a quick tour",
+      "subtitle": "It'll only take a few seconds to show you around customers, orders, billing, and staff.",
+      "cta": "Take a tour"
+    },
     "steps": {
-      "dashboard": {
-        "title": "Welcome to your Dashboard",
-        "description": "This is home base. Check today's collections, see what orders came in today, and track pending work and this month's sales — all in one glance."
-      },
       "customers": {
-        "title": "Keep customers organised",
-        "description": "Add a new customer in seconds, save their measurements once, and reuse them for every future order. Each profile also shows order history and any balance owed."
+        "title": "Add a customer",
+        "description": "Save a customer's name, phone, and measurements once — then reuse them for every future order."
       },
       "orders": {
-        "title": "Track every order to delivery",
-        "description": "Create an order and move it through Cutting → Stitching → Ready → Delivered with a single tap from its detail page. You always know exactly where an order stands."
+        "title": "Create an order",
+        "description": "Start an order for a customer and move it through Cutting → Stitching → Ready → Delivered with a single tap."
       },
-      "settings": {
-        "title": "Billing, staff & more",
-        "description": "Generate bills and record payments under Billing & Payments, manage your tailors under Staff Management, and fine-tune your shop profile — all from Settings."
+      "billing": {
+        "title": "Raise a bill",
+        "description": "Generate a bill for an order, record payments, and track what's still pending — all from Billing."
+      },
+      "staff": {
+        "title": "Add your staff",
+        "description": "Add a tailor or helper, set their wage type, and assign them to orders so you can track who's doing what."
       }
     }
   }

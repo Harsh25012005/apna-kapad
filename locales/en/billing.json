@@ -1,4 +1,22 @@
 {
+  "cashRegister": {
+    "title": "Cash Register",
+    "loading": "Loading today's register...",
+    "loadError": "Could not load today's register",
+    "today": "Today",
+    "cashIn": "Cash payments received",
+    "expectedClosing": "Expected closing cash",
+    "openingCash": "Opening cash",
+    "cashOut": "Cash out (expenses)",
+    "closingCash": "Closing cash (counted)",
+    "closingCashPlaceholder": "Count the drawer and enter here",
+    "notes": "Notes",
+    "shortBy": "Short by {{amount}}",
+    "overBy": "Over by {{amount}}",
+    "save": "Save reconciliation",
+    "saveSuccess": "Till reconciled",
+    "saveError": "Could not save reconciliation"
+  },
   "list": {
     "title": "Billing",
     "totalPending": "Total Pending Across All Customers",

@@ -1,4 +1,15 @@
 {
+  "leaderboard": {
+    "title": "સ્ટાફ લીડરબોર્ડ",
+    "loading": "લીડરબોર્ડ લોડ થઈ રહ્યું છે...",
+    "loadError": "લીડરબોર્ડ લોડ થઈ શક્યું નથી",
+    "week": "આ અઠવાડિયે",
+    "month": "આ મહિને",
+    "ordersCompleted": "{{count}} ઓર્ડર પૂર્ણ થયા",
+    "avgTurnaround": "સરેરાશ {{hours}} કલાક",
+    "emptyTitle": "હજુ સુધી કોઈ ઓર્ડર પૂર્ણ થયો નથી",
+    "emptyDescription": "આ સમયગાળામાં પૂર્ણ થયેલા ઓર્ડર અહીં દેખાશે."
+  },
   "wageUnit": {
     "daily": "/દિવસ",
     "monthly": "/મહિનો",

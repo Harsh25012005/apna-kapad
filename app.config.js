@@ -70,6 +70,15 @@ module.exports = {
           iosUrlScheme: process.env.GOOGLE_IOS_URL_SCHEME ?? 'com.googleusercontent.apps.PLACEHOLDER',
         },
       ],
+      'expo-sqlite',
+      'expo-notifications',
+      [
+        'expo-speech-recognition',
+        {
+          microphonePermission: 'Allow $(PRODUCT_NAME) to use the microphone to dictate order details.',
+          speechRecognitionPermission: 'Allow $(PRODUCT_NAME) to use speech recognition to dictate order details.',
+        },
+      ],
     ],
     extra: {
       supabaseUrl: process.env.SUPABASE_URL,

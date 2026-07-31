@@ -1,4 +1,26 @@
 {
+  "checklist": {
+    "title": "शुरुआत करें",
+    "progress": "सेटअप ({{done}}/{{total}})",
+    "nextStep": "अगला कदम",
+    "addNow": "अभी जोड़ें",
+    "steps": {
+      "addedFirstCustomer": "अपना पहला ग्राहक जोड़ें",
+      "createdFirstOrder": "अपना पहला ऑर्डर बनाएं",
+      "addedFirstStaff": "एक स्टाफ सदस्य जोड़ें",
+      "sentFirstBill": "अपना पहला बिल बनाएं"
+    }
+  },
+  "calendar": {
+    "title": "कैलेंडर",
+    "loading": "कैलेंडर लोड हो रहा है...",
+    "loadError": "कैलेंडर लोड नहीं हो सका",
+    "deliveryLabel": "डिलीवरी — #{{number}}",
+    "trialLabel": "ट्रायल — #{{number}}",
+    "leaveLabel": "{{name}} छुट्टी पर",
+    "emptyTitle": "कुछ भी निर्धारित नहीं है",
+    "emptyDescription": "इस दिन की डिलीवरी, ट्रायल और स्टाफ छुट्टी यहाँ दिखेंगी।"
+  },
   "loading": "डैशबोर्ड लोड हो रहा है...",
   "greeting": "नमस्ते, {{name}}",
   "defaultUser": "यूज़र",

@@ -5,6 +5,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { Avatar, Badge, Card, EmptyState, Header, LoadingSpinner, useToast } from '../../components/ui';
 import { supabase } from '../../lib/supabase';
+import { customersRepo, ordersRepo, billsRepo } from '../../lib/data/repository';
 import { formatCurrency, formatDate } from '../../lib/format';
 import { sendWhatsAppMessage, buildPaymentDueMessage } from '../../lib/whatsapp';
 import { useShop } from '../../context/AuthContext';
@@ -29,41 +30,33 @@ export default function CustomerDetailScreen({
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const [customerRes, measurementRes, orderRes, billRes] = await Promise.all([
-        supabase.from('customers').select('*').eq('id', customerId).single(),
+      const [customerData, measurementRes, allOrders, balanceByCustomer] = await Promise.all([
+        customersRepo.get(customerId),
         supabase
           .from('measurements')
           .select('*')
           .eq('customer_id', customerId)
           .order('updated_at', { ascending: false }),
-        supabase
-          .from('orders')
-          .select('*')
-          .eq('customer_id', customerId)
-          .order('order_date', { ascending: false }),
-        supabase
-          .from('bills')
-          .select('total_amount, payments(amount_paid)')
-          .eq('customer_id', customerId),
+        ordersRepo.list(shop.id),
+        billsRepo.pendingBalanceByCustomer(shop.id),
       ]);
 
-      if (customerRes.error) throw customerRes.error;
+      if (!customerData) throw new Error(t('detail.loadError'));
 
-      setCustomer(customerRes.data);
+      setCustomer(customerData);
       setMeasurements(measurementRes.data ?? []);
-      setOrders(orderRes.data ?? []);
-
-      const totalBalance = (billRes.data ?? []).reduce((sum, bill) => {
-        const paid = bill.payments.reduce((s, p) => s + Number(p.amount_paid), 0);
-        return sum + Math.max(Number(bill.total_amount ?? 0) - paid, 0);
-      }, 0);
-      setBalance(totalBalance);
+      setOrders(
+        allOrders
+          .filter((o) => o.customer_id === customerId)
+          .sort((a, b) => (a.order_date < b.order_date ? 1 : -1))
+      );
+      setBalance(balanceByCustomer[customerId] ?? 0);
     } catch (err) {
       showToast(err instanceof Error ? err.message : t('detail.loadError'), 'error');
     } finally {
       setLoading(false);
     }
-  }, [customerId, showToast]);
+  }, [customerId, showToast, shop.id]);
 
   useFocusEffect(
     useCallback(() => {

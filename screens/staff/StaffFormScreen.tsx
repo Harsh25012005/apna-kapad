@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { ScrollView } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { Button, Dropdown, Header, InputField, useToast } from '../../components/ui';
-import { supabase } from '../../lib/supabase';
+import { staffRepo } from '../../lib/data/repository';
 import { useShop } from '../../context/AuthContext';
 import type { SettingsScreenProps } from '../../navigation/types';
 import type { WageType } from '../../types';
@@ -43,7 +43,7 @@ export default function StaffFormScreen({ navigation, route }: SettingsScreenPro
   useEffect(() => {
     if (!staffId) return;
     void (async () => {
-      const { data } = await supabase.from('staff').select('*').eq('id', staffId).single();
+      const data = await staffRepo.get(staffId);
       if (!data) return;
       setName(data.name);
       setPhone(data.phone ?? '');
@@ -85,10 +85,11 @@ export default function StaffFormScreen({ navigation, route }: SettingsScreenPro
         wage_amount_pair: isPerPiece && Number.isFinite(parsedPair) && parsedPair > 0 ? parsedPair : null,
       };
 
-      const { error: saveError } = staffId
-        ? await supabase.from('staff').update(payload).eq('id', staffId)
-        : await supabase.from('staff').insert(payload);
-      if (saveError) throw saveError;
+      if (staffId) {
+        await staffRepo.update(staffId, shop.id, payload);
+      } else {
+        await staffRepo.create(payload);
+      }
 
       showToast(staffId ? t('form.updateSuccess') : t('form.addSuccess'), 'success');
       navigation.goBack();

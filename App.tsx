@@ -12,6 +12,7 @@ import {
 } from '@expo-google-fonts/google-sans-flex';
 import { LoadingSpinner, ToastProvider } from './components/ui';
 import { AuthProvider } from './context/AuthContext';
+import { ProductTourProvider } from './context/ProductTourContext';
 import { ThemeProvider, useTheme } from './context/ThemeContext';
 import { RootNavigator } from './navigation/RootNavigator';
 import { initI18n } from './lib/i18n';
@@ -71,7 +72,9 @@ export default function App() {
       <SafeAreaProvider>
         <ToastProvider>
           <AuthProvider>
-            <RootNavigator />
+            <ProductTourProvider>
+              <RootNavigator />
+            </ProductTourProvider>
           </AuthProvider>
         </ToastProvider>
         <StatusBarBackdrop />

@@ -1,8 +1,6 @@
 import { useState } from 'react';
 import { Platform, Pressable, Text, View } from 'react-native';
-import DateTimePicker, {
-  type DateTimePickerEvent,
-} from '@react-native-community/datetimepicker';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../../context/ThemeContext';
@@ -34,12 +32,12 @@ export function DatePickerField({
   const formatDate = (date: Date): string =>
     `${String(date.getDate()).padStart(2, '0')} ${t(`months.${date.getMonth() + 1}`)} ${date.getFullYear()}`;
 
-  const handleChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
+  const handleValueChange = (_event: unknown, selectedDate: Date) => {
     if (Platform.OS !== 'ios') setShow(false);
-    if (event.type === 'set' && selectedDate) {
-      onChange(selectedDate);
-    }
+    onChange(selectedDate);
   };
+
+  const handleDismiss = () => setShow(false);
 
   return (
     <View className="w-full mb-4">
@@ -68,7 +66,8 @@ export function DatePickerField({
           value={value ?? new Date()}
           mode="date"
           display={Platform.OS === 'ios' ? 'inline' : 'default'}
-          onChange={handleChange}
+          onValueChange={handleValueChange}
+          onDismiss={handleDismiss}
           minimumDate={minimumDate}
           maximumDate={maximumDate}
         />

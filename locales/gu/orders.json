@@ -1,4 +1,14 @@
 {
+  "bulk": {
+    "title": "બલ્ક ઓર્ડર",
+    "customersRequired": "ઓછામાં ઓછો એક ગ્રાહક પસંદ કરો",
+    "garmentTypeRequired": "ગારમેન્ટ પ્રકાર દાખલ કરો",
+    "selectCustomers": "ગ્રાહકો ({{count}} પસંદ કરેલ)",
+    "grandTotal": "કુલ રકમ: {{total}}",
+    "createOrders": "{{count}} ઓર્ડર બનાવો",
+    "success": "{{count}} ઓર્ડર બનાવ્યા",
+    "error": "બલ્ક ઓર્ડર બનાવી શકાયા નથી"
+  },
   "form": {
     "title": "નવો ઓર્ડર",
     "customer": "ગ્રાહક",
@@ -7,6 +17,24 @@
     "clothCountPlaceholder": "દા.ત. 2",
     "designPhotos": "ડિઝાઇન ફોટા",
     "piece": "ટુકડો {{number}}",
+    "itemsRequired": "ઓછામાં ઓછું એક ગારમેન્ટ અને ટુકડાની સંખ્યા ઉમેરો",
+    "garments": "ગારમેન્ટ્સ",
+    "garmentNumber": "ગારમેન્ટ {{number}}",
+    "garmentType": "ગારમેન્ટ પ્રકાર",
+    "garmentTypePlaceholder": "દા.ત. શર્ટ, પેન્ટ",
+    "defaultGarmentType": "ગારમેન્ટ",
+    "pieceCount": "ટુકડા",
+    "unitPrice": "પ્રતિ ટુકડો ભાવ",
+    "addGarment": "+ ગારમેન્ટ ઉમેરો",
+    "deliverySuggested": "હાલના કામના ભાર પર આધારિત સૂચન — બદલવા માટે ટેપ કરો",
+    "rushOrder": "રશ ઓર્ડર",
+    "rushYes": "હા",
+    "rushNo": "ના",
+    "rushFee": "રશ ફી",
+    "itemNotes": "નોંધ",
+    "itemNotesPlaceholder": "ખાસ સૂચનાઓ (અથવા માઇક પર ટેપ કરો)",
+    "dictationFailed": "સાંભળી શકાયું નથી, ફરી પ્રયાસ કરો",
+    "microphonePermissionDenied": "નોંધ બોલવા માટે માઇક્રોફોન પરવાનગી જરૂરી છે",
     "measurement": "માપ",
     "selectMeasurement": "સેવ કરેલું માપ પસંદ કરો",
     "measurementSection": {
@@ -114,6 +142,8 @@
     "deleteFailed": "ઓર્ડર કાઢી શકાયો નહીં",
     "cancel": "રદ કરો",
     "delete": "કાઢી નાખો",
+    "pushReadyTitle": "ઓર્ડર તૈયાર છે",
+    "pushReadyBody": "{{customerName}} માટે ઓર્ડર #{{number}} પિકઅપ માટે તૈયાર છે",
     "whatsapp": {
       "sectionTitle": "ગ્રાહકને સંદેશ",
       "sendCompletion": "તૈયાર થયાનો સંદેશ મોકલો",

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { ScrollView } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { Button, Header, InputField, LoadingSpinner, useToast } from '../../components/ui';
-import { supabase } from '../../lib/supabase';
+import { customersRepo } from '../../lib/data/repository';
 import { useShop } from '../../context/AuthContext';
 import type { CustomersScreenProps } from '../../navigation/types';
 
@@ -24,12 +24,8 @@ export default function CustomerFormScreen({ navigation, route }: CustomersScree
   const load = useCallback(async () => {
     if (!customerId) return;
     try {
-      const { data, error: fetchError } = await supabase
-        .from('customers')
-        .select('name, phone, address')
-        .eq('id', customerId)
-        .single();
-      if (fetchError) throw fetchError;
+      const data = await customersRepo.get(customerId);
+      if (!data) throw new Error(t('form.loadError'));
 
       setName(data.name ?? '');
       setPhone(data.phone ?? '');
@@ -60,16 +56,9 @@ export default function CustomerFormScreen({ navigation, route }: CustomersScree
       };
 
       if (isEditing) {
-        const { error: updateError } = await supabase
-          .from('customers')
-          .update(payload)
-          .eq('id', customerId!);
-        if (updateError) throw updateError;
+        await customersRepo.update(customerId!, shop.id, payload);
       } else {
-        const { error: insertError } = await supabase
-          .from('customers')
-          .insert({ shop_id: shop.id, ...payload });
-        if (insertError) throw insertError;
+        await customersRepo.create({ shop_id: shop.id, ...payload });
       }
 
       showToast(t(isEditing ? 'form.updateSuccess' : 'form.saveSuccess'), 'success');

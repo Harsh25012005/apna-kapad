@@ -3,7 +3,7 @@ import { ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { Button, Dropdown, Header, InputField, useToast } from '../../components/ui';
-import { supabase } from '../../lib/supabase';
+import { customersRepo, billsRepo } from '../../lib/data/repository';
 import { formatCurrency } from '../../lib/format';
 import { useShop } from '../../context/AuthContext';
 import type { AppScreenProps } from '../../navigation/types';
@@ -34,10 +34,10 @@ export default function BillFormScreen({ navigation, route }: AppScreenProps<'Bi
 
   useEffect(() => {
     void (async () => {
-      const { data } = await supabase.from('customers').select('id, name').order('name');
-      setCustomers((data ?? []).map((c) => ({ label: c.name, value: c.id })));
+      const data = await customersRepo.list(shop.id);
+      setCustomers(data.map((c) => ({ label: c.name, value: c.id })));
     })();
-  }, []);
+  }, [shop.id]);
 
   const total = useMemo(
     () =>
@@ -53,7 +53,7 @@ export default function BillFormScreen({ navigation, route }: AppScreenProps<'Bi
     setError('');
     setLoading(true);
     try {
-      const { error: insertError } = await supabase.from('bills').insert({
+      await billsRepo.create({
         shop_id: shop.id,
         order_id: orderId ?? null,
         customer_id: customerId,
@@ -62,7 +62,6 @@ export default function BillFormScreen({ navigation, route }: AppScreenProps<'Bi
         discount: toAmount(discount),
         tax: toAmount(tax),
       });
-      if (insertError) throw insertError;
       showToast(t('form.successCreated'), 'success');
       navigation.goBack();
     } catch (err) {

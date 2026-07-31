@@ -5,38 +5,26 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { FontAwesome5, Ionicons } from '@expo/vector-icons';
 import { Avatar, Card, EmptyState, Header, LoadingSpinner, SearchBar, useToast } from '../../components/ui';
-import { supabase } from '../../lib/supabase';
+import { customersRepo, billsRepo } from '../../lib/data/repository';
+import { useShop } from '../../context/AuthContext';
 import { formatCurrency } from '../../lib/format';
 import { haptics } from '../../lib/haptics';
 import type { CustomersScreenProps } from '../../navigation/types';
 import type { CustomerWithBalance } from '../../types';
 
-async function fetchCustomersWithBalance(): Promise<CustomerWithBalance[]> {
-  const { data: customers, error } = await supabase
-    .from('customers')
-    .select('id, name, phone')
-    .order('created_at', { ascending: false });
-  if (error) throw error;
-
-  const { data: bills, error: billsError } = await supabase
-    .from('bills')
-    .select('customer_id, total_amount, payments(amount_paid)');
-  if (billsError) throw billsError;
-
-  const balanceByCustomer: Record<string, number> = {};
-  for (const bill of bills ?? []) {
-    const paid = bill.payments.reduce((sum, p) => sum + Number(p.amount_paid), 0);
-    const pending = Math.max(Number(bill.total_amount ?? 0) - paid, 0);
-    balanceByCustomer[bill.customer_id] = (balanceByCustomer[bill.customer_id] ?? 0) + pending;
-  }
-
-  return (customers ?? []).map((c) => ({ ...c, balance: balanceByCustomer[c.id] ?? 0 }));
+async function fetchCustomersWithBalance(shopId: string): Promise<CustomerWithBalance[]> {
+  const [customers, balanceByCustomer] = await Promise.all([
+    customersRepo.list(shopId),
+    billsRepo.pendingBalanceByCustomer(shopId),
+  ]);
+  return customers.map((c) => ({ ...c, balance: balanceByCustomer[c.id] ?? 0 }));
 }
 
 export default function CustomerListScreen({ navigation }: CustomersScreenProps<'CustomerList'>) {
   const { t } = useTranslation('customers');
   const insets = useSafeAreaInsets();
   const showToast = useToast();
+  const shop = useShop();
   const [customers, setCustomers] = useState<CustomerWithBalance[]>([]);
   const [search, setSearch] = useState('');
   const [balanceOnly, setBalanceOnly] = useState(false);
@@ -46,11 +34,11 @@ export default function CustomerListScreen({ navigation }: CustomersScreenProps<
 
   const load = useCallback(async () => {
     try {
-      setCustomers(await fetchCustomersWithBalance());
+      setCustomers(await fetchCustomersWithBalance(shop.id));
     } catch (err) {
       showToast(err instanceof Error ? err.message : t('list.loadError'), 'error');
     }
-  }, [showToast]);
+  }, [showToast, shop.id]);
 
   useFocusEffect(
     useCallback(() => {

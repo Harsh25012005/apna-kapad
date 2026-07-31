@@ -3,6 +3,8 @@ import Constants, { ExecutionEnvironment } from 'expo-constants';
 import * as Linking from 'expo-linking';
 import type { EmailOtpType, Session, User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
+import { startAutoSync, stopAutoSync } from '../lib/data/sync';
+import { registerForPushNotifications } from '../lib/push';
 import type { Shop } from '../types';
 
 /** Where Supabase sends the user back to after they tap the email link. */
@@ -143,12 +145,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const loadShop = useCallback(async (currentSession: Session | null) => {
     if (!currentSession?.user) {
+      stopAutoSync();
       setShop(null);
       return;
     }
     try {
       const shopData = await fetchShop(currentSession.user.id);
       setShop(shopData);
+      if (shopData) {
+        startAutoSync(shopData.id);
+        void registerForPushNotifications(shopData.id);
+      } else {
+        stopAutoSync();
+      }
     } catch {
       // A failed shop lookup should not block the app from rendering —
       // the user simply lands on Shop Setup and can retry there.

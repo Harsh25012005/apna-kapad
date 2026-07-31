@@ -5,7 +5,7 @@ import { FontAwesome5 } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { Avatar, Card, useToast } from '../../components/ui';
 import { useAuth } from '../../context/AuthContext';
-import { useAppGuide } from '../../context/AppGuideContext';
+import { useProductTour } from '../../context/ProductTourContext';
 import { useTheme } from '../../context/ThemeContext';
 import { haptics } from '../../lib/haptics';
 import { setAppLanguage, SUPPORTED_LANGUAGES, type AppLanguage } from '../../lib/i18n';
@@ -26,7 +26,7 @@ const THEME_LABEL_KEY: Record<ThemeMode, string> = {
 
 export default function SettingsScreen({ navigation }: SettingsScreenProps<'SettingsHome'>) {
   const { shop, user, signOut } = useAuth();
-  const { openGuide } = useAppGuide();
+  const { start: startTour } = useProductTour();
   const { mode, setMode } = useTheme();
   const showToast = useToast();
   const insets = useSafeAreaInsets();
@@ -185,7 +185,14 @@ export default function SettingsScreen({ navigation }: SettingsScreenProps<'Sett
 
       {/* Help section */}
       <SectionCard title={t('help')}>
-        <MenuRow icon="compass" iconBg="bg-emerald-50 dark:bg-emerald-950" iconColor="#047857" label={t('howToUse')} onPress={openGuide} isLast />
+        <MenuRow
+          icon="compass"
+          iconBg="bg-emerald-50 dark:bg-emerald-950"
+          iconColor="#047857"
+          label={t('howToUse')}
+          onPress={startTour}
+          isLast
+        />
       </SectionCard>
 
       <Pressable

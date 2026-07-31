@@ -1,4 +1,22 @@
 {
+  "cashRegister": {
+    "title": "કેશ રજિસ્ટર",
+    "loading": "આજનું રજિસ્ટર લોડ થઈ રહ્યું છે...",
+    "loadError": "આજનું રજિસ્ટર લોડ થઈ શક્યું નથી",
+    "today": "આજે",
+    "cashIn": "મળેલ રોકડ ચુકવણી",
+    "expectedClosing": "અપેક્ષિત ક્લોઝિંગ રોકડ",
+    "openingCash": "ઓપનિંગ રોકડ",
+    "cashOut": "રોકડ ખર્ચ",
+    "closingCash": "ક્લોઝિંગ રોકડ (ગણેલ)",
+    "closingCashPlaceholder": "ડ્રોઅર ગણો અને અહીં દાખલ કરો",
+    "notes": "નોંધ",
+    "shortBy": "{{amount}} ઓછું",
+    "overBy": "{{amount}} વધારે",
+    "save": "મેળવણી સાચવો",
+    "saveSuccess": "ટિલ મેળવણી થઈ",
+    "saveError": "મેળવણી સાચવી શકાયું નથી"
+  },
   "list": {
     "title": "બિલિંગ",
     "totalPending": "તમામ ગ્રાહકોની કુલ બાકી રકમ",

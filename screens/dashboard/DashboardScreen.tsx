@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
@@ -8,7 +8,9 @@ import { EmptyState, LoadingSpinner, useToast } from '../../components/ui';
 import { supabase } from '../../lib/supabase';
 import { formatCurrency } from '../../lib/format';
 import { haptics } from '../../lib/haptics';
+import { hasSeenProductTour, markProductTourSeen } from '../../lib/productTour';
 import { useShop } from '../../context/AuthContext';
+import { useProductTour } from '../../context/ProductTourContext';
 import { useTheme } from '../../context/ThemeContext';
 import type { DashboardScreenProps } from '../../navigation/types';
 import type { OrderListItem } from '../../types';
@@ -73,6 +75,23 @@ export default function DashboardScreen({ navigation }: DashboardScreenProps<'Da
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const tour = useProductTour();
+
+  // First visit to the home page after signing up: show the tour once,
+  // then never again on this device for this shop.
+  useEffect(() => {
+    let cancelled = false;
+    void hasSeenProductTour(shop.id).then((seen) => {
+      if (!seen && !cancelled) {
+        void markProductTourSeen(shop.id);
+        tour.start();
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shop.id]);
 
   const load = useCallback(async () => {
     try {
@@ -222,12 +241,20 @@ export default function DashboardScreen({ navigation }: DashboardScreenProps<'Da
         <Text className="text-[18px] font-semibold text-[#101828] dark:text-gray-50">
           {t('greeting', { name: shop.shop_name || t('defaultUser') })}
         </Text>
-        <Pressable
-          onPress={() => navigation.navigate('Notifications')}
-          className="h-10 w-10 items-center justify-center rounded-full active:bg-gray-100 dark:active:bg-gray-800"
-        >
-          <Ionicons name="notifications-outline" size={22} color={scheme === 'dark' ? '#F3F4F6' : '#101828'} />
-        </Pressable>
+        <View className="flex-row items-center">
+          <Pressable
+            onPress={() => navigation.navigate('Calendar')}
+            className="h-10 w-10 items-center justify-center rounded-full active:bg-gray-100 dark:active:bg-gray-800"
+          >
+            <Ionicons name="calendar-outline" size={22} color={scheme === 'dark' ? '#F3F4F6' : '#101828'} />
+          </Pressable>
+          <Pressable
+            onPress={() => navigation.navigate('Notifications')}
+            className="h-10 w-10 items-center justify-center rounded-full active:bg-gray-100 dark:active:bg-gray-800"
+          >
+            <Ionicons name="notifications-outline" size={22} color={scheme === 'dark' ? '#F3F4F6' : '#101828'} />
+          </Pressable>
+        </View>
       </View>
 
       {/* Balance Hero Card */}

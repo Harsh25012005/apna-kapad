@@ -5,6 +5,8 @@ import { FontAwesome5 } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { Badge, Card, Header, LoadingSpinner, useToast } from '../../components/ui';
 import { supabase } from '../../lib/supabase';
+import { ordersRepo, billsRepo, paymentsRepo } from '../../lib/data/repository';
+import { sendPushNotification } from '../../lib/notify';
 import { formatCurrency, formatDate } from '../../lib/format';
 import { sendWhatsAppMessage } from '../../lib/whatsapp';
 import { haptics } from '../../lib/haptics';
@@ -91,19 +93,19 @@ export default function OrderDetailScreen({ navigation, route }: AppScreenProps<
       if (error) throw error;
       setOrder(data as unknown as OrderDetail);
 
-      const { data: bill } = await supabase
-        .from('bills')
-        .select('id, total_amount, payments(amount_paid)')
-        .eq('order_id', orderId)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
+      const [shopBills, shopPayments] = await Promise.all([
+        billsRepo.list(shop.id),
+        paymentsRepo.listForShop(shop.id),
+      ]);
+      const bill = shopBills.find((b) => b.order_id === orderId) ?? null;
       setExistingBillId(bill?.id ?? null);
       setBillAmounts(
         bill
           ? {
               total: Number(bill.total_amount ?? 0),
-              paid: (bill.payments ?? []).reduce((s, p) => s + Number(p.amount_paid ?? 0), 0),
+              paid: shopPayments
+                .filter((p) => p.bill_id === bill.id)
+                .reduce((s, p) => s + Number(p.amount_paid ?? 0), 0),
             }
           : null
       );
@@ -112,7 +114,7 @@ export default function OrderDetailScreen({ navigation, route }: AppScreenProps<
     } finally {
       setLoading(false);
     }
-  }, [orderId, showToast]);
+  }, [orderId, showToast, shop.id]);
 
   useFocusEffect(
     useCallback(() => {
@@ -124,11 +126,7 @@ export default function OrderDetailScreen({ navigation, route }: AppScreenProps<
     if (!order) return;
     setUpdating(true);
     try {
-      const { error } = await supabase
-        .from('orders')
-        .update({ status: nextStatus })
-        .eq('id', orderId);
-      if (error) throw error;
+      await ordersRepo.update(orderId, shop.id, { status: nextStatus });
 
       // Records this order against the assigned staff member so their "N
       // orders done" count (StaffListScreen) reflects real completions —
@@ -159,6 +157,16 @@ export default function OrderDetailScreen({ navigation, route }: AppScreenProps<
           // Non-critical bookkeeping — the order status change itself
           // already succeeded and shouldn't be reported as a failure.
         }
+      }
+
+      if (nextStatus === 'ready') {
+        void sendPushNotification({
+          shopId: shop.id,
+          type: 'order_ready',
+          customerId: order.customer_id,
+          title: t('detail.pushReadyTitle'),
+          body: t('detail.pushReadyBody', { number: order.order_number, customerName: order.customers?.name ?? '' }),
+        });
       }
 
       setOrder({ ...order, status: nextStatus });

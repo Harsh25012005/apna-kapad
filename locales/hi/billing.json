@@ -1,4 +1,22 @@
 {
+  "cashRegister": {
+    "title": "कैश रजिस्टर",
+    "loading": "आज का रजिस्टर लोड हो रहा है...",
+    "loadError": "आज का रजिस्टर लोड नहीं हो सका",
+    "today": "आज",
+    "cashIn": "प्राप्त नकद भुगतान",
+    "expectedClosing": "अपेक्षित क्लोजिंग नकद",
+    "openingCash": "ओपनिंग नकद",
+    "cashOut": "नकद व्यय",
+    "closingCash": "क्लोजिंग नकद (गिना हुआ)",
+    "closingCashPlaceholder": "दराज गिनें और यहाँ दर्ज करें",
+    "notes": "नोट्स",
+    "shortBy": "{{amount}} कम",
+    "overBy": "{{amount}} अधिक",
+    "save": "मिलान सहेजें",
+    "saveSuccess": "टिल मिलान हो गया",
+    "saveError": "मिलान सहेज नहीं सका"
+  },
   "list": {
     "title": "बिलिंग",
     "totalPending": "सभी ग्राहकों की कुल बकाया राशि",

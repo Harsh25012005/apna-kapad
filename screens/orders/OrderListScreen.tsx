@@ -13,7 +13,8 @@ import {
   SearchBar,
   useToast,
 } from '../../components/ui';
-import { supabase } from '../../lib/supabase';
+import { ordersRepo } from '../../lib/data/repository';
+import { useShop } from '../../context/AuthContext';
 import { formatDate } from '../../lib/format';
 import type { OrdersScreenProps } from '../../navigation/types';
 import type { OrderListItem, OrderPriority, OrderStatus } from '../../types';
@@ -24,6 +25,7 @@ type PriorityFilter = OrderPriority | 'all';
 export default function OrderListScreen({ navigation }: OrdersScreenProps<'OrderList'>) {
   const insets = useSafeAreaInsets();
   const showToast = useToast();
+  const shop = useShop();
   const { t } = useTranslation('orders');
 
   const STATUS_FILTERS: { label: string; value: StatusFilter }[] = [
@@ -51,16 +53,11 @@ export default function OrderListScreen({ navigation }: OrdersScreenProps<'Order
 
   const load = useCallback(async () => {
     try {
-      const { data, error } = await supabase
-        .from('orders')
-        .select('*, customers(name, phone)')
-        .order('delivery_date', { ascending: true });
-      if (error) throw error;
-      setOrders(data ?? []);
+      setOrders(await ordersRepo.listWithCustomer(shop.id));
     } catch (err) {
       showToast(err instanceof Error ? err.message : t('list.loadOrdersFailed'), 'error');
     }
-  }, [showToast]);
+  }, [showToast, shop.id]);
 
   useFocusEffect(
     useCallback(() => {
@@ -94,6 +91,15 @@ export default function OrderListScreen({ navigation }: OrdersScreenProps<'Order
       <Header
         showBack={false}
         title={t('list.title')}
+        right={
+          <Pressable
+            onPress={() => navigation.navigate('BulkOrderForm')}
+            hitSlop={8}
+            className="h-10 w-10 items-center justify-center rounded-full active:bg-gray-100 dark:active:bg-gray-800"
+          >
+            <FontAwesome5 name="layer-group" size={16} color="#1D4ED8" />
+          </Pressable>
+        }
         searchProps={{
           value: search,
           onChangeText: setSearch,

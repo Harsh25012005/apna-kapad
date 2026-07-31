@@ -31,6 +31,28 @@ export const colors = {
   } satisfies Record<PaymentStatus, BadgeColor>,
 };
 
+/**
+ * Same badge chips, tuned for a dark surface: the light-pastel/dark-text
+ * combination above reads as washed-out, low-contrast chips once the page
+ * behind them goes dark, so these swap to a tinted-dark bg with a light,
+ * saturated text color instead.
+ */
+export const darkColors = {
+  status: {
+    order_taken: { bg: '#3B2A6B', text: '#C4B5FD' },
+    cutting: { bg: '#4A3A0F', text: '#FCD34D' },
+    stitching: { bg: '#1E3A5F', text: '#93C5FD' },
+    ready: { bg: '#0F3D2E', text: '#6EE7B7' },
+    delivered: { bg: '#374151', text: '#E5E7EB' },
+  } satisfies Record<OrderStatus, BadgeColor>,
+
+  payment: {
+    paid: { bg: '#0F3D2E', text: '#6EE7B7' },
+    partial: { bg: '#4A3A0F', text: '#FCD34D' },
+    unpaid: { bg: '#4C1D1D', text: '#FCA5A5' },
+  } satisfies Record<PaymentStatus, BadgeColor>,
+};
+
 export const fonts = {
   regular: 'GoogleSansFlex_400Regular',
   medium: 'GoogleSansFlex_500Medium',

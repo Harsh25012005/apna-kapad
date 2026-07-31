@@ -26,12 +26,12 @@ export function Toggle({ value, onChange, label, disabled = false }: ToggleProps
 
   return (
     <View className="flex-row items-center justify-between">
-      {label ? <Text className="font-sans text-base text-gray-800">{label}</Text> : null}
+      {label ? <Text className="font-sans text-base text-gray-800 dark:text-gray-200">{label}</Text> : null}
       <Pressable
         onPress={() => !disabled && onChange(!value)}
         disabled={disabled}
         className={`h-7 w-12 justify-center rounded-full ${
-          value ? 'bg-primary-600' : 'bg-gray-300'
+          value ? 'bg-primary-600' : 'bg-gray-300 dark:bg-gray-700'
         } ${disabled ? 'opacity-50' : ''}`}
       >
         <Animated.View

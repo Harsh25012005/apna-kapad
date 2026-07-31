@@ -14,9 +14,14 @@ export const EMAIL_CONFIRM_REDIRECT = 'measuresone://confirm-email';
  * Which shape the link takes depends on the project's flow type and email
  * template, so all three are handled: implicit (tokens in the URL fragment),
  * PKCE (`?code=`), and the newer hashed-token templates (`?token_hash=&type=`).
- * Returns true if the URL actually carried credentials.
+ * Returns whether the URL carried credentials, and — since Supabase's own
+ * `PASSWORD_RECOVERY` auth event is only reliably emitted by the browser-side
+ * URL detector we bypass here by parsing links ourselves — whether the link's
+ * own `type=recovery` param marks this as a password-reset link rather than a
+ * plain sign-in, so the caller can gate straight to the reset-password screen
+ * instead of dropping the user into the app with their old password intact.
  */
-async function completeSessionFromUrl(url: string): Promise<boolean> {
+async function completeSessionFromUrl(url: string): Promise<{ handled: boolean; isRecovery: boolean }> {
   // Logged without the token values themselves so the Metro console shows
   // which shape the link arrived in when confirmation doesn't take.
   const shape = {
@@ -36,17 +41,18 @@ async function completeSessionFromUrl(url: string): Promise<boolean> {
     if (access_token && refresh_token) {
       const { error } = await supabase.auth.setSession({ access_token, refresh_token });
       if (error) throw error;
-      return true;
+      return { handled: true, isRecovery: fragment.get('type') === 'recovery' };
     }
   }
 
   const { queryParams } = Linking.parse(url);
+  const isRecoveryLink = queryParams?.type === 'recovery';
 
   const code = queryParams?.code;
   if (typeof code === 'string') {
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (error) throw error;
-    return true;
+    return { handled: true, isRecovery: isRecoveryLink };
   }
 
   const tokenHash = queryParams?.token_hash;
@@ -57,11 +63,11 @@ async function completeSessionFromUrl(url: string): Promise<boolean> {
       type: (typeof rawType === 'string' ? rawType : 'email') as EmailOtpType,
     });
     if (error) throw error;
-    return true;
+    return { handled: true, isRecovery: isRecoveryLink };
   }
 
   console.log('[auth] deep link carried no credentials — nothing to exchange');
-  return false;
+  return { handled: false, isRecovery: false };
 }
 
 /**
@@ -108,6 +114,9 @@ type AuthContextValue = {
   signInWithEmail: (email: string, password: string) => Promise<void>;
   signInWithGoogle: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
+  /** True once the recovery deep link has established a session, until completePasswordReset resolves. */
+  passwordRecovery: boolean;
+  completePasswordReset: (newPassword: string) => Promise<void>;
   resendConfirmationEmail: (email: string) => Promise<void>;
   signOut: () => Promise<void>;
   refreshShop: () => Promise<void>;
@@ -130,6 +139,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [shop, setShop] = useState<Shop | null>(null);
   const [loading, setLoading] = useState(true);
+  const [passwordRecovery, setPasswordRecovery] = useState(false);
 
   const loadShop = useCallback(async (currentSession: Session | null) => {
     if (!currentSession?.user) {
@@ -162,7 +172,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, newSession) => {
+    } = supabase.auth.onAuthStateChange((event, newSession) => {
+      // Supabase fires this specific event (rather than a plain SIGNED_IN) when
+      // the session came from a password-recovery link, so this is the only
+      // reliable way to tell "signed in" apart from "here to set a new
+      // password" — both otherwise look identical (session + user present).
+      if (event === 'PASSWORD_RECOVERY') setPasswordRecovery(true);
       setSession(newSession);
       void loadShop(newSession);
     });
@@ -177,9 +192,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // both for a cold start (app was closed) and while it's already running.
   useEffect(() => {
     const handle = (url: string) => {
-      void completeSessionFromUrl(url).catch((err) => {
-        console.warn('[auth] could not complete confirmation from link:', err?.message ?? err);
-      });
+      void completeSessionFromUrl(url)
+        .then(({ isRecovery }) => {
+          if (isRecovery) setPasswordRecovery(true);
+        })
+        .catch((err) => {
+          console.warn('[auth] could not complete confirmation from link:', err?.message ?? err);
+        });
     };
 
     void Linking.getInitialURL().then((url) => {
@@ -270,6 +289,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (error) throw error;
   };
 
+  const completePasswordReset = async (newPassword: string) => {
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    if (error) throw error;
+    setPasswordRecovery(false);
+  };
+
   const signOut = async () => {
     // Sign out from both Supabase and Google (clears cached Google account).
     // Skipped entirely in Expo Go, where the native module isn't present.
@@ -300,6 +325,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         signInWithEmail,
         signInWithGoogle,
         resetPassword,
+        passwordRecovery,
+        completePasswordReset,
         resendConfirmationEmail,
         signOut,
         refreshShop,

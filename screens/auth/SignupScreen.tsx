@@ -64,18 +64,18 @@ export default function SignupScreen({ navigation }: AuthScreenProps<'Signup'>) 
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      className="flex-1 bg-white"
+      className="flex-1 bg-white dark:bg-gray-950"
     >
       <ScrollView
         contentContainerStyle={{ flexGrow: 1, paddingTop: insets.top, paddingBottom: insets.bottom + 16 }}
         keyboardShouldPersistTaps="handled"
       >
         <View className="flex-1 justify-center px-6 py-10">
-          <View className="mb-6 h-14 w-14 items-center justify-center rounded-md bg-primary-50">
+          <View className="mb-6 h-14 w-14 items-center justify-center rounded-md bg-primary-50 dark:bg-primary-950">
             <FontAwesome5 name="tshirt" size={22} color="#1D4ED8" />
           </View>
-          <Text className="mb-1 text-2xl font-bold text-gray-900">{t('signup.title')}</Text>
-          <Text className="font-sans mb-8 text-base text-gray-500">{t('signup.subtitle')}</Text>
+          <Text className="mb-1 text-2xl font-bold text-gray-900 dark:text-gray-50">{t('signup.title')}</Text>
+          <Text className="font-sans mb-8 text-base text-gray-500 dark:text-gray-400">{t('signup.subtitle')}</Text>
 
           <InputField
             label={t('signup.email')}
@@ -108,9 +108,9 @@ export default function SignupScreen({ navigation }: AuthScreenProps<'Signup'>) 
           <Button title={t('signup.signUp')} onPress={handleSignup} loading={loading} />
 
           <View className="my-6 flex-row items-center">
-            <View className="h-px flex-1 bg-gray-200" />
-            <Text className="font-sans mx-3 text-xs text-gray-400">{t('signup.or')}</Text>
-            <View className="h-px flex-1 bg-gray-200" />
+            <View className="h-px flex-1 bg-gray-200 dark:bg-gray-800" />
+            <Text className="font-sans mx-3 text-xs text-gray-400 dark:text-gray-500">{t('signup.or')}</Text>
+            <View className="h-px flex-1 bg-gray-200 dark:bg-gray-800" />
           </View>
 
           <Button
@@ -122,7 +122,7 @@ export default function SignupScreen({ navigation }: AuthScreenProps<'Signup'>) 
           />
 
           <View className="mt-8 flex-row items-center justify-center gap-1">
-            <Text className="font-sans text-sm text-gray-500">{t('signup.haveAccount')}</Text>
+            <Text className="font-sans text-sm text-gray-500 dark:text-gray-400">{t('signup.haveAccount')}</Text>
             <Pressable onPress={() => navigation.navigate('Login')}>
               <Text className="text-sm font-semibold text-primary-600">{t('signup.signIn')}</Text>
             </Pressable>

@@ -1,5 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
+  darkMode: 'class',
   content: [
     './App.tsx',
     './screens/**/*.{js,jsx,ts,tsx}',
@@ -32,6 +33,7 @@ module.exports = {
           700: '#1D4ED8',
           800: '#1E40AF',
           900: '#1E3A8A',
+          950: '#172554',
         },
         success: '#16A34A',
         warning: '#D97706',

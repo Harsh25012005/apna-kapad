@@ -51,6 +51,8 @@ export type QuickAddMenuProps = {
   actions: QuickAction[];
   /** Height of the nav bar, i.e. where this card's bottom edge should sit. */
   bottomOffset: number;
+  /** Matches the tab bar's own fill so the two read as one dock. */
+  cardFill?: string;
 };
 
 const OPEN_MS = 240;
@@ -89,7 +91,7 @@ function cardPath(w: number, h: number) {
  * (never Reanimated) — Reanimated worklets segfault inside Expo Go, and this
  * needs to stay usable there.
  */
-export function QuickAddMenu({ visible, onClose, actions, bottomOffset }: QuickAddMenuProps) {
+export function QuickAddMenu({ visible, onClose, actions, bottomOffset, cardFill = '#050505' }: QuickAddMenuProps) {
   // Kept mounted for the duration of the exit animation.
   const [mounted, setMounted] = useState(visible);
   const progress = useRef(new Animated.Value(0)).current;
@@ -152,7 +154,7 @@ export function QuickAddMenu({ visible, onClose, actions, bottomOffset }: QuickA
         ]}
       >
         <Svg width={cardW} height={cardH} style={StyleSheet.absoluteFill}>
-          <Path d={cardPath(cardW, cardH)} fill="#050505" />
+          <Path d={cardPath(cardW, cardH)} fill={cardFill} />
         </Svg>
 
         <View style={[styles.grabber, { top: 12 }]} />

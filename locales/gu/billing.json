@@ -8,6 +8,9 @@
       "partial": "આંશિક",
       "unpaid": "બાકી"
     },
+    "filterModalTitle": "બિલ ફિલ્ટર કરો",
+    "reset": "રીસેટ",
+    "allBills": "બધા બિલ",
     "loading": "બિલ લોડ થઈ રહ્યા છે...",
     "emptySearchTitle": "કોઈ મેળ ખાતું બિલ નથી",
     "emptySearchDescription": "અલગ ગ્રાહકનું નામ અથવા બિલ ID અજમાવો",

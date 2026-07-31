@@ -3,7 +3,15 @@
     "dashboard": "Home",
     "customers": "Clients",
     "orders": "Orders",
-    "settings": "Profile"
+    "settings": "Profile",
+    "add": "Add"
+  },
+  "quickAdd": {
+    "newClient": "New Client",
+    "addBill": "Add Bill",
+    "addOrder": "Add Order",
+    "addStaff": "Add Staff",
+    "accessibilityLabel": "Quick actions"
   },
   "actions": {
     "save": "Save",
@@ -54,7 +62,8 @@
   "fields": {
     "selectDate": "Select date",
     "select": "Select",
-    "noOptions": "No options available"
+    "noOptions": "No options available",
+    "addPhoto": "Add photo"
   },
   "empty": {
     "title": "Nothing here yet"

@@ -4,7 +4,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import Svg, { Defs, Path, RadialGradient, Stop, Ellipse } from 'react-native-svg';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
+import { useTranslation } from 'react-i18next';
 import { useTabBarHighlight } from '../context/TabBarHighlightContext';
+import { useTheme } from '../context/ThemeContext';
 import { QuickAddMenu, NOTCH, notchCurve } from '../components/QuickAddMenu';
 import { haptics } from '../lib/haptics';
 import type { MainTabParamList } from './types';
@@ -14,32 +16,32 @@ type IconName = React.ComponentProps<typeof Ionicons>['name'];
 const TAB_CONFIG: Array<{
   type: 'tab' | 'add';
   routeName?: keyof MainTabParamList;
-  label: string;
+  labelKey: string;
   icon?: { active: IconName; inactive: IconName };
 }> = [
     {
       type: 'tab',
       routeName: 'DashboardTab',
-      label: 'Home',
+      labelKey: 'nav.dashboard',
       icon: { active: 'home', inactive: 'home-outline' },
     },
     {
       type: 'tab',
       routeName: 'CustomersTab',
-      label: 'Clients',
+      labelKey: 'nav.customers',
       icon: { active: 'people', inactive: 'people-outline' },
     },
-    { type: 'add', label: 'Add' },
+    { type: 'add', labelKey: 'nav.add' },
     {
       type: 'tab',
       routeName: 'OrdersTab',
-      label: 'Orders',
+      labelKey: 'nav.orders',
       icon: { active: 'shirt', inactive: 'shirt-outline' },
     },
     {
       type: 'tab',
       routeName: 'SettingsTab',
-      label: 'Profile',
+      labelKey: 'nav.settings',
       icon: { active: 'person', inactive: 'person-outline' },
     },
   ];
@@ -51,7 +53,7 @@ const TAB_CONFIG: Array<{
  */
 export const QUICK_ACTIONS: Array<{
   key: string;
-  label: string;
+  labelKey: string;
   icon: IconName;
   bg: string;
   fg: string;
@@ -60,7 +62,7 @@ export const QUICK_ACTIONS: Array<{
 }> = [
     {
       key: 'client',
-      label: 'New Client',
+      labelKey: 'quickAdd.newClient',
       icon: 'person-add',
       bg: '#D4E7C5',
       fg: '#334B24',
@@ -69,7 +71,7 @@ export const QUICK_ACTIONS: Array<{
     },
     {
       key: 'bill',
-      label: 'Add Bill',
+      labelKey: 'quickAdd.addBill',
       icon: 'swap-horizontal',
       bg: '#E2D4F8',
       fg: '#482D78',
@@ -78,7 +80,7 @@ export const QUICK_ACTIONS: Array<{
     },
     {
       key: 'order',
-      label: 'Add Order',
+      labelKey: 'quickAdd.addOrder',
       icon: 'calendar',
       bg: '#F7EBB2',
       fg: '#574A1A',
@@ -87,7 +89,7 @@ export const QUICK_ACTIONS: Array<{
     },
     {
       key: 'staff',
-      label: 'Add Staff',
+      labelKey: 'quickAdd.addStaff',
       icon: 'flag',
       bg: '#FAD5C5',
       fg: '#6B3224',
@@ -167,6 +169,12 @@ export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
   const { highlightedTab, setTabBarHeight } = useTabBarHighlight();
   const [isAddMenuOpen, setIsAddMenuOpen] = useState(false);
+  const { t } = useTranslation('common');
+  const { scheme } = useTheme();
+  // Pure black reads as a deliberate dark dock on a light page. In dark mode
+  // the page itself goes near-black, so the bar needs to be a shade lighter
+  // than the page (not pure black) or it visually disappears into it.
+  const barFill = scheme === 'dark' ? '#1C2333' : '#050505';
 
   const navWidth = Dimensions.get('window').width;
   const barHeight = 78;
@@ -209,8 +217,10 @@ export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
         visible={isAddMenuOpen}
         onClose={() => setIsAddMenuOpen(false)}
         bottomOffset={totalBarHeight + 22}
+        cardFill={barFill}
         actions={QUICK_ACTIONS.map((a) => ({
           ...a,
+          label: t(a.labelKey),
           onPress: () => {
             setIsAddMenuOpen(false);
             haptics.tap();
@@ -227,7 +237,7 @@ export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
               <Stop offset="1" stopColor={ACTIVE} stopOpacity="0" />
             </RadialGradient>
           </Defs>
-          <Path d={barPathWithNotch(navWidth, totalBarHeight, centerX)} fill="#050505" />
+          <Path d={barPathWithNotch(navWidth, totalBarHeight, centerX)} fill={barFill} />
           {/* Soft blue bloom sitting under the notch. */}
           <Ellipse cx={centerX} cy={NOTCH.depth + 14} rx={46} ry={22} fill="url(#notchGlow)" />
         </Svg>
@@ -264,7 +274,7 @@ export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
                       hitSlop={10}
                       style={styles.fabPress}
                       accessibilityRole="button"
-                      accessibilityLabel="Quick actions"
+                      accessibilityLabel={t('quickAdd.accessibilityLabel')}
                     >
                       <Ionicons name="add" size={30} color="#FFFFFF" />
                     </Pressable>
@@ -278,7 +288,7 @@ export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
                     className={isAddMenuOpen ? 'font-semibold' : 'font-medium'}
                     numberOfLines={1}
                   >
-                    Add
+                    {t(item.labelKey)}
                   </Text>
                 </View>
               );
@@ -328,7 +338,7 @@ export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
                   className={isFocused ? 'font-semibold' : 'font-medium'}
                   numberOfLines={1}
                 >
-                  {item.label}
+                  {t(item.labelKey)}
                 </Text>
               </Pressable>
             );

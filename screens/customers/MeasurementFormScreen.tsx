@@ -258,7 +258,7 @@ export default function MeasurementFormScreen({
         title={isEditing ? t('measurementForm.editTitle') : t('measurementForm.title')}
         onBack={() => navigation.goBack()}
       />
-      <ScrollView className="flex-1 bg-white" contentContainerStyle={{ padding: 20, paddingBottom: 160 }}>
+      <ScrollView className="flex-1 bg-white dark:bg-gray-950" contentContainerStyle={{ padding: 20, paddingBottom: 160 }}>
         <Dropdown
           label={t('measurementForm.garmentTypeLabel')}
           value={garmentType}
@@ -271,7 +271,7 @@ export default function MeasurementFormScreen({
         {groups.shirt.length > 0 ? (
           <View className="mb-1">
             {garmentType === 'Shirt+Pant' ? (
-              <Text className="mb-2 text-sm font-semibold text-gray-900">
+              <Text className="mb-2 text-sm font-semibold text-gray-900 dark:text-gray-50">
                 {t('measurementForm.shirtSection')}
               </Text>
             ) : null}
@@ -282,7 +282,7 @@ export default function MeasurementFormScreen({
         {groups.pant.length > 0 ? (
           <View className="mb-1">
             {garmentType === 'Shirt+Pant' ? (
-              <Text className="mb-2 mt-2 text-sm font-semibold text-gray-900">
+              <Text className="mb-2 mt-2 text-sm font-semibold text-gray-900 dark:text-gray-50">
                 {t('measurementForm.pantSection')}
               </Text>
             ) : null}
@@ -300,22 +300,22 @@ export default function MeasurementFormScreen({
 
         <View className="mt-2">
           <View className="mb-2 flex-row items-center justify-between">
-            <Text className="text-sm font-semibold text-gray-900">
+            <Text className="text-sm font-semibold text-gray-900 dark:text-gray-50">
               {t('measurementForm.customFieldsLabel')}
             </Text>
             <Pressable
               onPress={addCustomField}
-              className="flex-row items-center rounded-md bg-primary-50 px-3 py-1.5"
+              className="flex-row items-center rounded-md bg-primary-50 px-3 py-1.5 dark:bg-primary-950"
             >
               <FontAwesome5 name="plus" size={11} color="#1D4ED8" />
-              <Text className="ml-1.5 text-sm font-semibold text-primary-600">
+              <Text className="ml-1.5 text-sm font-semibold text-primary-600 dark:text-primary-400">
                 {t('measurementForm.addCustomField')}
               </Text>
             </Pressable>
           </View>
 
           {customFields.length === 0 ? (
-            <Text className="font-sans text-xs text-gray-400">
+            <Text className="font-sans text-xs text-gray-400 dark:text-gray-500">
               {t('measurementForm.noCustomFields')}
             </Text>
           ) : (

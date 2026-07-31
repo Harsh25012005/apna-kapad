@@ -5,6 +5,7 @@ import DateTimePicker, {
 } from '@react-native-community/datetimepicker';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
+import { useTheme } from '../../context/ThemeContext';
 
 export type DatePickerFieldProps = {
   label?: string;
@@ -26,6 +27,7 @@ export function DatePickerField({
   placeholder,
 }: DatePickerFieldProps) {
   const { t } = useTranslation('common');
+  const { colors } = useTheme();
   const [show, setShow] = useState(false);
 
   // Digits stay Western on purpose; only the month name is localised.
@@ -42,21 +44,21 @@ export function DatePickerField({
   return (
     <View className="w-full mb-4">
       {label ? (
-        <Text className="mb-1.5 text-xs font-bold uppercase tracking-[0.4px] text-gray-500">
+        <Text className="mb-1.5 text-xs font-bold uppercase tracking-[0.4px] text-gray-500 dark:text-gray-400">
           {label}
         </Text>
       ) : null}
 
       <Pressable
         onPress={() => setShow(true)}
-        className={`h-[52px] flex-row items-center justify-between rounded-md border bg-white px-4 ${
-          error ? 'border-danger' : 'border-gray-200'
+        className={`h-[52px] flex-row items-center justify-between rounded-md border bg-white px-4 dark:bg-gray-900 ${
+          error ? 'border-danger' : 'border-gray-200 dark:border-gray-700'
         }`}
       >
-        <Text className={value ? 'text-base text-gray-900' : 'text-base text-gray-400'}>
+        <Text className={value ? 'text-base text-gray-900 dark:text-gray-50' : 'text-base text-gray-400 dark:text-gray-500'}>
           {value ? formatDate(value) : placeholder ?? t('fields.selectDate')}
         </Text>
-        <FontAwesome5 name="calendar-alt" size={16} color="#6B7280" />
+        <FontAwesome5 name="calendar-alt" size={16} color={colors.iconMuted} />
       </Pressable>
 
       {error ? <Text className="font-sans mt-1 text-xs text-danger">{error}</Text> : null}

@@ -57,6 +57,7 @@
     "@types/node": "^26.1.2",
     "@types/react": "~19.2.4",
     "babel-preset-expo": "^57.0.5",
+    "jimp-compact": "^0.16.1",
     "typescript": "~6.0.3"
   }
 }

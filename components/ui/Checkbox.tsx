@@ -16,12 +16,12 @@ export function Checkbox({ checked, onChange, label, disabled = false }: Checkbo
     >
       <View
         className={`h-5 w-5 items-center justify-center rounded border ${
-          checked ? 'border-primary-600 bg-primary-600' : 'border-gray-300 bg-white'
+          checked ? 'border-primary-600 bg-primary-600' : 'border-gray-300 bg-white dark:border-gray-600 dark:bg-gray-900'
         }`}
       >
         {checked ? <FontAwesome5 name="check" size={10} color="#FFFFFF" /> : null}
       </View>
-      {label ? <Text className="font-sans ml-2 text-base text-gray-800">{label}</Text> : null}
+      {label ? <Text className="font-sans ml-2 text-base text-gray-800 dark:text-gray-200">{label}</Text> : null}
     </Pressable>
   );
 }

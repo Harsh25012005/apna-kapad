@@ -120,11 +120,11 @@ export default function BillDetailScreen({ navigation, route }: BillingScreenPro
   if (loading || !bill) return <LoadingSpinner fullScreen text={t('detail.loading')} />;
 
   return (
-    <View className="flex-1 bg-gray-50">
+    <View className="flex-1 bg-gray-50 dark:bg-gray-950">
       <Header title={t('detail.billTitle', { name: bill.customers?.name })} onBack={() => navigation.goBack()} />
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: insets.bottom + 160, gap: 16 }}>
         {/* Hero card: total / paid / balance due */}
-        <View className="rounded-xl bg-[#101828] p-5">
+        <View className="rounded-xl bg-[#101828] p-5 dark:border dark:border-gray-700">
           <View className="mb-4 flex-row items-center justify-between">
             <Text className="font-sans text-xs font-medium uppercase tracking-wide text-[#98A2B3]">
               {t('detail.totalAmount')}
@@ -167,7 +167,7 @@ export default function BillDetailScreen({ navigation, route }: BillingScreenPro
 
         {/* Customer info */}
         <Card>
-          <Text className="mb-2 text-sm font-semibold text-gray-900">{t('detail.customer')}</Text>
+          <Text className="mb-2 text-sm font-semibold text-gray-900 dark:text-gray-50">{t('detail.customer')}</Text>
           <View className="gap-1.5">
             <Row label={t('detail.name')} value={bill.customers?.name ?? '—'} />
             {bill.customers?.phone ? <Row label={t('detail.phone')} value={bill.customers.phone} /> : null}
@@ -176,32 +176,32 @@ export default function BillDetailScreen({ navigation, route }: BillingScreenPro
 
         {/* Related order */}
         {bill.order_id ? (
-          <View className="flex-row items-center rounded-md border border-gray-200 bg-white p-4">
-            <View className="h-10 w-10 items-center justify-center rounded-full bg-primary-50">
+          <View className="flex-row items-center rounded-md border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900">
+            <View className="h-10 w-10 items-center justify-center rounded-full bg-primary-50 dark:bg-primary-950">
               <FontAwesome5 name="shopping-bag" size={14} color="#2563EB" />
             </View>
             <View className="ml-3 flex-1">
-              <Text className="text-sm font-semibold text-gray-900">{t('detail.linkedOrder')}</Text>
-              <Text className="font-sans text-xs text-gray-400">{t('detail.linkedOrderDesc')}</Text>
+              <Text className="text-sm font-semibold text-gray-900 dark:text-gray-50">{t('detail.linkedOrder')}</Text>
+              <Text className="font-sans text-xs text-gray-400 dark:text-gray-500">{t('detail.linkedOrderDesc')}</Text>
             </View>
           </View>
         ) : null}
 
         {/* Charge breakdown */}
         <Card>
-          <Text className="mb-2 text-sm font-semibold text-gray-900">{t('detail.breakdown')}</Text>
+          <Text className="mb-2 text-sm font-semibold text-gray-900 dark:text-gray-50">{t('detail.breakdown')}</Text>
           <View className="gap-1.5">
             <Row label={t('detail.fabricCost')} value={formatCurrency(bill.fabric_cost)} />
             <Row label={t('detail.stitchingCharge')} value={formatCurrency(bill.stitching_charge)} />
             <Row label={t('detail.tax')} value={formatCurrency(bill.tax)} />
             <Row label={t('detail.discount')} value={`- ${formatCurrency(bill.discount)}`} />
-            <View className="my-2 h-px bg-gray-100" />
+            <View className="my-2 h-px bg-gray-100 dark:bg-gray-800" />
             <Row label={t('detail.totalAmount')} value={formatCurrency(bill.total_amount)} bold />
           </View>
         </Card>
 
         <View>
-          <Text className="mb-2 text-base font-semibold text-gray-900">{t('detail.paymentHistory')}</Text>
+          <Text className="mb-2 text-base font-semibold text-gray-900 dark:text-gray-50">{t('detail.paymentHistory')}</Text>
           {bill.payments.length === 0 ? (
             <EmptyState
               variant="compact"
@@ -214,12 +214,12 @@ export default function BillDetailScreen({ navigation, route }: BillingScreenPro
               {bill.payments.map((p) => (
                 <Card key={p.id}>
                   <View className="flex-row items-center justify-between">
-                    <Text className="text-sm font-semibold text-gray-900">
+                    <Text className="text-sm font-semibold text-gray-900 dark:text-gray-50">
                       {formatCurrency(p.amount_paid)}
                     </Text>
-                    <Text className="font-sans text-xs text-gray-500">{p.payment_mode}</Text>
+                    <Text className="font-sans text-xs text-gray-500 dark:text-gray-400">{p.payment_mode}</Text>
                   </View>
-                  <Text className="font-sans mt-1 text-xs text-gray-400">
+                  <Text className="font-sans mt-1 text-xs text-gray-400 dark:text-gray-500">
                     {formatDateTime(p.payment_date)}
                   </Text>
                 </Card>
@@ -245,12 +245,12 @@ export default function BillDetailScreen({ navigation, route }: BillingScreenPro
               key={m}
               onPress={() => setMode(m)}
               className={`rounded-full border px-3 py-1.5 ${
-                mode === m ? 'border-primary-600 bg-primary-50' : 'border-gray-200'
+                mode === m ? 'border-primary-600 bg-primary-50 dark:bg-primary-950' : 'border-gray-200 dark:border-gray-700'
               }`}
             >
               <Text
                 className={
-                  mode === m ? 'text-sm font-medium text-primary-700' : 'text-sm text-gray-600'
+                  mode === m ? 'text-sm font-medium text-primary-700 dark:text-primary-300' : 'text-sm text-gray-600 dark:text-gray-400'
                 }
               >
                 {t(`detail.paymentModes.${m}`)}
@@ -277,9 +277,9 @@ function Row({
 }) {
   return (
     <View className="flex-row items-center justify-between">
-      <Text className="font-sans text-sm text-gray-500">{label}</Text>
+      <Text className="font-sans text-sm text-gray-500 dark:text-gray-400">{label}</Text>
       <Text
-        className={bold ? 'text-base font-bold text-gray-900' : 'text-sm text-gray-700'}
+        className={bold ? 'text-base font-bold text-gray-900 dark:text-gray-50' : 'text-sm text-gray-700 dark:text-gray-300'}
         style={color ? { color } : undefined}
       >
         {value}

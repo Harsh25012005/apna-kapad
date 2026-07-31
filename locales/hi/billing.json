@@ -8,6 +8,9 @@
       "partial": "आंशिक",
       "unpaid": "बकाया"
     },
+    "filterModalTitle": "बिल फ़िल्टर करें",
+    "reset": "रीसेट",
+    "allBills": "सभी बिल",
     "loading": "बिल लोड हो रहे हैं...",
     "emptySearchTitle": "कोई मिलता-जुलता बिल नहीं",
     "emptySearchDescription": "किसी दूसरे ग्राहक नाम या बिल ID से खोजें",

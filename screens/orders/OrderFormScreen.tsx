@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { ScrollView, Text, View } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import {
   Button,
@@ -8,6 +9,7 @@ import {
   Header,
   ImagePickerField,
   InputField,
+  LoadingSpinner,
   RadioGroup,
   useToast,
 } from '../../components/ui';
@@ -45,6 +47,8 @@ async function nextOrderNumber(shopId: string): Promise<string> {
 
 export default function OrderFormScreen({ navigation, route }: AppScreenProps<'OrderForm'>) {
   const presetCustomerId = route.params?.customerId;
+  const orderId = route.params?.orderId;
+  const isEditing = !!orderId;
   const shop = useShop();
   const showToast = useToast();
   const { t } = useTranslation('orders');
@@ -71,8 +75,45 @@ export default function OrderFormScreen({ navigation, route }: AppScreenProps<'O
   const [paymentMode, setPaymentMode] = useState<string>('Cash');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [loadingOrder, setLoadingOrder] = useState(isEditing);
 
   const clothCountNum = Math.max(0, Math.floor(Number(clothCount) || 0));
+
+  useFocusEffect(
+    useCallback(() => {
+      if (!orderId) return;
+      let active = true;
+      setLoadingOrder(true);
+      void (async () => {
+        try {
+          const { data, error: loadError } = await supabase
+            .from('orders')
+            .select('*')
+            .eq('id', orderId)
+            .single();
+          if (loadError) throw loadError;
+          if (!active || !data) return;
+
+          const count = data.cloth_count ?? 0;
+          const urls = data.design_photo_urls ?? [];
+          setCustomerId(data.customer_id ?? '');
+          setClothCount(count ? String(count) : '');
+          setDesignPhotoUris(Array.from({ length: count }, (_, i) => urls[i] ?? null));
+          setDeliveryDate(data.delivery_date ? new Date(data.delivery_date) : null);
+          setPriority((data.priority as OrderPriority) ?? 'normal');
+          setAssignedStaffId(data.assigned_staff_id ?? '');
+          setBillBookNumber(data.bill_book_number ?? '');
+        } catch (err) {
+          showToast(err instanceof Error ? err.message : t('form.loadError'), 'error');
+        } finally {
+          if (active) setLoadingOrder(false);
+        }
+      })();
+      return () => {
+        active = false;
+      };
+    }, [orderId, showToast, t])
+  );
 
   useEffect(() => {
     // Keep the photo slot array in sync with the number of cloth pieces,
@@ -96,7 +137,65 @@ export default function OrderFormScreen({ navigation, route }: AppScreenProps<'O
     })();
   }, []);
 
+  /** Uploads any freshly-picked local photo URIs, leaving already-remote ones (edit mode) untouched. */
+  const resolveDesignPhotoUrls = async (fileNamePrefix: string): Promise<string[]> => {
+    const urls: string[] = [];
+    for (let i = 0; i < designPhotoUris.length; i++) {
+      const uri = designPhotoUris[i];
+      if (!uri) continue;
+      if (/^https?:\/\//.test(uri)) {
+        urls.push(uri);
+        continue;
+      }
+      try {
+        const url = await uploadImage({
+          bucket: 'design-photos',
+          shopId: shop.id,
+          localUri: uri,
+          fileName: `${fileNamePrefix}-${i + 1}`,
+        });
+        urls.push(url);
+      } catch {
+        showToast(t('form.photoUploadFailed'), 'info');
+      }
+    }
+    return urls;
+  };
+
+  const handleUpdate = async () => {
+    if (!customerId || !orderId) {
+      setError(t('form.customerRequired'));
+      return;
+    }
+    setError('');
+    setLoading(true);
+    try {
+      const designPhotoUrls = await resolveDesignPhotoUrls(orderId);
+      const { error: updateError } = await supabase
+        .from('orders')
+        .update({
+          customer_id: customerId,
+          cloth_count: clothCountNum || null,
+          design_photo_urls: designPhotoUrls,
+          delivery_date: deliveryDate ? deliveryDate.toISOString().slice(0, 10) : null,
+          priority,
+          assigned_staff_id: assignedStaffId || null,
+          bill_book_number: billBookNumber.trim() || null,
+        })
+        .eq('id', orderId);
+      if (updateError) throw updateError;
+
+      showToast(t('form.orderUpdated'), 'success');
+      navigation.goBack();
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : t('form.orderUpdateFailed'), 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSave = async () => {
+    if (isEditing) return handleUpdate();
     if (!customerId) {
       setError(t('form.customerRequired'));
       return;
@@ -208,10 +307,12 @@ export default function OrderFormScreen({ navigation, route }: AppScreenProps<'O
     }
   };
 
+  if (loadingOrder) return <LoadingSpinner fullScreen text={t('form.loading')} />;
+
   return (
     <>
-      <Header title={t('form.title')} onBack={() => navigation.goBack()} />
-      <ScrollView className="flex-1 bg-white" contentContainerStyle={{ padding: 20, paddingBottom: 160 }}>
+      <Header title={isEditing ? t('form.editTitle') : t('form.title')} onBack={() => navigation.goBack()} />
+      <ScrollView className="flex-1 bg-white dark:bg-gray-950" contentContainerStyle={{ padding: 20, paddingBottom: 160 }}>
         <Dropdown
           label={t('form.customer')}
           value={customerId}
@@ -231,7 +332,7 @@ export default function OrderFormScreen({ navigation, route }: AppScreenProps<'O
 
         {clothCountNum > 0 ? (
           <View className="mb-4">
-            <Text className="mb-1.5 text-sm font-medium text-gray-700">{t('form.designPhotos')}</Text>
+            <Text className="mb-1.5 text-sm font-medium text-gray-700 dark:text-gray-300">{t('form.designPhotos')}</Text>
             <View className="flex-row flex-wrap gap-3">
               {Array.from({ length: clothCountNum }).map((_, index) => (
                 <ImagePickerField
@@ -262,7 +363,7 @@ export default function OrderFormScreen({ navigation, route }: AppScreenProps<'O
         />
 
         <View className="mb-4">
-          <Text className="mb-1.5 text-sm font-medium text-gray-700">{t('form.priority')}</Text>
+          <Text className="mb-1.5 text-sm font-medium text-gray-700 dark:text-gray-300">{t('form.priority')}</Text>
           <RadioGroup<OrderPriority>
             value={priority}
             onChange={setPriority}
@@ -291,33 +392,43 @@ export default function OrderFormScreen({ navigation, route }: AppScreenProps<'O
           placeholder={t('form.billBookPlaceholder')}
         />
 
-        <InputField
-          label={t('form.totalAmount')}
-          value={totalAmount}
-          onChangeText={setTotalAmount}
-          placeholder={t('form.totalAmountPlaceholder')}
-          keyboardType="numeric"
+        {isEditing ? (
+          <Text className="font-sans mb-4 text-xs text-gray-500 dark:text-gray-400">{t('form.billingNotice')}</Text>
+        ) : (
+          <>
+            <InputField
+              label={t('form.totalAmount')}
+              value={totalAmount}
+              onChangeText={setTotalAmount}
+              placeholder={t('form.totalAmountPlaceholder')}
+              keyboardType="numeric"
+            />
+
+            <InputField
+              label={t('form.paidAmount')}
+              value={paidAmount}
+              onChangeText={setPaidAmount}
+              placeholder={t('form.paidAmountPlaceholder')}
+              keyboardType="numeric"
+            />
+
+            <View className="mb-4">
+              <Text className="mb-1.5 text-sm font-medium text-gray-700 dark:text-gray-300">{t('form.paymentMode')}</Text>
+              <RadioGroup<string>
+                value={paymentMode}
+                onChange={setPaymentMode}
+                direction="row"
+                options={PAYMENT_MODES.map((m) => ({ label: PAYMENT_MODE_LABELS[m], value: m }))}
+              />
+            </View>
+          </>
+        )}
+
+        <Button
+          title={isEditing ? t('form.updateOrder') : t('form.createOrder')}
+          onPress={handleSave}
+          loading={loading}
         />
-
-        <InputField
-          label={t('form.paidAmount')}
-          value={paidAmount}
-          onChangeText={setPaidAmount}
-          placeholder={t('form.paidAmountPlaceholder')}
-          keyboardType="numeric"
-        />
-
-        <View className="mb-4">
-          <Text className="mb-1.5 text-sm font-medium text-gray-700">{t('form.paymentMode')}</Text>
-          <RadioGroup<string>
-            value={paymentMode}
-            onChange={setPaymentMode}
-            direction="row"
-            options={PAYMENT_MODES.map((m) => ({ label: PAYMENT_MODE_LABELS[m], value: m }))}
-          />
-        </View>
-
-        <Button title={t('form.createOrder')} onPress={handleSave} loading={loading} />
       </ScrollView>
     </>
   );

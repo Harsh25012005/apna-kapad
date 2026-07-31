@@ -1,5 +1,6 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import SettingsScreen from '../screens/settings/SettingsScreen';
+import ShopEditScreen from '../screens/settings/ShopEditScreen';
 import StaffListScreen from '../screens/staff/StaffListScreen';
 import StaffFormScreen from '../screens/staff/StaffFormScreen';
 import StaffDetailScreen from '../screens/staff/StaffDetailScreen';
@@ -14,6 +15,7 @@ export function SettingsNavigator() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="SettingsHome" component={SettingsScreen} />
+      <Stack.Screen name="ShopEdit" component={ShopEditScreen} />
       <Stack.Screen name="Staff" component={StaffListScreen} />
       <Stack.Screen name="StaffForm" component={StaffFormScreen} />
       <Stack.Screen name="StaffDetail" component={StaffDetailScreen} />

@@ -10,7 +10,7 @@ export type AuthStackParamList = {
 
 /** Screens shared across several stacks (orders/bills reachable from many tabs). */
 type SharedOrderRoutes = {
-  OrderForm: { customerId?: string } | undefined;
+  OrderForm: { customerId?: string; orderId?: string } | undefined;
   OrderDetail: { orderId: string };
   BillForm: { orderId?: string; customerId?: string } | undefined;
 };
@@ -39,6 +39,7 @@ export type DashboardStackParamList = SharedOrderRoutes & {
 
 export type SettingsStackParamList = {
   SettingsHome: undefined;
+  ShopEdit: undefined;
   Staff: undefined;
   StaffForm: { staffId?: string } | undefined;
   StaffDetail: { staffId: string };
@@ -63,6 +64,7 @@ export type RootStackParamList = {
   Auth: undefined;
   ShopSetup: undefined;
   Main: undefined;
+  ResetPassword: undefined;
 };
 
 /**

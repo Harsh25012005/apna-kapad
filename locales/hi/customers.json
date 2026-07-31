@@ -11,7 +11,10 @@
     "emptyDescription": "शुरू करने के लिए अपना पहला ग्राहक जोड़ें",
     "addCustomer": "ग्राहक जोड़ें",
     "loadError": "ग्राहक लोड नहीं हो सके",
-    "hasBalanceFilter": "बकाया राशि वाले"
+    "hasBalanceFilter": "बकाया राशि वाले",
+    "filterModalTitle": "ग्राहक फ़िल्टर करें",
+    "reset": "रीसेट",
+    "allCustomers": "सभी ग्राहक"
   },
   "detail": {
     "loading": "ग्राहक लोड हो रहा है...",
@@ -33,7 +36,19 @@
     "noClothType": "कपड़े का प्रकार नहीं",
     "ordered": "ऑर्डर किया गया {{date}}",
     "loadError": "ग्राहक लोड नहीं हो सका",
-    "whatsappError": "WhatsApp नहीं खोला जा सका"
+    "whatsappError": "WhatsApp नहीं खोला जा सका",
+    "deleteCustomer": "ग्राहक हटाएं",
+    "deleteConfirmTitle": "इस ग्राहक को हटाएं?",
+    "deleteConfirmMessage": "यह {{name}} को स्थायी रूप से हटा देगा। यह पूर्ववत नहीं किया जा सकता।",
+    "deleteSuccess": "ग्राहक हटा दिया गया",
+    "deleteBlocked": "हटाया नहीं जा सकता — इस ग्राहक के ऑर्डर या बिल अभी बाकी हैं। पहले उन्हें हटाएं।",
+    "deleteFailed": "ग्राहक हटाया नहीं जा सका",
+    "deleteMeasurementConfirmTitle": "इस माप को हटाएं?",
+    "deleteMeasurementConfirmMessage": "यह सेव किया गया {{garmentType}} माप स्थायी रूप से हटा देगा।",
+    "deleteMeasurementSuccess": "माप हटा दिया गया",
+    "deleteMeasurementFailed": "माप हटाया नहीं जा सका",
+    "cancel": "रद्द करें",
+    "delete": "हटाएं"
   },
   "form": {
     "title": "नया ग्राहक",

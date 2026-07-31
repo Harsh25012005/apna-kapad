@@ -90,7 +90,7 @@ export default function OrderListScreen({ navigation }: OrdersScreenProps<'Order
   if (loading) return <LoadingSpinner fullScreen text={t('list.loadingOrders')} />;
 
   return (
-    <View className="flex-1 bg-white">
+    <View className="flex-1 bg-white dark:bg-gray-950">
       <Header
         showBack={false}
         title={t('list.title')}
@@ -114,9 +114,9 @@ export default function OrderListScreen({ navigation }: OrdersScreenProps<'Order
           className="flex-1 justify-end bg-black/40"
           onPress={() => setShowFilterModal(false)}
         >
-          <Pressable className="rounded-t-2xl bg-white p-5 gap-4" onPress={() => {}}>
-            <View className="flex-row items-center justify-between border-b border-gray-100 pb-3">
-              <Text className="text-base font-semibold text-gray-900">Filter Orders</Text>
+          <Pressable className="rounded-t-2xl bg-white p-5 gap-4 dark:bg-gray-900" onPress={() => {}}>
+            <View className="flex-row items-center justify-between border-b border-gray-100 pb-3 dark:border-gray-800">
+              <Text className="text-base font-semibold text-gray-900 dark:text-gray-50">{t('list.filterModalTitle')}</Text>
               {hasActiveFilters ? (
                 <Pressable
                   onPress={() => {
@@ -124,15 +124,15 @@ export default function OrderListScreen({ navigation }: OrdersScreenProps<'Order
                     setPriorityFilter('all');
                   }}
                 >
-                  <Text className="text-xs font-semibold text-primary-600">Reset</Text>
+                  <Text className="text-xs font-semibold text-primary-600 dark:text-primary-400">{t('list.reset')}</Text>
                 </Pressable>
               ) : null}
             </View>
 
             {/* Status Section */}
             <View>
-              <Text className="mb-2 text-xs font-bold uppercase tracking-wider text-gray-500">
-                Status
+              <Text className="mb-2 text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                {t('list.statusSection')}
               </Text>
               <View className="flex-row flex-wrap gap-2">
                 {STATUS_FILTERS.map((item) => {
@@ -144,12 +144,12 @@ export default function OrderListScreen({ navigation }: OrdersScreenProps<'Order
                       className={`rounded-full border px-3.5 py-2 ${
                         active
                           ? 'border-primary-600 bg-primary-600'
-                          : 'border-gray-200 bg-gray-50'
+                          : 'border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800'
                       }`}
                     >
                       <Text
                         className={`text-xs font-semibold ${
-                          active ? 'text-white' : 'text-gray-600'
+                          active ? 'text-white' : 'text-gray-600 dark:text-gray-300'
                         }`}
                       >
                         {item.label}
@@ -162,8 +162,8 @@ export default function OrderListScreen({ navigation }: OrdersScreenProps<'Order
 
             {/* Priority Section */}
             <View>
-              <Text className="mb-2 text-xs font-bold uppercase tracking-wider text-gray-500">
-                Priority
+              <Text className="mb-2 text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                {t('list.prioritySection')}
               </Text>
               <View className="flex-row flex-wrap gap-2">
                 {PRIORITY_FILTERS.map((item) => {
@@ -175,12 +175,12 @@ export default function OrderListScreen({ navigation }: OrdersScreenProps<'Order
                       className={`rounded-full border px-3.5 py-2 ${
                         active
                           ? 'border-primary-600 bg-primary-600'
-                          : 'border-gray-200 bg-gray-50'
+                          : 'border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800'
                       }`}
                     >
                       <Text
                         className={`text-xs font-semibold ${
-                          active ? 'text-white' : 'text-gray-600'
+                          active ? 'text-white' : 'text-gray-600 dark:text-gray-300'
                         }`}
                       >
                         {item.label}
@@ -195,7 +195,7 @@ export default function OrderListScreen({ navigation }: OrdersScreenProps<'Order
               onPress={() => setShowFilterModal(false)}
               className="mt-2 items-center rounded-md bg-primary-600 py-3 active:bg-primary-700"
             >
-              <Text className="text-sm font-semibold text-white">Apply Filters</Text>
+              <Text className="text-sm font-semibold text-white">{t('list.applyFilters')}</Text>
             </Pressable>
           </Pressable>
         </Pressable>
@@ -225,22 +225,22 @@ export default function OrderListScreen({ navigation }: OrdersScreenProps<'Order
         renderItem={({ item }) => (
           <Card onPress={() => navigation.navigate('OrderDetail', { orderId: item.id })}>
             <View className="flex-row items-center justify-between">
-              <Text className="text-base font-semibold text-gray-900">#{item.order_number}</Text>
+              <Text className="text-base font-semibold text-gray-900 dark:text-gray-50">#{item.order_number}</Text>
               <Badge type="order_status" value={item.status} />
             </View>
-            <Text className="font-sans mt-1 text-sm text-gray-600">{item.customers?.name}</Text>
+            <Text className="font-sans mt-1 text-sm text-gray-600 dark:text-gray-300">{item.customers?.name}</Text>
             <View className="mt-1 flex-row items-center justify-between">
-              <Text className="font-sans text-xs text-gray-400">
+              <Text className="font-sans text-xs text-gray-400 dark:text-gray-500">
                 {item.cloth_count != null
                   ? t('list.pieces', { count: item.cloth_count })
                   : t('list.noClothCount')}
               </Text>
-              <Text className="font-sans text-xs text-gray-400">
+              <Text className="font-sans text-xs text-gray-400 dark:text-gray-500">
                 {t('list.delivery', { date: formatDate(item.delivery_date) })}
               </Text>
             </View>
             {item.priority === 'urgent' ? (
-              <View className="mt-2 self-start rounded-full bg-red-50 px-2 py-0.5">
+              <View className="mt-2 self-start rounded-full bg-red-50 px-2 py-0.5 dark:bg-red-950">
                 <Text className="text-xs font-semibold text-danger">{t('list.urgent')}</Text>
               </View>
             ) : null}

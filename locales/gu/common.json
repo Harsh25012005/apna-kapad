@@ -3,7 +3,15 @@
     "dashboard": "હોમ",
     "customers": "ગ્રાહકો",
     "orders": "ઓર્ડર",
-    "settings": "પ્રોફાઇલ"
+    "settings": "પ્રોફાઇલ",
+    "add": "ઉમેરો"
+  },
+  "quickAdd": {
+    "newClient": "નવો ગ્રાહક",
+    "addBill": "બિલ ઉમેરો",
+    "addOrder": "ઓર્ડર ઉમેરો",
+    "addStaff": "સ્ટાફ ઉમેરો",
+    "accessibilityLabel": "ઝડપી ક્રિયાઓ"
   },
   "actions": {
     "save": "સેવ કરો",
@@ -54,7 +62,8 @@
   "fields": {
     "selectDate": "તારીખ પસંદ કરો",
     "select": "પસંદ કરો",
-    "noOptions": "કોઈ વિકલ્પ ઉપલબ્ધ નથી"
+    "noOptions": "કોઈ વિકલ્પ ઉપલબ્ધ નથી",
+    "addPhoto": "ફોટો ઉમેરો"
   },
   "empty": {
     "title": "અહીં હજી કંઈ નથી"

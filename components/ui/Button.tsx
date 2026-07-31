@@ -1,5 +1,6 @@
 import { Pressable, Text, ActivityIndicator } from 'react-native';
 import type { ReactNode } from 'react';
+import { useTheme } from '../../context/ThemeContext';
 
 export type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'danger' | 'google';
 export type ButtonSize = 'sm' | 'md' | 'lg';
@@ -11,13 +12,13 @@ const VARIANT_STYLES: Record<ButtonVariant, { container: string; text: string; s
     spinner: '#FFFFFF',
   },
   secondary: {
-    container: 'border border-primary-200 bg-primary-50 active:bg-primary-100',
-    text: 'text-primary-700',
+    container: 'border border-primary-200 bg-primary-50 active:bg-primary-100 dark:border-primary-800 dark:bg-primary-950 dark:active:bg-primary-900',
+    text: 'text-primary-700 dark:text-primary-300',
     spinner: '#1D4ED8',
   },
   outline: {
-    container: 'bg-white border border-primary-600 active:bg-primary-50',
-    text: 'text-primary-600',
+    container: 'bg-white border border-primary-600 active:bg-primary-50 dark:bg-transparent dark:active:bg-primary-950',
+    text: 'text-primary-600 dark:text-primary-400',
     spinner: '#2563EB',
   },
   danger: {
@@ -26,10 +27,16 @@ const VARIANT_STYLES: Record<ButtonVariant, { container: string; text: string; s
     spinner: '#FFFFFF',
   },
   google: {
-    container: 'bg-[#E6E6E6] active:bg-[#D6D6D6] border-0',
-    text: 'text-gray-900',
+    container: 'bg-[#E6E6E6] active:bg-[#D6D6D6] border-0 dark:bg-[#3C4043] dark:active:bg-[#484A4D]',
+    text: 'text-gray-900 dark:text-white',
     spinner: '#1F2937',
   },
+};
+
+/** Spinner colors that need to flip with the scheme — the rest read fine on both. */
+const DARK_SPINNER_OVERRIDES: Partial<Record<ButtonVariant, string>> = {
+  google: '#FFFFFF',
+  outline: '#60A5FA',
 };
 
 const SIZE_STYLES: Record<ButtonSize, { container: string; text: string }> = {
@@ -61,9 +68,11 @@ export function Button({
   icon,
   className = '',
 }: ButtonProps) {
+  const { scheme } = useTheme();
   const variantStyle = VARIANT_STYLES[variant];
   const sizeStyle = SIZE_STYLES[size];
   const isDisabled = disabled || loading;
+  const spinnerColor = (scheme === 'dark' && DARK_SPINNER_OVERRIDES[variant]) || variantStyle.spinner;
 
   return (
     <Pressable
@@ -77,7 +86,7 @@ export function Button({
       } ${fullWidth ? 'w-full' : ''} ${isDisabled ? 'opacity-50' : ''} ${className}`}
     >
       {loading ? (
-        <ActivityIndicator color={variantStyle.spinner} />
+        <ActivityIndicator color={spinnerColor} />
       ) : (
         <>
           {icon}

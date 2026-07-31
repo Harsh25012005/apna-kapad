@@ -70,7 +70,7 @@ export default function BillingListScreen({ navigation }: BillingScreenProps<'Bi
   if (loading) return <LoadingSpinner fullScreen text={t('list.loading')} />;
 
   return (
-    <View className="flex-1 bg-white">
+    <View className="flex-1 bg-white dark:bg-gray-950">
       <Header
         showBack={false}
         title={t('list.title')}
@@ -85,7 +85,7 @@ export default function BillingListScreen({ navigation }: BillingScreenProps<'Bi
 
       <View className="px-5 pt-3">
         <Card className="mb-3">
-          <Text className="font-sans text-sm text-gray-500">{t('list.totalPending')}</Text>
+          <Text className="font-sans text-sm text-gray-500 dark:text-gray-400">{t('list.totalPending')}</Text>
           <Text className="mt-1 text-2xl font-bold text-danger">{formatCurrency(totalPending)}</Text>
         </Card>
       </View>
@@ -101,12 +101,12 @@ export default function BillingListScreen({ navigation }: BillingScreenProps<'Bi
           className="flex-1 justify-end bg-black/40"
           onPress={() => setShowFilterModal(false)}
         >
-          <Pressable className="rounded-t-2xl bg-white p-5 gap-4" onPress={() => {}}>
-            <View className="flex-row items-center justify-between border-b border-gray-100 pb-3">
-              <Text className="text-base font-semibold text-gray-900">Filter Bills</Text>
+          <Pressable className="rounded-t-2xl bg-white p-5 gap-4 dark:bg-gray-900" onPress={() => {}}>
+            <View className="flex-row items-center justify-between border-b border-gray-100 pb-3 dark:border-gray-800">
+              <Text className="text-base font-semibold text-gray-900 dark:text-gray-50">{t('list.filterModalTitle')}</Text>
               {hasActiveFilters ? (
                 <Pressable onPress={() => setStatusFilter(null)}>
-                  <Text className="text-xs font-semibold text-primary-600">Reset</Text>
+                  <Text className="text-xs font-semibold text-primary-600 dark:text-primary-400">{t('list.reset')}</Text>
                 </Pressable>
               ) : null}
             </View>
@@ -118,11 +118,11 @@ export default function BillingListScreen({ navigation }: BillingScreenProps<'Bi
                   setShowFilterModal(false);
                 }}
                 className={`flex-row items-center justify-between rounded-lg border p-3.5 ${
-                  !statusFilter ? 'border-primary-600 bg-primary-50' : 'border-gray-200 bg-gray-50'
+                  !statusFilter ? 'border-primary-600 bg-primary-50 dark:bg-primary-950' : 'border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800'
                 }`}
               >
-                <Text className={`text-sm font-semibold ${!statusFilter ? 'text-primary-700' : 'text-gray-700'}`}>
-                  All Bills
+                <Text className={`text-sm font-semibold ${!statusFilter ? 'text-primary-700 dark:text-primary-300' : 'text-gray-700 dark:text-gray-300'}`}>
+                  {t('list.allBills')}
                 </Text>
                 {!statusFilter ? <FontAwesome5 name="check" size={14} color="#1D4ED8" /> : null}
               </Pressable>
@@ -137,10 +137,10 @@ export default function BillingListScreen({ navigation }: BillingScreenProps<'Bi
                       setShowFilterModal(false);
                     }}
                     className={`flex-row items-center justify-between rounded-lg border p-3.5 ${
-                      active ? 'border-primary-600 bg-primary-50' : 'border-gray-200 bg-gray-50'
+                      active ? 'border-primary-600 bg-primary-50 dark:bg-primary-950' : 'border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800'
                     }`}
                   >
-                    <Text className={`text-sm font-semibold capitalize ${active ? 'text-primary-700' : 'text-gray-700'}`}>
+                    <Text className={`text-sm font-semibold capitalize ${active ? 'text-primary-700 dark:text-primary-300' : 'text-gray-700 dark:text-gray-300'}`}>
                       {t(`list.filters.${status}`)}
                     </Text>
                     {active ? <FontAwesome5 name="check" size={14} color="#1D4ED8" /> : null}
@@ -180,14 +180,14 @@ export default function BillingListScreen({ navigation }: BillingScreenProps<'Bi
         renderItem={({ item }) => (
           <Card onPress={() => navigation.navigate('BillDetail', { billId: item.id })}>
             <View className="flex-row items-center justify-between">
-              <Text className="text-base font-semibold text-gray-900">
+              <Text className="text-base font-semibold text-gray-900 dark:text-gray-50">
                 {item.customers?.name}
               </Text>
               <Badge type="payment_status" value={item.payment_status} />
             </View>
             <View className="mt-1 flex-row items-center justify-between">
-              <Text className="font-sans text-sm text-gray-500">{formatDate(item.created_at)}</Text>
-              <Text className="text-sm font-semibold text-gray-900">
+              <Text className="font-sans text-sm text-gray-500 dark:text-gray-400">{formatDate(item.created_at)}</Text>
+              <Text className="text-sm font-semibold text-gray-900 dark:text-gray-50">
                 {formatCurrency(item.total_amount)}
               </Text>
             </View>

@@ -88,7 +88,7 @@ export default function StaffWorkEntryFormScreen({
   return (
     <>
       <Header title={t('workEntry.title')} onBack={() => navigation.goBack()} />
-      <ScrollView className="flex-1 bg-white" contentContainerStyle={{ padding: 20, paddingBottom: 110 }}>
+      <ScrollView className="flex-1 bg-white dark:bg-gray-950" contentContainerStyle={{ padding: 20, paddingBottom: 110 }}>
         <DatePickerField
           label={t('workEntry.dateLabel')}
           value={workDate}
@@ -111,17 +111,17 @@ export default function StaffWorkEntryFormScreen({
           error={error}
         />
 
-        <View className="mb-4 gap-2 rounded-md bg-gray-50 p-3">
+        <View className="mb-4 gap-2 rounded-md bg-gray-50 p-3 dark:bg-gray-800">
           <View className="flex-row items-center justify-between">
-            <Text className="font-sans text-sm text-gray-600">{t('workEntry.rateApplied')}</Text>
-            <Text className="text-base font-bold text-[#101828]">{formatCurrency(rate)}</Text>
+            <Text className="font-sans text-sm text-gray-600 dark:text-gray-300">{t('workEntry.rateApplied')}</Text>
+            <Text className="text-base font-bold text-[#101828] dark:text-gray-50">{formatCurrency(rate)}</Text>
           </View>
           <View className="flex-row items-center justify-between">
-            <Text className="font-sans text-sm text-gray-600">{t('workEntry.totalPay')}</Text>
-            <Text className="text-base font-bold text-[#101828]">{formatCurrency(rate * previewQty)}</Text>
+            <Text className="font-sans text-sm text-gray-600 dark:text-gray-300">{t('workEntry.totalPay')}</Text>
+            <Text className="text-base font-bold text-[#101828] dark:text-gray-50">{formatCurrency(rate * previewQty)}</Text>
           </View>
           {rate === 0 ? (
-            <Text className="font-sans text-xs text-amber-600">{t('workEntry.noRateWarning')}</Text>
+            <Text className="font-sans text-xs text-amber-600 dark:text-amber-400">{t('workEntry.noRateWarning')}</Text>
           ) : null}
         </View>
 

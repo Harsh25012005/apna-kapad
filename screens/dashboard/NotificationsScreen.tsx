@@ -21,8 +21,8 @@ const TYPE_META: Record<
   Enums<'notification_type'>,
   { icon: React.ComponentProps<typeof FontAwesome5>['name']; bg: string; color: string }
 > = {
-  order_ready: { icon: 'check-circle', bg: 'bg-emerald-50', color: '#047857' },
-  payment_due: { icon: 'rupee-sign', bg: 'bg-amber-50', color: '#B45309' },
+  order_ready: { icon: 'check-circle', bg: 'bg-emerald-50 dark:bg-emerald-950', color: '#047857' },
+  payment_due: { icon: 'rupee-sign', bg: 'bg-amber-50 dark:bg-amber-950', color: '#B45309' },
 };
 
 function relativeTime(dateString: string | null, t: TFunction<'dashboard'>): string {
@@ -77,7 +77,7 @@ export default function NotificationsScreen({ navigation }: DashboardScreenProps
   if (loading) return <LoadingSpinner fullScreen text={t('notifications.loading')} />;
 
   return (
-    <View className="flex-1 bg-gray-50">
+    <View className="flex-1 bg-gray-50 dark:bg-gray-950">
       <Header title={t('notifications.title')} onBack={() => navigation.goBack()} />
       <FlatList
         data={items}
@@ -98,15 +98,15 @@ export default function NotificationsScreen({ navigation }: DashboardScreenProps
         renderItem={({ item }) => {
           const meta = TYPE_META[item.type];
           return (
-            <View className="flex-row items-center rounded-md border border-gray-200 bg-white p-4">
+            <View className="flex-row items-center rounded-md border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900">
               <View className={`h-11 w-11 items-center justify-center rounded-full ${meta.bg}`}>
                 <FontAwesome5 name={meta.icon} size={16} color={meta.color} />
               </View>
               <View className="ml-3 flex-1">
-                <Text className="text-sm font-semibold text-gray-900">
+                <Text className="text-sm font-semibold text-gray-900 dark:text-gray-50">
                   {t(`notifications.types.${item.type}`)} · {item.customers?.name ?? t('notifications.customer')}
                 </Text>
-                <Text className="font-sans mt-0.5 text-xs text-gray-500">
+                <Text className="font-sans mt-0.5 text-xs text-gray-500 dark:text-gray-400">
                   {relativeTime(item.sent_at, t)}
                   {item.status !== 'sent' ? ` · ${item.status}` : ''}
                 </Text>

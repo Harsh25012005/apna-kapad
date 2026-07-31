@@ -1,6 +1,7 @@
 import { View, Text } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { colors } from '../../constants/theme';
+import { colors, darkColors } from '../../constants/theme';
+import { useTheme } from '../../context/ThemeContext';
 import type { OrderStatus, PaymentStatus } from '../../types';
 
 export type BadgeProps =
@@ -10,20 +11,22 @@ export type BadgeProps =
 
 export function Badge(props: BadgeProps) {
   const { t } = useTranslation('common');
+  const { scheme } = useTheme();
+  const isDark = scheme === 'dark';
   let text: string;
   let bgColor: string;
   let textColor: string;
 
   if (props.type === 'order_status') {
     text = t(`status.order.${props.value}`);
-    ({ bg: bgColor, text: textColor } = colors.status[props.value]);
+    ({ bg: bgColor, text: textColor } = (isDark ? darkColors : colors).status[props.value]);
   } else if (props.type === 'payment_status') {
     text = t(`status.payment.${props.value}`);
-    ({ bg: bgColor, text: textColor } = colors.payment[props.value]);
+    ({ bg: bgColor, text: textColor } = (isDark ? darkColors : colors).payment[props.value]);
   } else {
     text = props.label;
-    bgColor = props.bg ?? '#E5E7EB';
-    textColor = props.color ?? '#374151';
+    bgColor = props.bg ?? (isDark ? '#374151' : '#E5E7EB');
+    textColor = props.color ?? (isDark ? '#E5E7EB' : '#374151');
   }
 
   return (

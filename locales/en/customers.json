@@ -11,7 +11,10 @@
     "emptyDescription": "Add your first customer to get started",
     "addCustomer": "Add Customer",
     "loadError": "Could not load customers",
-    "hasBalanceFilter": "Has balance due"
+    "hasBalanceFilter": "Has balance due",
+    "filterModalTitle": "Filter Customers",
+    "reset": "Reset",
+    "allCustomers": "All Customers"
   },
   "detail": {
     "loading": "Loading customer...",
@@ -33,7 +36,19 @@
     "noClothType": "No cloth type",
     "ordered": "Ordered {{date}}",
     "loadError": "Could not load customer",
-    "whatsappError": "Could not open WhatsApp"
+    "whatsappError": "Could not open WhatsApp",
+    "deleteCustomer": "Delete Customer",
+    "deleteConfirmTitle": "Delete this customer?",
+    "deleteConfirmMessage": "This removes {{name}} permanently. This cannot be undone.",
+    "deleteSuccess": "Customer deleted",
+    "deleteBlocked": "Can't delete — this customer still has orders or bills. Remove those first.",
+    "deleteFailed": "Could not delete customer",
+    "deleteMeasurementConfirmTitle": "Delete this measurement?",
+    "deleteMeasurementConfirmMessage": "This removes the saved {{garmentType}} measurement permanently.",
+    "deleteMeasurementSuccess": "Measurement deleted",
+    "deleteMeasurementFailed": "Could not delete measurement",
+    "cancel": "Cancel",
+    "delete": "Delete"
   },
   "form": {
     "title": "New Customer",

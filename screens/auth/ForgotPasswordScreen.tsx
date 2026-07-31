@@ -34,21 +34,21 @@ export default function ForgotPasswordScreen({ navigation }: AuthScreenProps<'Fo
   };
 
   return (
-    <View className="flex-1 bg-white">
+    <View className="flex-1 bg-white dark:bg-gray-950">
       <Header title={t('forgotPassword.title')} onBack={() => navigation.goBack()} />
       <View className="flex-1 px-6 py-8">
         {sent ? (
           <View className="items-center pt-6">
-            <View className="mb-4 h-14 w-14 items-center justify-center rounded-full bg-emerald-50">
+            <View className="mb-4 h-14 w-14 items-center justify-center rounded-full bg-emerald-50 dark:bg-emerald-950">
               <FontAwesome5 name="check" size={20} color="#047857" />
             </View>
-            <Text className="font-sans text-center text-base text-gray-700">
+            <Text className="font-sans text-center text-base text-gray-700 dark:text-gray-300">
               {t('forgotPassword.sentMessage', { email })}
             </Text>
           </View>
         ) : (
           <>
-            <Text className="font-sans mb-6 text-sm text-gray-500">
+            <Text className="font-sans mb-6 text-sm text-gray-500 dark:text-gray-400">
               {t('forgotPassword.instructions')}
             </Text>
             <InputField

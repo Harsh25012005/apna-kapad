@@ -9,6 +9,7 @@ import { supabase } from '../../lib/supabase';
 import { formatCurrency } from '../../lib/format';
 import { haptics } from '../../lib/haptics';
 import { useShop } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
 import type { DashboardScreenProps } from '../../navigation/types';
 import type { OrderListItem } from '../../types';
 
@@ -67,6 +68,8 @@ export default function DashboardScreen({ navigation }: DashboardScreenProps<'Da
   const insets = useSafeAreaInsets();
   const showToast = useToast();
   const { t } = useTranslation('dashboard');
+  const { scheme } = useTheme();
+  const amberIconColor = scheme === 'dark' ? '#FCD34D' : '#B45309';
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -208,7 +211,7 @@ export default function DashboardScreen({ navigation }: DashboardScreenProps<'Da
 
   return (
     <ScrollView
-      className="flex-1 bg-white"
+      className="flex-1 bg-white dark:bg-gray-950"
       contentContainerStyle={{ paddingTop: insets.top + 8, paddingBottom: 160 }}
       refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor="#1D4ED8" />
@@ -216,19 +219,19 @@ export default function DashboardScreen({ navigation }: DashboardScreenProps<'Da
     >
       {/* Topbar Header */}
       <View className="flex-row items-center justify-between px-5 py-3">
-        <Text className="text-[18px] font-semibold text-[#101828]">
+        <Text className="text-[18px] font-semibold text-[#101828] dark:text-gray-50">
           {t('greeting', { name: shop.shop_name || t('defaultUser') })}
         </Text>
         <Pressable
           onPress={() => navigation.navigate('Notifications')}
-          className="h-10 w-10 items-center justify-center rounded-full active:bg-gray-100"
+          className="h-10 w-10 items-center justify-center rounded-full active:bg-gray-100 dark:active:bg-gray-800"
         >
-          <Ionicons name="notifications-outline" size={22} color="#101828" />
+          <Ionicons name="notifications-outline" size={22} color={scheme === 'dark' ? '#F3F4F6' : '#101828'} />
         </Pressable>
       </View>
 
       {/* Balance Hero Card */}
-      <View className="mx-5 mb-4 rounded-lg bg-[#101828] p-4 shadow-md">
+      <View className="mx-5 mb-4 rounded-lg bg-[#101828] p-4 shadow-md dark:border dark:border-gray-700">
         <View className="flex-row items-start justify-between">
           <View className="gap-1">
             <Text className="font-sans text-[14px] font-medium text-[#98A2B3]">
@@ -280,35 +283,35 @@ export default function DashboardScreen({ navigation }: DashboardScreenProps<'Da
       {stats.unpaidBillsCount > 0 ? (
         <Pressable
           onPress={() => navigation.navigate('SettingsTab' as any, { screen: 'Billing' })}
-          className="mx-5 mb-4 flex-row items-center justify-between rounded-lg border border-amber-300 bg-amber-50 p-4 active:bg-amber-100 shadow-sm"
+          className="mx-5 mb-4 flex-row items-center justify-between rounded-lg border border-amber-300 bg-amber-50 p-4 active:bg-amber-100 shadow-sm dark:border-amber-800 dark:bg-amber-950 dark:active:bg-amber-900"
         >
           <View className="flex-1 flex-row items-center gap-3">
-            <View className="h-11 w-11 items-center justify-center rounded-full bg-amber-100">
-              <FontAwesome5 name="exclamation-circle" size={16} color="#B45309" />
+            <View className="h-11 w-11 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900">
+              <FontAwesome5 name="exclamation-circle" size={16} color={amberIconColor} />
             </View>
             <View className="flex-1">
-              <Text className="text-[14px] font-semibold text-[#101828]">{t('pendingPayments.title')}</Text>
-              <Text className="font-sans text-[12px] font-medium text-[#B45309]">
+              <Text className="text-[14px] font-semibold text-[#101828] dark:text-gray-50">{t('pendingPayments.title')}</Text>
+              <Text className="font-sans text-[12px] font-medium text-[#B45309] dark:text-amber-300">
                 {t('pendingPayments.subtitle', { count: stats.unpaidBillsCount })}
               </Text>
             </View>
           </View>
           <View className="items-end">
-            <Text className="text-[16px] font-semibold text-[#B45309]">
+            <Text className="text-[16px] font-semibold text-[#B45309] dark:text-amber-300">
               {formatCurrency(stats.totalPendingBalance)}
             </Text>
-            <Ionicons name="chevron-forward" size={16} color="#B45309" />
+            <Ionicons name="chevron-forward" size={16} color={amberIconColor} />
           </View>
         </Pressable>
       ) : null}
 
       {/* Quick Send & Transactions Sheet Container */}
-      <View className="flex-1 bg-white">
+      <View className="flex-1 bg-white dark:bg-gray-950">
 
         {/* Top Clients — ranked by order count, hidden until there's data */}
         {stats.topClients.length > 0 ? (
         <View className="mb-6 px-5">
-          <Text className="mb-3 text-[14px] font-semibold text-[#101828]">{t('topClients')}</Text>
+          <Text className="mb-3 text-[14px] font-semibold text-[#101828] dark:text-gray-50">{t('topClients')}</Text>
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
@@ -331,7 +334,7 @@ export default function DashboardScreen({ navigation }: DashboardScreenProps<'Da
                   <View className={`h-[54px] w-[54px] items-center justify-center rounded-full ${colorStyle.bg}`}>
                     <Text className={`text-[18px] font-semibold ${colorStyle.text}`}>{initial}</Text>
                   </View>
-                  <Text className="font-sans text-[12px] font-medium text-[#101828] text-center" numberOfLines={1}>
+                  <Text className="font-sans text-[12px] font-medium text-[#101828] dark:text-gray-50 text-center" numberOfLines={1}>
                     {client.name.split(' ')[0]}
                   </Text>
                 </Pressable>
@@ -345,7 +348,7 @@ export default function DashboardScreen({ navigation }: DashboardScreenProps<'Da
         {stats.dueSoonOrders.length > 0 ? (
           <View className="mb-6 px-5">
             <View className="mb-3 flex-row items-center justify-between">
-              <Text className="text-[14px] font-semibold text-[#101828]">{t('dueSoon.title')}</Text>
+              <Text className="text-[14px] font-semibold text-[#101828] dark:text-gray-50">{t('dueSoon.title')}</Text>
               <Pressable onPress={() => navigation.navigate('OrdersTab' as any)}>
                 <Text className="text-[12px] font-medium text-[#1D4ED8] underline">{t('viewAll')}</Text>
               </Pressable>
@@ -359,19 +362,19 @@ export default function DashboardScreen({ navigation }: DashboardScreenProps<'Da
                   <Pressable
                     key={o.id}
                     onPress={() => navigation.navigate('OrderDetail', { orderId: o.id })}
-                    className="flex-row items-center justify-between rounded-md border border-gray-200 bg-[#F9FAFB] px-4 py-3.5"
+                    className="flex-row items-center justify-between rounded-md border border-gray-200 bg-[#F9FAFB] px-4 py-3.5 dark:border-gray-700 dark:bg-gray-800"
                   >
                     <View className="flex-1">
-                      <Text className="text-[14px] font-semibold text-[#101828]" numberOfLines={1}>
+                      <Text className="text-[14px] font-semibold text-[#101828] dark:text-gray-50" numberOfLines={1}>
                         #{o.order_number} · {o.customers?.name || t('customer')}
                       </Text>
-                      <Text className="font-sans text-[12px] font-medium text-[#667085]">
+                      <Text className="font-sans text-[12px] font-medium text-[#667085] dark:text-gray-400">
                         {o.cloth_type || t('garmentOrder')}
                       </Text>
                     </View>
                     <View className="items-end">
                       <Text className="text-[12px] font-semibold text-[#1D4ED8]">{dateStr}</Text>
-                      <Text className="font-sans text-[11px] font-medium text-[#667085]">
+                      <Text className="font-sans text-[11px] font-medium text-[#667085] dark:text-gray-400">
                         {o.status.replace('_', ' ')}
                       </Text>
                     </View>
@@ -385,7 +388,7 @@ export default function DashboardScreen({ navigation }: DashboardScreenProps<'Da
         {/* Transaction History / Recent Activity */}
         <View className="px-5">
           <View className="mb-3 flex-row items-center justify-between">
-            <Text className="text-[14px] font-semibold text-[#101828]">{t('transactionHistory')}</Text>
+            <Text className="text-[14px] font-semibold text-[#101828] dark:text-gray-50">{t('transactionHistory')}</Text>
             <Pressable onPress={() => navigation.navigate('OrdersTab' as any)}>
               <Text className="text-[12px] font-medium text-[#1D4ED8] underline">{t('viewAll')}</Text>
             </Pressable>
@@ -417,28 +420,28 @@ export default function DashboardScreen({ navigation }: DashboardScreenProps<'Da
                     className="flex-row items-center justify-between rounded-xl py-2"
                   >
                     <View className="flex-1 flex-row items-center gap-3">
-                      <View className="h-[48px] w-[48px] items-center justify-center rounded-full bg-[#F4F6F9]">
+                      <View className="h-[48px] w-[48px] items-center justify-center rounded-full bg-[#F4F6F9] dark:bg-gray-800">
                         <FontAwesome5 name="shopping-bag" size={18} color="#1D4ED8" />
                       </View>
                       <View className="flex-1">
-                        <Text className="text-[15px] font-semibold text-[#101828]" numberOfLines={1}>
+                        <Text className="text-[15px] font-semibold text-[#101828] dark:text-gray-50" numberOfLines={1}>
                           #{o.order_number} · {o.customers?.name || t('customer')}
                         </Text>
-                        <Text className="font-sans text-[12px] font-medium text-[#667085]">
+                        <Text className="font-sans text-[12px] font-medium text-[#667085] dark:text-gray-400">
                           {dateStr}
                         </Text>
                       </View>
                     </View>
 
                     <View className="items-end">
-                      <Text className="text-[14px] font-semibold text-[#101828]">
+                      <Text className="text-[14px] font-semibold text-[#101828] dark:text-gray-50">
                         {o.cloth_type || t('garmentOrder')}
                       </Text>
                       <Text
                         className={`text-[12px] font-medium ${isDelivered ? 'text-[#12B76A]' : 'text-amber-600'
                           }`}
                       >
-                        {isDelivered ? t('paid') : o.status.replace('_', ' ')}
+                        {o.status.replace('_', ' ')}
                       </Text>
                     </View>
                   </Pressable>

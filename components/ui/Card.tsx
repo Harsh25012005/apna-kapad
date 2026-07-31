@@ -8,14 +8,14 @@ export type CardProps = {
 };
 
 export function Card({ children, onPress, className = '' }: CardProps) {
-  const baseClass = `rounded-md border border-gray-200 bg-white p-4 ${className}`;
+  const baseClass = `rounded-md border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900 ${className}`;
 
   if (onPress) {
     return (
       <Pressable
         onPress={onPress}
         style={({ pressed }) => ({ transform: [{ scale: pressed ? 0.985 : 1 }] })}
-        className={`active:border-gray-300 active:bg-gray-50 ${baseClass}`}
+        className={`active:border-gray-300 active:bg-gray-50 dark:active:border-gray-700 dark:active:bg-gray-800 ${baseClass}`}
       >
         {children}
       </Pressable>

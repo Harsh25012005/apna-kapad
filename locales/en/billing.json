@@ -8,6 +8,9 @@
       "partial": "Partial",
       "unpaid": "Unpaid"
     },
+    "filterModalTitle": "Filter Bills",
+    "reset": "Reset",
+    "allBills": "All Bills",
     "loading": "Loading bills...",
     "emptySearchTitle": "No matching bills",
     "emptySearchDescription": "Try a different customer name or bill ID",

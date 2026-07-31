@@ -76,7 +76,7 @@ export default function BillFormScreen({ navigation, route }: AppScreenProps<'Bi
     <>
       <Header title={t('form.title')} onBack={() => navigation.goBack()} />
       <ScrollView
-        className="flex-1 bg-white"
+        className="flex-1 bg-white dark:bg-gray-950"
         contentContainerStyle={{ padding: 20, paddingBottom: insets.bottom + 160 }}
         keyboardShouldPersistTaps="handled"
       >
@@ -114,9 +114,9 @@ export default function BillFormScreen({ navigation, route }: AppScreenProps<'Bi
           keyboardType="numeric"
         />
 
-        <View className="mb-6 flex-row items-center justify-between rounded-lg bg-primary-50 p-4">
-          <Text className="text-sm font-medium text-primary-700">{t('form.totalAmount')}</Text>
-          <Text className="text-xl font-bold text-primary-700">{formatCurrency(total)}</Text>
+        <View className="mb-6 flex-row items-center justify-between rounded-lg bg-primary-50 p-4 dark:bg-primary-950">
+          <Text className="text-sm font-medium text-primary-700 dark:text-primary-300">{t('form.totalAmount')}</Text>
+          <Text className="text-xl font-bold text-primary-700 dark:text-primary-300">{formatCurrency(total)}</Text>
         </View>
 
         <Button title={t('form.createBill')} onPress={handleSave} loading={loading} />

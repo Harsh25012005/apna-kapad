@@ -82,19 +82,19 @@ export default function ShopSetupScreen() {
   };
 
   return (
-    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} className="flex-1 bg-white">
+    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} className="flex-1 bg-white dark:bg-gray-950">
       <ScrollView
-        className="flex-1 bg-white"
+        className="flex-1 bg-white dark:bg-gray-950"
         contentContainerStyle={{ padding: 24, paddingTop: insets.top + 24, paddingBottom: insets.bottom + 32 }}
         keyboardShouldPersistTaps="handled"
       >
-        <Text className="mb-1 text-2xl font-bold text-gray-900">{t('shopSetup.title')}</Text>
-        <Text className="font-sans mb-6 text-sm text-gray-500">
+        <Text className="mb-1 text-2xl font-bold text-gray-900 dark:text-gray-50">{t('shopSetup.title')}</Text>
+        <Text className="font-sans mb-6 text-sm text-gray-500 dark:text-gray-400">
           {t('shopSetup.subtitle')}
         </Text>
 
         <View className="mb-6">
-          <Text className="mb-1.5 text-xs font-bold uppercase tracking-[0.4px] text-gray-500">
+          <Text className="mb-1.5 text-xs font-bold uppercase tracking-[0.4px] text-gray-500 dark:text-gray-400">
             {t('shopSetup.language')}
           </Text>
           <View className="flex-row gap-2">
@@ -105,12 +105,12 @@ export default function ShopSetupScreen() {
                   key={lang}
                   onPress={() => setAppLanguage(lang)}
                   className={`flex-1 items-center rounded-md border py-2.5 ${
-                    active ? 'border-primary-600 bg-primary-50' : 'border-gray-200 bg-white'
+                    active ? 'border-primary-600 bg-primary-50 dark:bg-primary-950' : 'border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-900'
                   }`}
                 >
                   <Text
                     className={`font-sans text-sm font-medium ${
-                      active ? 'text-primary-600' : 'text-gray-600'
+                      active ? 'text-primary-600 dark:text-primary-400' : 'text-gray-600 dark:text-gray-400'
                     }`}
                   >
                     {LANGUAGE_ENDONYMS[lang]}
@@ -119,7 +119,7 @@ export default function ShopSetupScreen() {
               );
             })}
           </View>
-          <Text className="font-sans mt-1.5 text-xs text-gray-400">{t('shopSetup.languageHint')}</Text>
+          <Text className="font-sans mt-1.5 text-xs text-gray-400 dark:text-gray-500">{t('shopSetup.languageHint')}</Text>
         </View>
 
         <ImagePickerField label={t('shopSetup.shopLogo')} uri={logoUri} onChange={setLogoUri} />
@@ -128,7 +128,7 @@ export default function ShopSetupScreen() {
           label={t('shopSetup.shopName')}
           value={shopName}
           onChangeText={setShopName}
-          placeholder={t('shopSetup.shopNamePlaceholder')}
+          placeholder={t('shopSetup.shopNamePlaceholder')}
           error={errors.shopName}
         />
 
@@ -136,7 +136,7 @@ export default function ShopSetupScreen() {
           label={t('shopSetup.ownerName')}
           value={ownerName}
           onChangeText={setOwnerName}
-          placeholder={t('shopSetup.ownerNamePlaceholder')}
+          placeholder={t('shopSetup.ownerNamePlaceholder')}
           error={errors.ownerName}
         />
 
@@ -144,7 +144,7 @@ export default function ShopSetupScreen() {
           label={t('shopSetup.address')}
           value={address}
           onChangeText={setAddress}
-          placeholder={t('shopSetup.addressPlaceholder')}
+          placeholder={t('shopSetup.addressPlaceholder')}
           multiline
         />
 
@@ -152,7 +152,7 @@ export default function ShopSetupScreen() {
           label={t('shopSetup.phone')}
           value={phone}
           onChangeText={setPhone}
-          placeholder={t('shopSetup.phonePlaceholder')}
+          placeholder={t('shopSetup.phonePlaceholder')}
           keyboardType="phone-pad"
         />
 

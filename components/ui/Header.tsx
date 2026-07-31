@@ -3,7 +3,9 @@ import type { ReactNode } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 import { SearchBar, type SearchBarProps } from './SearchBar';
+import { useTheme } from '../../context/ThemeContext';
 
 export type HeaderProps = {
   title: string;
@@ -18,7 +20,7 @@ export type HeaderProps = {
 export function Header({
   title,
   showBack = true,
-  backText = 'Back',
+  backText,
   right,
   onBack,
   searchProps,
@@ -26,11 +28,14 @@ export function Header({
 }: HeaderProps) {
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
+  const { t } = useTranslation('common');
+  const { colors } = useTheme();
+  const resolvedBackText = backText ?? t('actions.back');
 
   return (
     <View
       style={{ paddingTop: insets.top + 8 }}
-      className="border-b border-gray-200 bg-white px-5 pb-3"
+      className="border-b border-gray-200 bg-white px-5 pb-3 dark:border-gray-800 dark:bg-gray-950"
     >
       {/* Top row with Title or Back Button */}
       <View className="flex-row items-center justify-between min-h-[40px] mb-1">
@@ -38,18 +43,18 @@ export function Header({
           <Pressable
             onPress={onBack ?? (() => navigation.goBack())}
             hitSlop={8}
-            className="-ml-2 flex-row items-center gap-1 rounded-lg px-2 py-1 active:bg-gray-100"
+            className="-ml-2 flex-row items-center gap-1 rounded-lg px-2 py-1 active:bg-gray-100 dark:active:bg-gray-800"
           >
-            <Ionicons name="chevron-back" size={20} color="#101828" />
-            <Text className="font-sans text-[15px] font-medium text-[#101828]">
-              {backText}
+            <Ionicons name="chevron-back" size={20} color={colors.textPrimary} />
+            <Text className="font-sans text-[15px] font-medium text-[#101828] dark:text-gray-50">
+              {resolvedBackText}
             </Text>
           </Pressable>
         ) : null}
 
         <View className={`flex-1 ${showBack ? 'px-2' : ''}`}>
           <Text
-            className={`font-semibold text-[#101828] ${
+            className={`font-semibold text-[#101828] dark:text-gray-50 ${
               showBack ? 'text-center text-[18px]' : 'text-[22px] font-bold'
             }`}
             numberOfLines={1}
@@ -57,7 +62,7 @@ export function Header({
             {title}
           </Text>
           {subtitle ? (
-            <Text className="font-sans text-xs text-gray-500">{subtitle}</Text>
+            <Text className="font-sans text-xs text-gray-500 dark:text-gray-400">{subtitle}</Text>
           ) : null}
         </View>
 

@@ -102,7 +102,7 @@ export default function StaffFormScreen({ navigation, route }: SettingsScreenPro
   return (
     <>
       <Header title={staffId ? t('form.titleEdit') : t('form.titleAdd')} onBack={() => navigation.goBack()} />
-      <ScrollView className="flex-1 bg-white" contentContainerStyle={{ padding: 20, paddingBottom: 160 }}>
+      <ScrollView className="flex-1 bg-white dark:bg-gray-950" contentContainerStyle={{ padding: 20, paddingBottom: 160 }}>
         <InputField
           label={t('form.nameLabel')}
           value={name}

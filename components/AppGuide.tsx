@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { Button } from './ui';
 import { haptics } from '../lib/haptics';
 import { useTabBarHighlight } from '../context/TabBarHighlightContext';
+import { useTheme } from '../context/ThemeContext';
 import type { MainTabParamList } from '../navigation/types';
 
 type Step = {
@@ -32,6 +33,7 @@ export type AppGuideProps = {
  */
 export function AppGuide({ visible, onDone }: AppGuideProps) {
   const { t } = useTranslation('settings');
+  const { colors } = useTheme();
   const [index, setIndex] = useState(0);
   const { setHighlightedTab, tabBarHeight } = useTabBarHighlight();
   const step = STEPS[index];
@@ -77,31 +79,31 @@ export function AppGuide({ visible, onDone }: AppGuideProps) {
         <View className="flex-1 justify-end" pointerEvents="box-none">
           <View
             style={{ marginBottom: barSpace + 14 }}
-            className="mx-5 rounded-3xl border border-gray-200 bg-white p-5 shadow-lg"
+            className="mx-5 rounded-3xl border border-gray-200 bg-white p-5 shadow-lg dark:border-gray-800 dark:bg-gray-900"
           >
             <View className="mb-4 flex-row items-center justify-between">
               <View className="flex-row items-center">
-                <View className="h-11 w-11 items-center justify-center rounded-full bg-primary-50">
-                  <FontAwesome5 name={step.icon} size={18} color="#2563EB" />
+                <View className="h-11 w-11 items-center justify-center rounded-full bg-primary-50 dark:bg-primary-950">
+                  <FontAwesome5 name={step.icon} size={18} color={colors.primary} />
                 </View>
-                <Text className="font-sans ml-3 text-xs font-semibold uppercase tracking-wide text-gray-400">
+                <Text className="font-sans ml-3 text-xs font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">
                   {t('appGuide.stepOf', { current: index + 1, total: STEPS.length })}
                 </Text>
               </View>
-              <Pressable onPress={handleFinish} hitSlop={8} className="rounded-full px-2 py-1 active:bg-gray-100">
-                <Text className="text-sm font-medium text-gray-400">{t('appGuide.skip')}</Text>
+              <Pressable onPress={handleFinish} hitSlop={8} className="rounded-full px-2 py-1 active:bg-gray-100 dark:active:bg-gray-800">
+                <Text className="text-sm font-medium text-gray-400 dark:text-gray-500">{t('appGuide.skip')}</Text>
               </Pressable>
             </View>
 
-            <Text className="mb-1.5 text-lg font-bold text-gray-900">{t(`appGuide.steps.${step.key}.title`)}</Text>
-            <Text className="font-sans mb-5 text-sm leading-5 text-gray-500">{t(`appGuide.steps.${step.key}.description`)}</Text>
+            <Text className="mb-1.5 text-lg font-bold text-gray-900 dark:text-gray-50">{t(`appGuide.steps.${step.key}.title`)}</Text>
+            <Text className="font-sans mb-5 text-sm leading-5 text-gray-500 dark:text-gray-400">{t(`appGuide.steps.${step.key}.description`)}</Text>
 
             <View className="mb-4 flex-row justify-center gap-1.5">
               {STEPS.map((s, i) => (
                 <View
                   key={s.tab}
                   className={`h-1.5 rounded-full ${
-                    i === index ? 'w-5 bg-primary-600' : i < index ? 'w-1.5 bg-primary-200' : 'w-1.5 bg-gray-200'
+                    i === index ? 'w-5 bg-primary-600' : i < index ? 'w-1.5 bg-primary-200 dark:bg-primary-800' : 'w-1.5 bg-gray-200 dark:bg-gray-700'
                   }`}
                 />
               ))}

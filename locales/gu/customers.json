@@ -11,7 +11,10 @@
     "emptyDescription": "શરૂ કરવા માટે તમારો પ્રથમ ગ્રાહક ઉમેરો",
     "addCustomer": "ગ્રાહક ઉમેરો",
     "loadError": "ગ્રાહકો લોડ કરી શકાયા નથી",
-    "hasBalanceFilter": "બાકી રકમ ધરાવે છે"
+    "hasBalanceFilter": "બાકી રકમ ધરાવે છે",
+    "filterModalTitle": "ગ્રાહકો ફિલ્ટર કરો",
+    "reset": "રીસેટ",
+    "allCustomers": "બધા ગ્રાહકો"
   },
   "detail": {
     "loading": "ગ્રાહક લોડ થઈ રહ્યો છે...",
@@ -33,7 +36,19 @@
     "noClothType": "કાપડનો પ્રકાર નથી",
     "ordered": "ઓર્ડર કર્યો {{date}}",
     "loadError": "ગ્રાહક લોડ કરી શકાયો નથી",
-    "whatsappError": "WhatsApp ખોલી શકાયું નથી"
+    "whatsappError": "WhatsApp ખોલી શકાયું નથી",
+    "deleteCustomer": "ગ્રાહક કાઢી નાખો",
+    "deleteConfirmTitle": "આ ગ્રાહકને કાઢી નાખવો છે?",
+    "deleteConfirmMessage": "આ {{name}} ને કાયમ માટે દૂર કરશે. આ પાછું લઈ શકાશે નહીં.",
+    "deleteSuccess": "ગ્રાહક કાઢી નાખવામાં આવ્યો",
+    "deleteBlocked": "કાઢી શકાતું નથી — આ ગ્રાહકના ઓર્ડર અથવા બિલ હજુ બાકી છે. પહેલા તે દૂર કરો.",
+    "deleteFailed": "ગ્રાહક કાઢી શકાયો નથી",
+    "deleteMeasurementConfirmTitle": "આ માપ કાઢી નાખવું છે?",
+    "deleteMeasurementConfirmMessage": "આ સેવ કરેલ {{garmentType}} માપ કાયમ માટે દૂર કરશે.",
+    "deleteMeasurementSuccess": "માપ કાઢી નાખવામાં આવ્યું",
+    "deleteMeasurementFailed": "માપ કાઢી શકાયું નથી",
+    "cancel": "રદ કરો",
+    "delete": "કાઢી નાખો"
   },
   "form": {
     "title": "નવો ગ્રાહક",

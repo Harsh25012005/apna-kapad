@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ScrollView, Text, View, Pressable } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, Text, View, Pressable } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { Button, Dropdown, Header, InputField, LoadingSpinner, useToast } from '../../components/ui';
@@ -258,7 +258,16 @@ export default function MeasurementFormScreen({
         title={isEditing ? t('measurementForm.editTitle') : t('measurementForm.title')}
         onBack={() => navigation.goBack()}
       />
-      <ScrollView className="flex-1 bg-white dark:bg-gray-950" contentContainerStyle={{ padding: 20, paddingBottom: 160 }}>
+      <KeyboardAvoidingView
+        className="flex-1"
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+      >
+      <ScrollView
+        className="flex-1 bg-white dark:bg-gray-950"
+        contentContainerStyle={{ padding: 20, paddingBottom: 160 }}
+        keyboardShouldPersistTaps="handled"
+      >
         <Dropdown
           label={t('measurementForm.garmentTypeLabel')}
           value={garmentType}
@@ -266,6 +275,7 @@ export default function MeasurementFormScreen({
           options={garmentTypeOptions}
           placeholder={t('measurementForm.garmentTypePlaceholder')}
           error={error}
+          required
         />
 
         {groups.shirt.length > 0 ? (
@@ -295,7 +305,6 @@ export default function MeasurementFormScreen({
           value={notes}
           onChangeText={setNotes}
           placeholder={t('measurementForm.notesPlaceholder')}
-          multiline
         />
 
         <View className="mt-2">
@@ -358,6 +367,7 @@ export default function MeasurementFormScreen({
           className="mt-4"
         />
       </ScrollView>
+      </KeyboardAvoidingView>
     </>
   );
 }

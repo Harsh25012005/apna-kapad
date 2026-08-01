@@ -130,6 +130,7 @@ export default function ShopSetupScreen() {
           onChangeText={setShopName}
           placeholder={t('shopSetup.shopNamePlaceholder')}
           error={errors.shopName}
+          required
         />
 
         <InputField
@@ -138,6 +139,7 @@ export default function ShopSetupScreen() {
           onChangeText={setOwnerName}
           placeholder={t('shopSetup.ownerNamePlaceholder')}
           error={errors.ownerName}
+          required
         />
 
         <InputField
@@ -145,7 +147,6 @@ export default function ShopSetupScreen() {
           value={address}
           onChangeText={setAddress}
           placeholder={t('shopSetup.addressPlaceholder')}
-          multiline
         />
 
         <InputField

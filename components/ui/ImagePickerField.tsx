@@ -13,6 +13,8 @@ export type ImagePickerFieldProps = {
   source?: 'library' | 'camera';
   /** Called when the required OS permission was refused. */
   onPermissionDenied?: () => void;
+  /** Square size in px. Defaults to 128 (the original fixed w-32/h-32). */
+  size?: number;
 };
 
 export function ImagePickerField({
@@ -22,6 +24,7 @@ export function ImagePickerField({
   aspect = [1, 1],
   source = 'library',
   onPermissionDenied,
+  size = 128,
 }: ImagePickerFieldProps) {
   const { t } = useTranslation('common');
   const { colors } = useTheme();
@@ -62,7 +65,8 @@ export function ImagePickerField({
 
       <Pressable
         onPress={pickImage}
-        className="h-32 w-32 items-center justify-center overflow-hidden rounded-md border border-dashed border-gray-200 bg-gray-50 active:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:active:bg-gray-700"
+        style={{ width: size, height: size }}
+        className="items-center justify-center overflow-hidden rounded-md border border-dashed border-gray-200 bg-gray-50 active:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:active:bg-gray-700"
       >
         {uri ? (
           <Image source={{ uri }} className="h-full w-full" resizeMode="cover" />

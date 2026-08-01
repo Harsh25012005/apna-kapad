@@ -12,6 +12,7 @@ create table if not exists customers (
   name text not null,
   phone text,
   address text,
+  book_number text,
   created_at text not null,
   updated_at text not null
 );
@@ -113,11 +114,30 @@ create table if not exists sync_meta (
 
 let dbPromise: Promise<SQLite.SQLiteDatabase> | null = null;
 
+/**
+ * Column additions to already-installed local databases. `CREATE TABLE IF NOT
+ * EXISTS` above only ever runs once per device, so a new column needs an
+ * explicit ALTER TABLE here — each wrapped so "duplicate column" on devices
+ * that already have it (or a fresh install where the CREATE already included
+ * it) doesn't block startup.
+ */
+async function runColumnMigrations(db: SQLite.SQLiteDatabase): Promise<void> {
+  const migrations = ['alter table customers add column book_number text'];
+  for (const sql of migrations) {
+    try {
+      await db.execAsync(sql);
+    } catch {
+      // Column already exists — nothing to do.
+    }
+  }
+}
+
 export function getDb(): Promise<SQLite.SQLiteDatabase> {
   if (!dbPromise) {
     dbPromise = SQLite.openDatabaseAsync('measuresone_offline.db').then(async (db) => {
       await db.execAsync('PRAGMA journal_mode = WAL;');
       await db.execAsync(SCHEMA_SQL);
+      await runColumnMigrations(db);
       return db;
     });
   }

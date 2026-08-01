@@ -13,6 +13,7 @@ type SharedOrderRoutes = {
   OrderForm: { customerId?: string; orderId?: string } | undefined;
   OrderDetail: { orderId: string };
   BillForm: { orderId?: string; customerId?: string } | undefined;
+  BillDetail: { billId: string };
 };
 
 export type CustomersStackParamList = SharedOrderRoutes & {
@@ -24,7 +25,6 @@ export type CustomersStackParamList = SharedOrderRoutes & {
 
 export type OrdersStackParamList = SharedOrderRoutes & {
   OrderList: undefined;
-  BulkOrderForm: undefined;
 };
 
 export type BillingStackParamList = {
@@ -37,6 +37,7 @@ export type DashboardStackParamList = SharedOrderRoutes & {
   Dashboard: undefined;
   Notifications: undefined;
   Calendar: undefined;
+  Transactions: undefined;
 };
 
 export type SettingsStackParamList = {

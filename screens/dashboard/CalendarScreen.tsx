@@ -7,6 +7,7 @@ import { Card, EmptyState, Header, LoadingSpinner, useToast } from '../../compon
 import { supabase } from '../../lib/supabase';
 import { ordersRepo } from '../../lib/data/repository';
 import { useShop } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
 import type { DashboardScreenProps } from '../../navigation/types';
 
 type AgendaItem = { id: string; kind: 'delivery' | 'trial' | 'leave'; title: string; subtitle?: string };
@@ -20,6 +21,27 @@ export default function CalendarScreen({ navigation }: DashboardScreenProps<'Cal
   const shop = useShop();
   const showToast = useToast();
   const { t } = useTranslation('dashboard');
+  const { colors, scheme } = useTheme();
+
+  const calendarTheme = useMemo(
+    () => ({
+      backgroundColor: colors.bgPage,
+      calendarBackground: colors.bgPage,
+      textSectionTitleColor: colors.textMuted,
+      dayTextColor: colors.textPrimary,
+      todayTextColor: colors.primary,
+      monthTextColor: colors.textPrimary,
+      textDisabledColor: colors.textFaint,
+      arrowColor: colors.primary,
+      selectedDayBackgroundColor: colors.primary,
+      selectedDayTextColor: '#FFFFFF',
+      indicatorColor: colors.primary,
+      textDayFontFamily: undefined,
+      textMonthFontFamily: undefined,
+      textDayHeaderFontFamily: undefined,
+    }),
+    [colors, scheme]
+  );
 
   const [selectedDate, setSelectedDate] = useState(todayIso());
   const [byDate, setByDate] = useState<Record<string, AgendaItem[]>>({});
@@ -98,6 +120,9 @@ export default function CalendarScreen({ navigation }: DashboardScreenProps<'Cal
     <View className="flex-1 bg-white dark:bg-gray-950">
       <Header title={t('calendar.title')} onBack={() => navigation.goBack()} />
       <Calendar
+        key={scheme}
+        style={{ backgroundColor: colors.bgPage }}
+        theme={calendarTheme}
         markingType="multi-dot"
         markedDates={markedDates}
         onDayPress={(d: DateData) => setSelectedDate(d.dateString)}

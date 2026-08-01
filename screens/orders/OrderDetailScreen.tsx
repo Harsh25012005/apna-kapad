@@ -5,53 +5,25 @@ import { FontAwesome5 } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { Badge, Card, Header, LoadingSpinner, useToast } from '../../components/ui';
 import { supabase } from '../../lib/supabase';
-import { ordersRepo, billsRepo, paymentsRepo } from '../../lib/data/repository';
+import { ordersRepo, billsRepo, paymentsRepo, customersRepo, staffRepo } from '../../lib/data/repository';
 import { sendPushNotification } from '../../lib/notify';
 import { formatCurrency, formatDate } from '../../lib/format';
 import { sendWhatsAppMessage } from '../../lib/whatsapp';
 import { haptics } from '../../lib/haptics';
 import { useShop } from '../../context/AuthContext';
 import type { AppScreenProps } from '../../navigation/types';
-import type { Customer, Measurement, Order, OrderStatus, Staff } from '../../types';
+import type { Customer, Order, Staff } from '../../types';
 
-const STATUS_STEPS: OrderStatus[] = [
-  'order_taken',
-  'cutting',
-  'stitching',
-  'ready',
-  'delivered',
-];
-
-/** Order joined with its full linked measurement, not just the garment type. */
 type OrderDetail = Order & {
   customers: Pick<Customer, 'name' | 'phone'> | null;
   staff: Pick<Staff, 'name'> | null;
-  measurements: Measurement | null;
 };
-
-type CustomField = { label: string; value: string };
-
-function parseCustomFields(json: unknown): CustomField[] {
-  if (!Array.isArray(json)) return [];
-  return json
-    .filter((f): f is { label: unknown; value: unknown } => !!f && typeof f === 'object')
-    .map((f) => ({ label: String((f as any).label ?? ''), value: String((f as any).value ?? '') }))
-    .filter((f) => f.label || f.value);
-}
 
 export default function OrderDetailScreen({ navigation, route }: AppScreenProps<'OrderDetail'>) {
   const { orderId } = route.params;
   const shop = useShop();
   const showToast = useToast();
   const { t } = useTranslation('orders');
-
-  const STATUS_LABELS: Record<OrderStatus, string> = {
-    order_taken: t('detail.statusOrderTaken'),
-    cutting: t('detail.statusCutting'),
-    stitching: t('detail.statusStitching'),
-    ready: t('detail.statusReady'),
-    delivered: t('detail.statusDelivered'),
-  };
 
   /** Labels garment piece counts by type when the linked measurement says so. */
   function clothPieceLabel(garmentType: string | null | undefined): string {
@@ -61,19 +33,9 @@ export default function OrderDetailScreen({ navigation, route }: AppScreenProps<
     return t('detail.clothPieces');
   }
 
-  const MEASUREMENT_FIELD_LABELS: { key: keyof Measurement; label: string }[] = [
-    { key: 'chest', label: t('detail.measurementFields.chest') },
-    { key: 'waist', label: t('detail.measurementFields.waist') },
-    { key: 'shoulder', label: t('detail.measurementFields.shoulder') },
-    { key: 'length', label: t('detail.measurementFields.length') },
-    { key: 'sleeve', label: t('detail.measurementFields.sleeve') },
-  ];
-
   const [order, setOrder] = useState<OrderDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
-  /** id of the bill already raised for this order, or null if none exists yet. */
-  const [existingBillId, setExistingBillId] = useState<string | null>(null);
   /**
    * Live total/paid for the linked bill. orders.total_amount/paid_amount are
    * only a snapshot taken at order creation — once a payment is recorded on
@@ -85,20 +47,33 @@ export default function OrderDetailScreen({ navigation, route }: AppScreenProps<
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('orders')
-        .select('*, customers(name, phone), staff(name), measurements(*)')
-        .eq('id', orderId)
-        .single();
-      if (error) throw error;
-      setOrder(data as unknown as OrderDetail);
+      // Reads from the local-first mirror (same one order create/update/delete
+      // write through) rather than Supabase directly — querying Supabase here
+      // raced the background sync for freshly-created orders and made the
+      // detail page look like it "wouldn't open" right after creating one.
+      const order = await ordersRepo.get(orderId);
+      if (!order) {
+        // Order no longer exists (e.g. deleted elsewhere) — just leave, no
+        // need to surface a technical error for something the user can't act on.
+        navigation.goBack();
+        return;
+      }
+
+      const [customer, staffMember] = await Promise.all([
+        customersRepo.get(order.customer_id),
+        order.assigned_staff_id ? staffRepo.get(order.assigned_staff_id) : Promise.resolve(null),
+      ]);
+      setOrder({
+        ...order,
+        customers: customer ? { name: customer.name, phone: customer.phone } : null,
+        staff: staffMember ? { name: staffMember.name } : null,
+      });
 
       const [shopBills, shopPayments] = await Promise.all([
         billsRepo.list(shop.id),
         paymentsRepo.listForShop(shop.id),
       ]);
       const bill = shopBills.find((b) => b.order_id === orderId) ?? null;
-      setExistingBillId(bill?.id ?? null);
       setBillAmounts(
         bill
           ? {
@@ -109,12 +84,12 @@ export default function OrderDetailScreen({ navigation, route }: AppScreenProps<
             }
           : null
       );
-    } catch (err) {
-      showToast(err instanceof Error ? err.message : t('detail.loadOrderFailed'), 'error');
+    } catch {
+      navigation.goBack();
     } finally {
       setLoading(false);
     }
-  }, [orderId, showToast, shop.id]);
+  }, [orderId, navigation, shop.id]);
 
   useFocusEffect(
     useCallback(() => {
@@ -122,16 +97,16 @@ export default function OrderDetailScreen({ navigation, route }: AppScreenProps<
     }, [load])
   );
 
-  const advanceStatus = async (nextStatus: OrderStatus) => {
+  const markComplete = async () => {
     if (!order) return;
     setUpdating(true);
     try {
-      await ordersRepo.update(orderId, shop.id, { status: nextStatus });
+      await ordersRepo.update(orderId, shop.id, { status: 'delivered' });
 
       // Records this order against the assigned staff member so their "N
       // orders done" count (StaffListScreen) reflects real completions —
       // staff_orders otherwise has nothing that ever writes to it.
-      if (nextStatus === 'delivered' && order.assigned_staff_id) {
+      if (order.assigned_staff_id) {
         try {
           const { data: existing } = await supabase
             .from('staff_orders')
@@ -159,17 +134,15 @@ export default function OrderDetailScreen({ navigation, route }: AppScreenProps<
         }
       }
 
-      if (nextStatus === 'ready') {
-        void sendPushNotification({
-          shopId: shop.id,
-          type: 'order_ready',
-          customerId: order.customer_id,
-          title: t('detail.pushReadyTitle'),
-          body: t('detail.pushReadyBody', { number: order.order_number, customerName: order.customers?.name ?? '' }),
-        });
-      }
+      void sendPushNotification({
+        shopId: shop.id,
+        type: 'order_ready',
+        customerId: order.customer_id,
+        title: t('detail.pushReadyTitle'),
+        body: t('detail.pushReadyBody', { number: order.order_number, customerName: order.customers?.name ?? '' }),
+      });
 
-      setOrder({ ...order, status: nextStatus });
+      setOrder({ ...order, status: 'delivered' });
       haptics.success();
     } catch (err) {
       haptics.error();
@@ -205,14 +178,11 @@ export default function OrderDetailScreen({ navigation, route }: AppScreenProps<
           style: 'destructive',
           onPress: async () => {
             try {
-              const { error } = await supabase.from('orders').delete().eq('id', orderId);
-              if (error) throw error;
+              await ordersRepo.remove(orderId, shop.id);
               showToast(t('detail.deleteSuccess'), 'success');
               navigation.goBack();
-            } catch (err: unknown) {
-              const isFkViolation =
-                typeof err === 'object' && err !== null && 'code' in err && (err as { code: string }).code === '23503';
-              showToast(isFkViolation ? t('detail.deleteBlocked') : t('detail.deleteFailed'), 'error');
+            } catch (err) {
+              showToast(err instanceof Error ? err.message : t('detail.deleteFailed'), 'error');
             }
           },
         },
@@ -222,8 +192,7 @@ export default function OrderDetailScreen({ navigation, route }: AppScreenProps<
 
   if (loading || !order) return <LoadingSpinner fullScreen text={t('detail.loadingOrder')} />;
 
-  const currentStepIndex = STATUS_STEPS.indexOf(order.status);
-  const nextStep = STATUS_STEPS[currentStepIndex + 1];
+  const isDelivered = order.status === 'delivered';
 
   const photos = order.design_photo_urls?.length
     ? order.design_photo_urls
@@ -235,32 +204,8 @@ export default function OrderDetailScreen({ navigation, route }: AppScreenProps<
   const paidAmount = billAmounts ? billAmounts.paid : Number(order.paid_amount ?? 0);
   const balanceDue = Math.max(totalAmount - paidAmount, 0);
   const hasBilling = order.total_amount != null;
-  const measurement = order.measurements;
-  const measurementCustomFields = measurement ? parseCustomFields(measurement.custom_fields) : [];
   const customerName = order.customers?.name ?? '';
   const hasPhone = !!order.customers?.phone;
-
-  /**
-   * If a bill was already raised for this order, jump to it in the Billing
-   * stack (nested under the Settings tab); otherwise start a new bill.
-   */
-  const goToBill = () => {
-    haptics.tap();
-    if (existingBillId) {
-      navigation.navigate('SettingsTab' as any, {
-        screen: 'Billing',
-        params: { screen: 'BillDetail', params: { billId: existingBillId } },
-      });
-    } else {
-      navigation.navigate('BillForm', { orderId: order.id, customerId: order.customer_id });
-    }
-  };
-
-  const billButtonLabel = existingBillId
-    ? balanceDue > 0
-      ? t('detail.addPaymentViewBill')
-      : t('detail.viewBill')
-    : t('detail.createBillForOrder');
 
   return (
     <View className="flex-1 bg-gray-50 dark:bg-gray-950">
@@ -336,7 +281,7 @@ export default function OrderDetailScreen({ navigation, route }: AppScreenProps<
             {order.cloth_count != null ? (
               <View className="flex-row items-center justify-between">
                 <Text className="font-sans text-sm text-gray-500 dark:text-gray-400">
-                  {clothPieceLabel(measurement?.garment_type)}
+                  {clothPieceLabel(undefined)}
                 </Text>
                 <Text className="font-sans text-sm font-semibold text-[#101828] dark:text-gray-50">{order.cloth_count}</Text>
               </View>
@@ -408,22 +353,8 @@ export default function OrderDetailScreen({ navigation, route }: AppScreenProps<
                 </View>
               ) : null}
             </View>
-
-            <Pressable
-              onPress={goToBill}
-              className="mt-4 items-center rounded-md border border-primary-600 py-3 active:bg-primary-50 dark:active:bg-primary-950"
-            >
-              <Text className="text-sm font-semibold text-primary-600">{billButtonLabel}</Text>
-            </Pressable>
           </Card>
-        ) : (
-          <Pressable
-            onPress={goToBill}
-            className="items-center rounded-md border border-primary-600 bg-white py-3 active:bg-primary-50 dark:bg-gray-900 dark:active:bg-primary-950"
-          >
-            <Text className="text-sm font-semibold text-primary-600">{billButtonLabel}</Text>
-          </Pressable>
-        )}
+        ) : null}
 
         {/* Customer messaging actions */}
         <Card>
@@ -456,80 +387,23 @@ export default function OrderDetailScreen({ navigation, route }: AppScreenProps<
                 {t('detail.whatsapp.sendCompletion')}
               </Text>
             </Pressable>
-
-            <Pressable
-              disabled={!hasPhone}
-              onPress={() =>
-                sendMessage(
-                  balanceDue > 0
-                    ? t('detail.whatsapp.reminderPaymentBody', {
-                        customerName,
-                        orderNumber: order.order_number,
-                        shopName: shop.shop_name,
-                        amount: formatCurrency(balanceDue),
-                      })
-                    : t('detail.whatsapp.reminderPickupBody', {
-                        customerName,
-                        orderNumber: order.order_number,
-                        shopName: shop.shop_name,
-                      })
-                )
-              }
-              className={`flex-row items-center justify-center gap-2 rounded-md border border-primary-600 py-3 active:bg-primary-50 dark:active:bg-primary-950 ${
-                hasPhone ? '' : 'opacity-40'
-              }`}
-            >
-              <FontAwesome5 name="bell" size={14} color="#1D4ED8" />
-              <Text className="text-sm font-semibold text-primary-600">
-                {t('detail.whatsapp.sendReminder')}
-              </Text>
-            </Pressable>
           </View>
         </Card>
 
-        {/* Status pipeline */}
+        {/* Status action */}
         <Card>
-          <Text className="mb-3 text-[13px] font-bold uppercase tracking-[0.4px] text-gray-500 dark:text-gray-400">
-            {t('detail.statusPipeline')}
-          </Text>
-          <View className="gap-3">
-            {STATUS_STEPS.map((step, index) => {
-              const isDone = index <= currentStepIndex;
-              return (
-                <View key={step} className="flex-row items-center">
-                  <View
-                    className={`h-6 w-6 items-center justify-center rounded-full ${
-                      isDone ? 'bg-primary-600' : 'bg-gray-100 dark:bg-gray-800'
-                    }`}
-                  >
-                    {isDone ? <FontAwesome5 name="check" size={10} color="#FFFFFF" /> : null}
-                  </View>
-                  <Text
-                    className={`ml-3 text-sm ${
-                      isDone ? 'font-semibold text-[#101828] dark:text-gray-50' : 'text-gray-400 dark:text-gray-600'
-                    }`}
-                  >
-                    {STATUS_LABELS[step]}
-                  </Text>
-                </View>
-              );
-            })}
-          </View>
-
-          {nextStep ? (
+          {!isDelivered ? (
             <Pressable
-              onPress={() => advanceStatus(nextStep)}
+              onPress={markComplete}
               disabled={updating}
-              className={`mt-4 items-center rounded-md bg-primary-600 py-3 active:bg-primary-700 ${
+              className={`items-center rounded-md bg-primary-600 py-3 active:bg-primary-700 ${
                 updating ? 'opacity-50' : ''
               }`}
             >
-              <Text className="text-sm font-semibold text-white">
-                {t('detail.markAs', { status: STATUS_LABELS[nextStep] })}
-              </Text>
+              <Text className="text-sm font-semibold text-white">{t('detail.markComplete')}</Text>
             </Pressable>
           ) : (
-            <View className="mt-4 items-center rounded-md bg-gray-100 py-3 dark:bg-gray-800">
+            <View className="items-center rounded-md bg-gray-100 py-3 dark:bg-gray-800">
               <Text className="text-sm font-semibold text-gray-500 dark:text-gray-400">{t('detail.orderDelivered')}</Text>
             </View>
           )}

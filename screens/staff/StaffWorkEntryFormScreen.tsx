@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ScrollView, Text, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { Button, DatePickerField, Dropdown, Header, InputField, useToast } from '../../components/ui';
 import { supabase } from '../../lib/supabase';
@@ -88,45 +88,55 @@ export default function StaffWorkEntryFormScreen({
   return (
     <>
       <Header title={t('workEntry.title')} onBack={() => navigation.goBack()} />
-      <ScrollView className="flex-1 bg-white dark:bg-gray-950" contentContainerStyle={{ padding: 20, paddingBottom: 110 }}>
-        <DatePickerField
-          label={t('workEntry.dateLabel')}
-          value={workDate}
-          onChange={setWorkDate}
-          placeholder={t('workEntry.datePlaceholder')}
-        />
-        <Dropdown<WorkType>
-          label={t('workEntry.typeLabel')}
-          value={workType}
-          onChange={setWorkType}
-          options={WORK_TYPES}
-          placeholder={t('workEntry.typePlaceholder')}
-        />
-        <InputField
-          label={t('workEntry.quantityLabel')}
-          value={quantity}
-          onChangeText={setQuantity}
-          placeholder={t('workEntry.quantityPlaceholder')}
-          keyboardType="numeric"
-          error={error}
-        />
+      <KeyboardAvoidingView
+        className="flex-1"
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+      >
+        <ScrollView
+          className="flex-1 bg-white dark:bg-gray-950"
+          contentContainerStyle={{ padding: 20, paddingBottom: 110 }}
+          keyboardShouldPersistTaps="handled"
+        >
+          <DatePickerField
+            label={t('workEntry.dateLabel')}
+            value={workDate}
+            onChange={setWorkDate}
+            placeholder={t('workEntry.datePlaceholder')}
+          />
+          <Dropdown<WorkType>
+            label={t('workEntry.typeLabel')}
+            value={workType}
+            onChange={setWorkType}
+            options={WORK_TYPES}
+            placeholder={t('workEntry.typePlaceholder')}
+          />
+          <InputField
+            label={t('workEntry.quantityLabel')}
+            value={quantity}
+            onChangeText={setQuantity}
+            placeholder={t('workEntry.quantityPlaceholder')}
+            keyboardType="numeric"
+            error={error}
+          />
 
-        <View className="mb-4 gap-2 rounded-md bg-gray-50 p-3 dark:bg-gray-800">
-          <View className="flex-row items-center justify-between">
-            <Text className="font-sans text-sm text-gray-600 dark:text-gray-300">{t('workEntry.rateApplied')}</Text>
-            <Text className="text-base font-bold text-[#101828] dark:text-gray-50">{formatCurrency(rate)}</Text>
+          <View className="mb-4 gap-2 rounded-md bg-gray-50 p-3 dark:bg-gray-800">
+            <View className="flex-row items-center justify-between">
+              <Text className="font-sans text-sm text-gray-600 dark:text-gray-300">{t('workEntry.rateApplied')}</Text>
+              <Text className="text-base font-bold text-[#101828] dark:text-gray-50">{formatCurrency(rate)}</Text>
+            </View>
+            <View className="flex-row items-center justify-between">
+              <Text className="font-sans text-sm text-gray-600 dark:text-gray-300">{t('workEntry.totalPay')}</Text>
+              <Text className="text-base font-bold text-[#101828] dark:text-gray-50">{formatCurrency(rate * previewQty)}</Text>
+            </View>
+            {rate === 0 ? (
+              <Text className="font-sans text-xs text-amber-600 dark:text-amber-400">{t('workEntry.noRateWarning')}</Text>
+            ) : null}
           </View>
-          <View className="flex-row items-center justify-between">
-            <Text className="font-sans text-sm text-gray-600 dark:text-gray-300">{t('workEntry.totalPay')}</Text>
-            <Text className="text-base font-bold text-[#101828] dark:text-gray-50">{formatCurrency(rate * previewQty)}</Text>
-          </View>
-          {rate === 0 ? (
-            <Text className="font-sans text-xs text-amber-600 dark:text-amber-400">{t('workEntry.noRateWarning')}</Text>
-          ) : null}
-        </View>
 
-        <Button title={t('workEntry.save')} onPress={handleSave} loading={loading} />
-      </ScrollView>
+          <Button title={t('workEntry.save')} onPress={handleSave} loading={loading} />
+        </ScrollView>
+      </KeyboardAvoidingView>
     </>
   );
 }

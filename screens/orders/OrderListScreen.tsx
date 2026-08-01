@@ -1,16 +1,13 @@
 import { useCallback, useState } from 'react';
 import { FlatList, Modal, Pressable, RefreshControl, Text, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
-import { FontAwesome5 } from '@expo/vector-icons';
 import {
   Badge,
   Card,
   EmptyState,
   Header,
   LoadingSpinner,
-  SearchBar,
   useToast,
 } from '../../components/ui';
 import { ordersRepo } from '../../lib/data/repository';
@@ -23,7 +20,6 @@ type StatusFilter = OrderStatus | 'all';
 type PriorityFilter = OrderPriority | 'all';
 
 export default function OrderListScreen({ navigation }: OrdersScreenProps<'OrderList'>) {
-  const insets = useSafeAreaInsets();
   const showToast = useToast();
   const shop = useShop();
   const { t } = useTranslation('orders');
@@ -91,15 +87,6 @@ export default function OrderListScreen({ navigation }: OrdersScreenProps<'Order
       <Header
         showBack={false}
         title={t('list.title')}
-        right={
-          <Pressable
-            onPress={() => navigation.navigate('BulkOrderForm')}
-            hitSlop={8}
-            className="h-10 w-10 items-center justify-center rounded-full active:bg-gray-100 dark:active:bg-gray-800"
-          >
-            <FontAwesome5 name="layer-group" size={16} color="#1D4ED8" />
-          </Pressable>
-        }
         searchProps={{
           value: search,
           onChangeText: setSearch,

@@ -5,7 +5,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { FontAwesome5, Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { EmptyState, LoadingSpinner, useToast } from '../../components/ui';
-import { supabase } from '../../lib/supabase';
+import { ordersRepo, customersRepo, billsRepo, paymentsRepo } from '../../lib/data/repository';
 import { formatCurrency } from '../../lib/format';
 import { haptics } from '../../lib/haptics';
 import { hasSeenProductTour, markProductTourSeen } from '../../lib/productTour';
@@ -99,119 +99,99 @@ export default function DashboardScreen({ navigation }: DashboardScreenProps<'Da
       const weekAhead = new Date();
       weekAhead.setDate(weekAhead.getDate() + 7);
       const weekAheadDate = weekAhead.toISOString().slice(0, 10);
+      const monthStartIso = monthStart();
 
-      const [
-        ordersRes,
-        recentOrdersRes,
-        dueSoonRes,
-        customerOrdersRes,
-        pendingRes,
-        paymentsRes,
-        billsRes,
-        balanceRes,
-        unpaidBillsRes,
-      ] = await Promise.all([
-        supabase.from('orders').select('*, customers(name, phone)').eq('order_date', localDate),
-        supabase
-          .from('orders')
-          .select('*, customers(name, phone)')
-          .order('created_at', { ascending: false })
-          .limit(6),
-        supabase
-          .from('orders')
-          .select('*, customers(name, phone)')
-          .not('delivery_date', 'is', null)
-          .lte('delivery_date', weekAheadDate)
-          .neq('status', 'delivered')
-          .order('delivery_date', { ascending: true })
-          .limit(6),
-        supabase.from('orders').select('customer_id, total_amount'),
-        supabase.from('orders').select('id', { count: 'exact', head: true }).neq('status', 'delivered'),
-        supabase.from('payments').select('amount_paid').gte('payment_date', start).lte('payment_date', end),
-        supabase.from('bills').select('total_amount').gte('created_at', monthStart()),
-        supabase.from('bills').select('total_amount, payments(amount_paid)'),
-        supabase.from('bills').select('id', { count: 'exact', head: true }).neq('payment_status', 'paid'),
+      // Everything reads from the local-first mirror (same one every
+      // create/order/payment flow writes through) rather than Supabase
+      // directly, so the dashboard reflects the real current data instead of
+      // racing the background sync.
+      const [allOrders, customers, allBills, allPayments] = await Promise.all([
+        ordersRepo.listWithCustomer(shop.id),
+        customersRepo.list(shop.id),
+        billsRepo.list(shop.id),
+        paymentsRepo.listForShop(shop.id),
       ]);
+      const customerById = new Map(customers.map((c) => [c.id, c]));
+
+      const todaysOrders = allOrders.filter((o) => o.order_date === localDate);
+      const recentOrders = [...allOrders]
+        .sort((a, b) => (a.created_at < b.created_at ? 1 : -1))
+        .slice(0, 6);
+      const dueSoonOrders = allOrders
+        .filter(
+          (o) =>
+            o.delivery_date != null &&
+            o.delivery_date <= weekAheadDate &&
+            o.status !== 'delivered'
+        )
+        .sort((a, b) => (a.delivery_date! < b.delivery_date! ? -1 : 1))
+        .slice(0, 6);
+      const pendingCount = allOrders.filter((o) => o.status !== 'delivered').length;
 
       // "Top clients" = best customers, ranked by how many orders they've
       // placed (ties broken by total value billed to them). Customers with no
       // orders at all are excluded — the row is meant to surface regulars.
       const customerScores = new Map<string, { orders: number; value: number }>();
-      for (const row of customerOrdersRes.data ?? []) {
-        if (!row.customer_id) continue;
-        const prev = customerScores.get(row.customer_id) ?? { orders: 0, value: 0 };
-        customerScores.set(row.customer_id, {
+      for (const o of allOrders) {
+        if (!o.customer_id) continue;
+        const prev = customerScores.get(o.customer_id) ?? { orders: 0, value: 0 };
+        customerScores.set(o.customer_id, {
           orders: prev.orders + 1,
-          value: prev.value + Number(row.total_amount ?? 0),
+          value: prev.value + Number(o.total_amount ?? 0),
         });
       }
-
-      const rankedIds = [...customerScores.entries()]
+      const topClients: ClientItem[] = [...customerScores.entries()]
         .sort((a, b) => b[1].orders - a[1].orders || b[1].value - a[1].value)
         .slice(0, 8)
-        .map(([id]) => id);
+        .map(([id]) => customerById.get(id))
+        .filter((c): c is (typeof customers)[number] => !!c)
+        .map((c) => ({ id: c.id, name: c.name, phone: c.phone }));
 
-      let topClients: ClientItem[] = [];
-      if (rankedIds.length > 0) {
-        const { data: clientRows } = await supabase
-          .from('customers')
-          .select('id, name, phone')
-          .in('id', rankedIds);
-        const byId = new Map((clientRows ?? []).map((c) => [c.id, c]));
-        topClients = rankedIds
-          .map((id) => byId.get(id))
-          .filter((c): c is ClientItem => !!c);
+      const paymentsByBill = new Map<string, number>();
+      for (const p of allPayments) {
+        paymentsByBill.set(p.bill_id, (paymentsByBill.get(p.bill_id) ?? 0) + Number(p.amount_paid));
       }
-
-      const totalPendingBalance = (balanceRes.data ?? []).reduce((sum, bill) => {
-        const paid = bill.payments.reduce((s, p) => s + Number(p.amount_paid), 0);
+      const totalPendingBalance = allBills.reduce((sum, bill) => {
+        const paid = paymentsByBill.get(bill.id) ?? 0;
         return sum + Math.max(Number(bill.total_amount ?? 0) - paid, 0);
       }, 0);
+      const unpaidBillsCount = allBills.filter((b) => b.payment_status !== 'paid').length;
+      const monthlySales = allBills
+        .filter((b) => b.created_at >= monthStartIso)
+        .reduce((s, b) => s + Number(b.total_amount ?? 0), 0);
 
-      let todaysCollections = (paymentsRes.data ?? []).reduce((s, p) => s + Number(p.amount_paid), 0);
+      let todaysCollections = allPayments
+        .filter((p) => p.payment_date >= start && p.payment_date <= end)
+        .reduce((s, p) => s + Number(p.amount_paid), 0);
       let collectionsDate: string | null = null;
 
       // No payments today — fall back to the most recent day that had any,
       // rather than showing a flat ₹0 on the main hero card every morning.
-      if (todaysCollections === 0) {
-        const { data: lastPayment } = await supabase
-          .from('payments')
-          .select('amount_paid, payment_date')
-          .order('payment_date', { ascending: false })
-          .limit(1)
-          .maybeSingle();
-
-        if (lastPayment) {
-          const lastDate = lastPayment.payment_date.slice(0, 10);
-          const dayStart = `${lastDate}T00:00:00.000Z`;
-          const dayEnd = `${lastDate}T23:59:59.999Z`;
-          const { data: dayPayments } = await supabase
-            .from('payments')
-            .select('amount_paid')
-            .gte('payment_date', dayStart)
-            .lte('payment_date', dayEnd);
-
-          todaysCollections = (dayPayments ?? []).reduce((s, p) => s + Number(p.amount_paid), 0);
-          collectionsDate = lastDate;
-        }
+      if (todaysCollections === 0 && allPayments.length > 0) {
+        const lastPayment = [...allPayments].sort((a, b) => (a.payment_date < b.payment_date ? 1 : -1))[0];
+        const lastDate = lastPayment.payment_date.slice(0, 10);
+        todaysCollections = allPayments
+          .filter((p) => p.payment_date.slice(0, 10) === lastDate)
+          .reduce((s, p) => s + Number(p.amount_paid), 0);
+        collectionsDate = lastDate;
       }
 
       setStats({
-        todaysOrders: ordersRes.data ?? [],
-        recentOrders: recentOrdersRes.data ?? [],
-        dueSoonOrders: dueSoonRes.data ?? [],
+        todaysOrders,
+        recentOrders,
+        dueSoonOrders,
         topClients,
-        pendingCount: pendingRes.count ?? 0,
+        pendingCount,
         todaysCollections,
         collectionsDate,
-        monthlySales: (billsRes.data ?? []).reduce((s, b) => s + Number(b.total_amount ?? 0), 0),
+        monthlySales,
         totalPendingBalance,
-        unpaidBillsCount: unpaidBillsRes.count ?? 0,
+        unpaidBillsCount,
       });
     } catch (err) {
       showToast(err instanceof Error ? err.message : t('errorLoad'), 'error');
     }
-  }, [showToast]);
+  }, [showToast, t, shop.id]);
 
   useFocusEffect(
     useCallback(() => {
@@ -335,51 +315,67 @@ export default function DashboardScreen({ navigation }: DashboardScreenProps<'Da
       {/* Quick Send & Transactions Sheet Container */}
       <View className="flex-1 bg-white dark:bg-gray-950">
 
-        {/* Top Clients — ranked by order count, hidden until there's data */}
-        {stats.topClients.length > 0 ? (
+        {/* Top Clients — ranked by order count */}
         <View className="mb-6 px-5">
           <Text className="mb-3 text-[14px] font-semibold text-[#101828] dark:text-gray-50">{t('topClients')}</Text>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ gap: 14 }}
-          >
-            {stats.topClients.map((client, idx) => {
-              const initial = client.name ? client.name.charAt(0).toUpperCase() : 'C';
-              const colorStyle = AVATAR_COLORS[idx % AVATAR_COLORS.length];
-              return (
-                <Pressable
-                  key={client.id}
-                  onPress={() =>
-                    navigation.navigate('CustomersTab' as any, {
-                      screen: 'CustomerDetail',
-                      params: { customerId: client.id },
-                    })
-                  }
-                  className="w-[54px] items-center gap-1"
-                >
-                  <View className={`h-[54px] w-[54px] items-center justify-center rounded-full ${colorStyle.bg}`}>
-                    <Text className={`text-[18px] font-semibold ${colorStyle.text}`}>{initial}</Text>
-                  </View>
-                  <Text className="font-sans text-[12px] font-medium text-[#101828] dark:text-gray-50 text-center" numberOfLines={1}>
-                    {client.name.split(' ')[0]}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </ScrollView>
+          {stats.topClients.length === 0 ? (
+            <EmptyState
+              variant="compact"
+              icon="user-friends"
+              title={t('emptyTopClients.title')}
+              description={t('emptyTopClients.description')}
+            />
+          ) : (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ gap: 14 }}
+            >
+              {stats.topClients.map((client, idx) => {
+                const initial = client.name ? client.name.charAt(0).toUpperCase() : 'C';
+                const colorStyle = AVATAR_COLORS[idx % AVATAR_COLORS.length];
+                return (
+                  <Pressable
+                    key={client.id}
+                    onPress={() =>
+                      navigation.navigate('CustomersTab' as any, {
+                        screen: 'CustomerDetail',
+                        params: { customerId: client.id },
+                      })
+                    }
+                    className="w-[54px] items-center gap-1"
+                  >
+                    <View className={`h-[54px] w-[54px] items-center justify-center rounded-full ${colorStyle.bg}`}>
+                      <Text className={`text-[18px] font-semibold ${colorStyle.text}`}>{initial}</Text>
+                    </View>
+                    <Text className="font-sans text-[12px] font-medium text-[#101828] dark:text-gray-50 text-center" numberOfLines={1}>
+                      {client.name.split(' ')[0]}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </ScrollView>
+          )}
         </View>
-        ) : null}
 
         {/* Orders Due Soon — capped at 3 here, the rest live in the Orders tab */}
-        {stats.dueSoonOrders.length > 0 ? (
-          <View className="mb-6 px-5">
-            <View className="mb-3 flex-row items-center justify-between">
-              <Text className="text-[14px] font-semibold text-[#101828] dark:text-gray-50">{t('dueSoon.title')}</Text>
+        <View className="mb-6 px-5">
+          <View className="mb-3 flex-row items-center justify-between">
+            <Text className="text-[14px] font-semibold text-[#101828] dark:text-gray-50">{t('dueSoon.title')}</Text>
+            {stats.dueSoonOrders.length > 0 ? (
               <Pressable onPress={() => navigation.navigate('OrdersTab' as any)}>
                 <Text className="text-[12px] font-medium text-[#1D4ED8] underline">{t('viewAll')}</Text>
               </Pressable>
-            </View>
+            ) : null}
+          </View>
+          {stats.dueSoonOrders.length === 0 ? (
+            <EmptyState
+              variant="compact"
+              icon="calendar-check"
+              title={t('dueSoon.emptyTitle')}
+              description={t('dueSoon.emptyDescription')}
+            />
+          ) : (
             <View className="gap-2.5">
               {stats.dueSoonOrders.slice(0, 3).map((o) => {
                 const dateStr = o.delivery_date
@@ -409,16 +405,18 @@ export default function DashboardScreen({ navigation }: DashboardScreenProps<'Da
                 );
               })}
             </View>
-          </View>
-        ) : null}
+          )}
+        </View>
 
         {/* Transaction History / Recent Activity */}
         <View className="px-5">
           <View className="mb-3 flex-row items-center justify-between">
             <Text className="text-[14px] font-semibold text-[#101828] dark:text-gray-50">{t('transactionHistory')}</Text>
-            <Pressable onPress={() => navigation.navigate('OrdersTab' as any)}>
-              <Text className="text-[12px] font-medium text-[#1D4ED8] underline">{t('viewAll')}</Text>
-            </Pressable>
+            {stats.recentOrders.length > 0 ? (
+              <Pressable onPress={() => navigation.navigate('Transactions')}>
+                <Text className="text-[12px] font-medium text-[#1D4ED8] underline">{t('viewAll')}</Text>
+              </Pressable>
+            ) : null}
           </View>
 
           {stats.recentOrders.length === 0 ? (

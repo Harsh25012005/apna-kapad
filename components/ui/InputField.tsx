@@ -17,6 +17,8 @@ export type InputFieldProps = {
   autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters';
   editable?: boolean;
   multiline?: boolean;
+  /** Shows a red "*" next to the label to mark the field as mandatory. */
+  required?: boolean;
 };
 
 export function InputField({
@@ -32,6 +34,7 @@ export function InputField({
   autoCapitalize = 'sentences',
   editable = true,
   multiline = false,
+  required = false,
 }: InputFieldProps) {
   const [isFocused, setIsFocused] = useState(false);
   const [hidden, setHidden] = useState(secureTextEntry);
@@ -57,6 +60,7 @@ export function InputField({
             }`}
         >
           {label}
+          {required ? <Text className="text-danger"> *</Text> : null}
         </Text>
       ) : null}
 

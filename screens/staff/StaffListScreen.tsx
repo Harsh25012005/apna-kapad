@@ -1,43 +1,36 @@
 import { useCallback, useMemo, useState } from 'react';
-import { FlatList, Modal, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
+import { FlatList, Modal, Pressable, RefreshControl, Text, View } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
-import { FontAwesome5 } from '@expo/vector-icons';
-import { Avatar, Card, EmptyState, Header, LoadingSpinner, SearchBar, useToast } from '../../components/ui';
-import { supabase } from '../../lib/supabase';
-import { formatCurrency } from '../../lib/format';
-import { haptics } from '../../lib/haptics';
+import { Avatar, Badge, Card, EmptyState, Header, LoadingSpinner, useToast } from '../../components/ui';
+import { staffRepo } from '../../lib/data/repository';
+import { useShop } from '../../context/AuthContext';
 import type { SettingsScreenProps } from '../../navigation/types';
-import type { StaffWithOrders, WageType } from '../../types';
+import type { Staff, WageType } from '../../types';
 
 export default function StaffListScreen({ navigation }: SettingsScreenProps<'Staff'>) {
   const { t } = useTranslation('staff');
   const showToast = useToast();
+  const shop = useShop();
   const WAGE_LABELS: Record<WageType, string> = {
     daily: t('wageUnit.daily'),
     monthly: t('wageUnit.monthly'),
     per_piece: t('wageUnit.per_piece'),
   };
-  const [staff, setStaff] = useState<StaffWithOrders[]>([]);
+  const [staff, setStaff] = useState<Staff[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [search, setSearch] = useState('');
-  const [roleFilter, setRoleFilter] = useState<string | null>(null);
   const [wageTypeFilter, setWageTypeFilter] = useState<WageType | null>(null);
   const [showFilterModal, setShowFilterModal] = useState(false);
 
   const load = useCallback(async () => {
     try {
-      const { data, error } = await supabase
-        .from('staff')
-        .select('*, staff_orders(id, completed_at)')
-        .order('created_at', { ascending: false });
-      if (error) throw error;
-      setStaff(data ?? []);
+      setStaff(await staffRepo.list(shop.id));
     } catch (err) {
       showToast(err instanceof Error ? err.message : t('list.loadError'), 'error');
     }
-  }, [showToast, t]);
+  }, [showToast, t, shop.id]);
 
   useFocusEffect(
     useCallback(() => {
@@ -52,29 +45,18 @@ export default function StaffListScreen({ navigation }: SettingsScreenProps<'Sta
     setRefreshing(false);
   };
 
-  const roleOptions = useMemo(() => {
-    const roles = new Set<string>();
-    staff.forEach((item) => {
-      if (item.role) roles.add(item.role);
-    });
-    return Array.from(roles).sort();
-  }, [staff]);
-
   const wageTypeOptions: WageType[] = ['daily', 'monthly', 'per_piece'];
 
   const filteredStaff = useMemo(() => {
     const query = search.trim().toLowerCase();
     return staff.filter((item) => {
-      if (roleFilter && item.role !== roleFilter) return false;
       if (wageTypeFilter && item.wage_type !== wageTypeFilter) return false;
       if (!query) return true;
-      return [item.name, item.role, item.phone].some((field) =>
-        field?.toLowerCase().includes(query)
-      );
+      return [item.name, item.phone].some((field) => field?.toLowerCase().includes(query));
     });
-  }, [staff, search, roleFilter, wageTypeFilter]);
+  }, [staff, search, wageTypeFilter]);
 
-  const hasActiveFilters = Boolean(roleFilter || wageTypeFilter);
+  const hasActiveFilters = Boolean(wageTypeFilter);
 
   if (loading) return <LoadingSpinner fullScreen text={t('list.loading')} />;
 
@@ -109,7 +91,6 @@ export default function StaffListScreen({ navigation }: SettingsScreenProps<'Sta
               {hasActiveFilters ? (
                 <Pressable
                   onPress={() => {
-                    setRoleFilter(null);
                     setWageTypeFilter(null);
                   }}
                 >
@@ -143,33 +124,6 @@ export default function StaffListScreen({ navigation }: SettingsScreenProps<'Sta
               </View>
             </View>
 
-            {/* Role Section */}
-            {roleOptions.length > 0 ? (
-              <View>
-                <Text className="mb-2 text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                  {t('list.roleSection')}
-                </Text>
-                <View className="flex-row flex-wrap gap-2">
-                  {roleOptions.map((role) => {
-                    const active = roleFilter === role;
-                    return (
-                      <Pressable
-                        key={role}
-                        onPress={() => setRoleFilter(active ? null : role)}
-                        className={`rounded-full border px-3.5 py-2 ${
-                          active ? 'border-primary-600 bg-primary-600' : 'border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800'
-                        }`}
-                      >
-                        <Text className={`text-xs font-semibold ${active ? 'text-white' : 'text-gray-600 dark:text-gray-300'}`}>
-                          {role}
-                        </Text>
-                      </Pressable>
-                    );
-                  })}
-                </View>
-              </View>
-            ) : null}
-
             <Pressable
               onPress={() => setShowFilterModal(false)}
               className="items-center rounded-md bg-primary-600 py-3 active:bg-primary-700"
@@ -201,27 +155,18 @@ export default function StaffListScreen({ navigation }: SettingsScreenProps<'Sta
             onAction={hasActiveFilters ? undefined : () => navigation.navigate('StaffForm', {})}
           />
         }
-        renderItem={({ item }) => {
-          const completedOrders = item.staff_orders.filter((s) => s.completed_at).length;
-          return (
-            <Card onPress={() => navigation.navigate('StaffDetail', { staffId: item.id })}>
-              <View className="flex-row items-center">
-                <Avatar name={item.name} size="md" />
-                <View className="ml-3 flex-1">
-                  <Text className="text-base font-semibold text-gray-900 dark:text-gray-50">{item.name}</Text>
-                  <Text className="font-sans text-sm text-gray-500 dark:text-gray-400">{item.role ?? t('list.defaultRole')}</Text>
-                </View>
-                <View className="ml-2 items-end">
-                  <Text className="text-sm font-semibold text-gray-900 dark:text-gray-50">
-                    {formatCurrency(item.wage_amount)}
-                    <Text className="font-sans text-xs text-gray-500 dark:text-gray-400">{WAGE_LABELS[item.wage_type]}</Text>
-                  </Text>
-                  <Text className="font-sans text-xs text-gray-400 dark:text-gray-500">{t('list.ordersDone', { count: completedOrders })}</Text>
-                </View>
+        renderItem={({ item }) => (
+          <Card onPress={() => navigation.navigate('StaffDetail', { staffId: item.id })}>
+            <View className="flex-row items-center">
+              <Avatar name={item.name} size="md" />
+              <View className="ml-3 flex-1">
+                <Text className="text-base font-semibold text-gray-900 dark:text-gray-50">{item.name}</Text>
+                <Text className="font-sans text-sm text-gray-500 dark:text-gray-400">{item.phone ?? t('list.noPhone')}</Text>
               </View>
-            </Card>
-          );
-        }}
+              <Badge label={WAGE_LABELS[item.wage_type]} />
+            </View>
+          </Card>
+        )}
       />
 
     </View>

@@ -1,9 +1,7 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { useCallback, useEffect, useState } from 'react';
+import { Alert, KeyboardAvoidingView, Platform, ScrollView, Text, useWindowDimensions, View } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
-import { FontAwesome5 } from '@expo/vector-icons';
-import { ExpoSpeechRecognitionModule, useSpeechRecognitionEvent } from 'expo-speech-recognition';
 import {
   Button,
   DatePickerField,
@@ -16,16 +14,24 @@ import {
   useToast,
 } from '../../components/ui';
 import { uploadImage } from '../../lib/storage';
-import { formatCurrency } from '../../lib/format';
 import { useShop } from '../../context/AuthContext';
-import { customersRepo, staffRepo, ordersRepo, billsRepo, paymentsRepo } from '../../lib/data/repository';
+import { customersRepo, ordersRepo, billsRepo, paymentsRepo } from '../../lib/data/repository';
 import { suggestDeliveryDate } from '../../lib/orderScheduling';
 import type { AppScreenProps } from '../../navigation/types';
 import type { OrderPriority } from '../../types';
 
 type Option = { label: string; value: string };
 
-const PAYMENT_MODES = ['Cash', 'UPI', 'Card', 'Bank Transfer'] as const;
+const PAYMENT_MODES = ['Cash', 'UPI'] as const;
+const GARMENT_TYPES = ['shirt', 'pant', 'both'] as const;
+type GarmentType = (typeof GARMENT_TYPES)[number];
+
+/** Resizes a photo-URI array to `count` slots, keeping already-picked images in place. */
+function resizePhotoSlots(prev: (string | null)[], count: number): (string | null)[] {
+  const next = prev.slice(0, count);
+  while (next.length < count) next.push(null);
+  return next;
+}
 
 /**
  * Derives the next order number from the highest existing one for this shop.
@@ -56,24 +62,25 @@ export default function OrderFormScreen({ navigation, route }: AppScreenProps<'O
   const PAYMENT_MODE_LABELS: Record<(typeof PAYMENT_MODES)[number], string> = {
     Cash: t('form.paymentModeCash'),
     UPI: t('form.paymentModeUpi'),
-    Card: t('form.paymentModeCard'),
-    'Bank Transfer': t('form.paymentModeBankTransfer'),
   };
 
+  const { width: windowWidth } = useWindowDimensions();
+  /** Sizes each photo slot so exactly 3 fit in the visible width of a horizontally scrolling row. */
+  const photoSlotSize = (windowWidth - 40 - 24) / 3;
+
   const [customers, setCustomers] = useState<Option[]>([]);
-  const [staff, setStaff] = useState<Option[]>([]);
 
   const [customerId, setCustomerId] = useState<string>(presetCustomerId ?? '');
-  const [garmentType, setGarmentType] = useState('');
+  const [garmentType, setGarmentType] = useState<GarmentType | ''>('');
   const [clothCount, setClothCount] = useState('');
-  const [unitPrice, setUnitPrice] = useState('');
   const [notes, setNotes] = useState('');
-  const [designPhotoUris, setDesignPhotoUris] = useState<(string | null)[]>([]);
+  const [shirtPhotoUris, setShirtPhotoUris] = useState<(string | null)[]>([null]);
+  const [pantPhotoUris, setPantPhotoUris] = useState<(string | null)[]>([null]);
   const [deliveryDate, setDeliveryDate] = useState<Date | null>(null);
   const [deliveryDateTouched, setDeliveryDateTouched] = useState(false);
   const [priority, setPriority] = useState<OrderPriority>('normal');
-  const [assignedStaffId, setAssignedStaffId] = useState<string>('');
   const [billBookNumber, setBillBookNumber] = useState('');
+  const [totalAmount, setTotalAmount] = useState('');
   const [paidAmount, setPaidAmount] = useState('');
   const [paymentMode, setPaymentMode] = useState<string>('Cash');
   const [error, setError] = useState('');
@@ -81,42 +88,29 @@ export default function OrderFormScreen({ navigation, route }: AppScreenProps<'O
   const [loadingOrder, setLoadingOrder] = useState(isEditing);
 
   const clothCountNum = Math.max(0, Math.floor(Number(clothCount) || 0));
-  const unitPriceNum = Math.max(0, Number(unitPrice) || 0);
-  const itemsSubtotal = clothCountNum * unitPriceNum;
+  const totalAmountNum = Math.max(0, Number(totalAmount) || 0);
 
-  const [dictating, setDictating] = useState(false);
-
-  useSpeechRecognitionEvent('result', (event) => {
-    const transcript = event.results[0]?.transcript;
-    if (transcript) setNotes(transcript);
-  });
-  useSpeechRecognitionEvent('end', () => setDictating(false));
-  useSpeechRecognitionEvent('error', () => {
-    setDictating(false);
-    showToast(t('form.dictationFailed'), 'error');
-  });
-
-  const startDictation = async () => {
-    const result = await ExpoSpeechRecognitionModule.requestPermissionsAsync();
-    if (!result.granted) {
-      showToast(t('form.microphonePermissionDenied'), 'error');
-      return;
-    }
-    setDictating(true);
-    ExpoSpeechRecognitionModule.start({ lang: 'en-US', interimResults: false, continuous: false });
+  const GARMENT_TYPE_LABELS: Record<GarmentType, string> = {
+    shirt: t('form.garmentTypes.shirt'),
+    pant: t('form.garmentTypes.pant'),
+    both: t('form.garmentTypes.both'),
   };
 
-  const stopDictation = () => {
-    ExpoSpeechRecognitionModule.stop();
-  };
-
-  // Auto-suggests a delivery date from garment count + the assigned staff
-  // member's current backlog. Only runs for new orders and stops once the
-  // user has manually picked a date, so it never fights their choice.
+  // Auto-suggests a delivery date from garment count. Only runs for new
+  // orders and stops once the user has manually picked a date, so it never
+  // fights their choice.
   useEffect(() => {
     if (isEditing || deliveryDateTouched || clothCountNum === 0) return;
-    void suggestDeliveryDate(shop.id, clothCountNum, assignedStaffId || null).then(setDeliveryDate);
-  }, [isEditing, deliveryDateTouched, clothCountNum, assignedStaffId, shop.id]);
+    void suggestDeliveryDate(shop.id, clothCountNum, null).then(setDeliveryDate);
+  }, [isEditing, deliveryDateTouched, clothCountNum, shop.id]);
+
+  // Keeps the number of photo slots in sync with the entered cloth count,
+  // preserving already-picked images when the count grows or shrinks.
+  useEffect(() => {
+    const slots = Math.max(1, clothCountNum);
+    setShirtPhotoUris((prev) => resizePhotoSlots(prev, slots));
+    setPantPhotoUris((prev) => resizePhotoSlots(prev, slots));
+  }, [clothCountNum]);
 
   useFocusEffect(
     useCallback(() => {
@@ -126,24 +120,40 @@ export default function OrderFormScreen({ navigation, route }: AppScreenProps<'O
       void (async () => {
         try {
           const [data, orderItems] = await Promise.all([ordersRepo.get(orderId), ordersRepo.itemsForOrder(orderId)]);
-          if (!data) throw new Error(t('form.loadError'));
           if (!active) return;
+          if (!data) {
+            // Order no longer exists (e.g. deleted elsewhere) — just leave,
+            // no need to surface a technical error for something the user can't act on.
+            navigation.goBack();
+            return;
+          }
 
           const firstItem = orderItems[0];
           const urls = data.design_photo_urls ?? [];
+          const half = Math.ceil(urls.length / 2);
+          const rawGarmentType = (firstItem?.garment_type ?? '').toLowerCase();
+          const loadedGarmentType: GarmentType | '' = GARMENT_TYPES.includes(rawGarmentType as GarmentType)
+            ? (rawGarmentType as GarmentType)
+            : '';
+          const loadedClothCount = firstItem ? firstItem.cloth_count : data.cloth_count ?? 1;
+          const slots = Math.max(1, loadedClothCount);
           setCustomerId(data.customer_id ?? '');
-          setGarmentType(firstItem?.garment_type ?? '');
-          setClothCount(firstItem ? String(firstItem.cloth_count) : data.cloth_count ? String(data.cloth_count) : '');
-          setUnitPrice(firstItem?.unit_price ? String(firstItem.unit_price) : '');
+          setGarmentType(loadedGarmentType);
+          setClothCount(String(loadedClothCount));
           setNotes(firstItem?.notes ?? '');
-          setDesignPhotoUris(urls.length > 0 ? urls : []);
+          setShirtPhotoUris(
+            loadedGarmentType === 'pant' ? Array(slots).fill(null) : resizePhotoSlots(urls.slice(0, half), slots)
+          );
+          setPantPhotoUris(
+            loadedGarmentType === 'shirt' ? Array(slots).fill(null) : resizePhotoSlots(urls.slice(half), slots)
+          );
           setDeliveryDate(data.delivery_date ? new Date(data.delivery_date) : null);
           setDeliveryDateTouched(true);
           setPriority((data.priority as OrderPriority) ?? 'normal');
-          setAssignedStaffId(data.assigned_staff_id ?? '');
           setBillBookNumber(data.bill_book_number ?? '');
-        } catch (err) {
-          showToast(err instanceof Error ? err.message : t('form.loadError'), 'error');
+          setTotalAmount(data.total_amount ? String(data.total_amount) : '');
+        } catch {
+          navigation.goBack();
         } finally {
           if (active) setLoadingOrder(false);
         }
@@ -151,25 +161,25 @@ export default function OrderFormScreen({ navigation, route }: AppScreenProps<'O
       return () => {
         active = false;
       };
-    }, [orderId, showToast, t])
+    }, [orderId, navigation])
   );
 
   useEffect(() => {
     void (async () => {
-      const [customerRows, staffRows] = await Promise.all([
-        customersRepo.list(shop.id),
-        staffRepo.list(shop.id, { activeOnly: true }),
-      ]);
+      const customerRows = await customersRepo.list(shop.id);
       setCustomers(customerRows.map((c) => ({ label: c.name, value: c.id })));
-      setStaff(staffRows.map((s) => ({ label: s.name, value: s.id })));
     })();
   }, [shop.id]);
 
   /** Uploads any freshly-picked local photo URIs, leaving already-remote ones (edit mode) untouched. */
   const resolveDesignPhotoUrls = async (fileNamePrefix: string): Promise<string[]> => {
+    const combined = [
+      ...(garmentType !== 'pant' ? shirtPhotoUris : []),
+      ...(garmentType !== 'shirt' ? pantPhotoUris : []),
+    ];
     const urls: string[] = [];
-    for (let i = 0; i < designPhotoUris.length; i++) {
-      const uri = designPhotoUris[i];
+    for (let i = 0; i < combined.length; i++) {
+      const uri = combined[i];
       if (!uri) continue;
       if (/^https?:\/\//.test(uri)) {
         urls.push(uri);
@@ -192,9 +202,9 @@ export default function OrderFormScreen({ navigation, route }: AppScreenProps<'O
 
   const buildItem = () => [
     {
-      garment_type: garmentType.trim() || t('form.defaultGarmentType'),
+      garment_type: garmentType ? GARMENT_TYPE_LABELS[garmentType] : t('form.defaultGarmentType'),
       cloth_count: clothCountNum || 1,
-      unit_price: unitPriceNum,
+      unit_price: totalAmountNum,
       notes: notes.trim() || null,
     },
   ];
@@ -214,7 +224,6 @@ export default function OrderFormScreen({ navigation, route }: AppScreenProps<'O
         design_photo_urls: designPhotoUrls,
         delivery_date: deliveryDate ? deliveryDate.toISOString().slice(0, 10) : null,
         priority,
-        assigned_staff_id: assignedStaffId || null,
         bill_book_number: billBookNumber.trim() || null,
       });
       await ordersRepo.replaceItems(orderId, shop.id, buildItem());
@@ -235,28 +244,26 @@ export default function OrderFormScreen({ navigation, route }: AppScreenProps<'O
       return;
     }
     setError('');
+
+    if (paymentMode === 'UPI') {
+      Alert.alert(t('form.upiConfirmTitle'), t('form.upiConfirmMessage'), [
+        { text: t('form.upiConfirmNo'), style: 'cancel' },
+        { text: t('form.upiConfirmYes'), onPress: () => void submitOrder() },
+      ]);
+      return;
+    }
+
+    await submitOrder();
+  };
+
+  const submitOrder = async () => {
     setLoading(true);
     try {
-      const totalAmountNum = itemsSubtotal > 0 ? itemsSubtotal : null;
+      const totalAmountValue = totalAmountNum > 0 ? totalAmountNum : null;
       const paidAmountNum = paidAmount.trim() ? Number(paidAmount) : 0;
 
       const orderNumber = await nextOrderNumber(shop.id);
-      const designPhotoUrls: string[] = [];
-      for (let i = 0; i < designPhotoUris.length; i++) {
-        const localUri = designPhotoUris[i];
-        if (!localUri) continue;
-        try {
-          const url = await uploadImage({
-            bucket: 'design-photos',
-            shopId: shop.id,
-            localUri,
-            fileName: `${orderNumber}-${i + 1}`,
-          });
-          designPhotoUrls.push(url);
-        } catch {
-          showToast(t('form.photoUploadFailed'), 'info');
-        }
-      }
+      const designPhotoUrls = await resolveDesignPhotoUrls(orderNumber);
 
       const createdOrder = await ordersRepo.create(
         shop.id,
@@ -267,9 +274,8 @@ export default function OrderFormScreen({ navigation, route }: AppScreenProps<'O
           design_photo_urls: designPhotoUrls,
           delivery_date: deliveryDate ? deliveryDate.toISOString().slice(0, 10) : null,
           priority,
-          assigned_staff_id: assignedStaffId || null,
           bill_book_number: billBookNumber.trim() || null,
-          total_amount: totalAmountNum,
+          total_amount: totalAmountValue,
           paid_amount: paidAmountNum,
           payment_mode: paymentMode || null,
         },
@@ -322,165 +328,186 @@ export default function OrderFormScreen({ navigation, route }: AppScreenProps<'O
   return (
     <>
       <Header title={isEditing ? t('form.editTitle') : t('form.title')} onBack={() => navigation.goBack()} />
-      <ScrollView className="flex-1 bg-white dark:bg-gray-950" contentContainerStyle={{ padding: 20, paddingBottom: 160 }}>
-        <Dropdown
-          label={t('form.customer')}
-          value={customerId}
-          onChange={setCustomerId}
-          options={customers}
-          placeholder={t('form.selectCustomer')}
-          error={error}
-        />
-
-        <InputField
-          label={t('form.garmentType')}
-          value={garmentType}
-          onChangeText={setGarmentType}
-          placeholder={t('form.garmentTypePlaceholder')}
-        />
-
-        <InputField
-          label={t('form.clothCount')}
-          value={clothCount}
-          onChangeText={setClothCount}
-          placeholder={t('form.clothCountPlaceholder')}
-          keyboardType="numeric"
-        />
-
-        <InputField
-          label={t('form.unitPrice')}
-          value={unitPrice}
-          onChangeText={setUnitPrice}
-          keyboardType="numeric"
-        />
-
-        <View className="mb-4 flex-row items-end gap-2">
-          <View className="flex-1">
-            <InputField
-              label={t('form.itemNotes')}
-              value={notes}
-              onChangeText={setNotes}
-              placeholder={t('form.itemNotesPlaceholder')}
-            />
-          </View>
-          <Pressable
-            onPress={() => (dictating ? stopDictation() : startDictation())}
-            className={`mb-4 h-10 w-10 items-center justify-center rounded-full ${
-              dictating ? 'bg-danger' : 'bg-primary-50 dark:bg-primary-950'
-            }`}
-          >
-            <FontAwesome5 name="microphone" size={14} color={dictating ? '#FFFFFF' : '#1D4ED8'} />
-          </Pressable>
-        </View>
-
-        {clothCountNum > 0 ? (
-          <View className="mb-4">
-            <Text className="mb-1.5 text-sm font-medium text-gray-700 dark:text-gray-300">{t('form.designPhotos')}</Text>
-            <View className="flex-row flex-wrap gap-3">
-              {[...designPhotoUris, null].map((uri, index) => (
-                <ImagePickerField
-                  key={index}
-                  label={t('form.piece', { number: index + 1 })}
-                  uri={uri}
-                  onChange={(newUri) =>
-                    setDesignPhotoUris((prev) => {
-                      const next = [...prev];
-                      if (index < next.length) {
-                        if (newUri) next[index] = newUri;
-                        else next.splice(index, 1);
-                      } else if (newUri) {
-                        next.push(newUri);
-                      }
-                      return next;
-                    })
-                  }
-                  aspect={[3, 4]}
-                  source="camera"
-                  onPermissionDenied={() => showToast(t('form.cameraPermissionDenied'), 'error')}
-                />
-              ))}
-            </View>
-          </View>
-        ) : null}
-
-        <DatePickerField
-          label={t('form.deliveryDate')}
-          value={deliveryDate}
-          onChange={(d) => {
-            setDeliveryDate(d);
-            setDeliveryDateTouched(true);
-          }}
-          minimumDate={new Date()}
-        />
-        {!isEditing && !deliveryDateTouched && clothCountNum > 0 ? (
-          <Text className="font-sans -mt-3 mb-4 text-xs text-gray-400 dark:text-gray-500">{t('form.deliverySuggested')}</Text>
-        ) : null}
-
-        <View className="mb-4">
-          <Text className="mb-1.5 text-sm font-medium text-gray-700 dark:text-gray-300">{t('form.priority')}</Text>
-          <RadioGroup<OrderPriority>
-            value={priority}
-            onChange={setPriority}
-            direction="row"
-            options={[
-              { label: t('form.priorityNormal'), value: 'normal' },
-              { label: t('form.priorityUrgent'), value: 'urgent' },
-            ]}
-          />
-        </View>
-
-        {staff.length > 0 ? (
+      <KeyboardAvoidingView
+        className="flex-1"
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+      >
+        <ScrollView
+          className="flex-1 bg-white dark:bg-gray-950"
+          contentContainerStyle={{ padding: 20, paddingBottom: 160 }}
+          keyboardShouldPersistTaps="handled"
+        >
           <Dropdown
-            label={t('form.assignStaff')}
-            value={assignedStaffId}
-            onChange={setAssignedStaffId}
-            options={staff}
-            placeholder={t('form.selectTailor')}
+            label={t('form.customer')}
+            value={customerId}
+            onChange={setCustomerId}
+            options={customers}
+            placeholder={t('form.selectCustomer')}
+            error={error}
+            required
+            searchable
+            searchPlaceholder={t('form.searchClientPlaceholder')}
+            onAddNew={() => navigation.navigate('CustomersTab' as any, { screen: 'CustomerForm' })}
+            addNewLabel={t('form.addClient')}
           />
-        ) : null}
 
-        <InputField
-          label={t('form.billBookNumber')}
-          value={billBookNumber}
-          onChangeText={setBillBookNumber}
-          placeholder={t('form.billBookPlaceholder')}
-        />
+          <Dropdown
+            label={t('form.garmentType')}
+            value={garmentType}
+            onChange={(v) => setGarmentType(v as GarmentType)}
+            options={GARMENT_TYPES.map((g) => ({ label: GARMENT_TYPE_LABELS[g], value: g }))}
+            placeholder={t('form.garmentTypePlaceholder')}
+            required
+          />
 
-        {isEditing ? (
-          <Text className="font-sans mb-4 text-xs text-gray-500 dark:text-gray-400">{t('form.billingNotice')}</Text>
-        ) : (
-          <>
-            <View className="mb-4 flex-row items-center justify-between rounded-lg bg-primary-50 p-4 dark:bg-primary-950">
-              <Text className="text-sm font-medium text-primary-700 dark:text-primary-300">{t('form.totalAmount')}</Text>
-              <Text className="text-xl font-bold text-primary-700 dark:text-primary-300">{formatCurrency(itemsSubtotal)}</Text>
+          <InputField
+            label={t('form.clothCount')}
+            value={clothCount}
+            onChangeText={setClothCount}
+            placeholder={t('form.clothCountPlaceholder')}
+            keyboardType="numeric"
+          />
+
+          <InputField
+            label={t('form.itemNotes')}
+            value={notes}
+            onChangeText={setNotes}
+            placeholder={t('form.itemNotesPlaceholder')}
+          />
+
+          {garmentType === 'shirt' || garmentType === 'both' ? (
+            <View className="mb-4 w-full">
+              <Text className="mb-1.5 text-sm font-medium text-gray-700 dark:text-gray-300">
+                {t('form.shirtPhotosCount', { count: shirtPhotoUris.length })}
+              </Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                <View className="flex-row gap-3">
+                  {shirtPhotoUris.map((uri, index) => (
+                    <ImagePickerField
+                      key={index}
+                      label={t('form.piece', { number: index + 1 })}
+                      uri={uri}
+                      onChange={(newUri) =>
+                        setShirtPhotoUris((prev) => {
+                          const next = [...prev];
+                          next[index] = newUri;
+                          return next;
+                        })
+                      }
+                      aspect={[3, 4]}
+                      source="camera"
+                      size={photoSlotSize}
+                      onPermissionDenied={() => showToast(t('form.cameraPermissionDenied'), 'error')}
+                    />
+                  ))}
+                </View>
+              </ScrollView>
             </View>
+          ) : null}
 
-            <InputField
-              label={t('form.paidAmount')}
-              value={paidAmount}
-              onChangeText={setPaidAmount}
-              placeholder={t('form.paidAmountPlaceholder')}
-              keyboardType="numeric"
+          {garmentType === 'pant' || garmentType === 'both' ? (
+            <View className="mb-4 w-full">
+              <Text className="mb-1.5 text-sm font-medium text-gray-700 dark:text-gray-300">
+                {t('form.pantPhotosCount', { count: pantPhotoUris.length })}
+              </Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                <View className="flex-row gap-3">
+                  {pantPhotoUris.map((uri, index) => (
+                    <ImagePickerField
+                      key={index}
+                      label={t('form.piece', { number: index + 1 })}
+                      uri={uri}
+                      onChange={(newUri) =>
+                        setPantPhotoUris((prev) => {
+                          const next = [...prev];
+                          next[index] = newUri;
+                          return next;
+                        })
+                      }
+                      aspect={[3, 4]}
+                      source="camera"
+                      size={photoSlotSize}
+                      onPermissionDenied={() => showToast(t('form.cameraPermissionDenied'), 'error')}
+                    />
+                  ))}
+                </View>
+              </ScrollView>
+            </View>
+          ) : null}
+
+          <DatePickerField
+            label={t('form.deliveryDate')}
+            value={deliveryDate}
+            onChange={(d) => {
+              setDeliveryDate(d);
+              setDeliveryDateTouched(true);
+            }}
+            minimumDate={new Date()}
+          />
+          {!isEditing && !deliveryDateTouched && clothCountNum > 0 ? (
+            <Text className="font-sans -mt-3 mb-4 text-xs text-gray-400 dark:text-gray-500">{t('form.deliverySuggested')}</Text>
+          ) : null}
+
+          <View className="mb-4">
+            <Text className="mb-1.5 text-sm font-medium text-gray-700 dark:text-gray-300">{t('form.priority')}</Text>
+            <RadioGroup<OrderPriority>
+              value={priority}
+              onChange={setPriority}
+              direction="row"
+              options={[
+                { label: t('form.priorityNormal'), value: 'normal' },
+                { label: t('form.priorityUrgent'), value: 'urgent' },
+              ]}
             />
+          </View>
 
-            <View className="mb-4">
-              <Text className="mb-1.5 text-sm font-medium text-gray-700 dark:text-gray-300">{t('form.paymentMode')}</Text>
-              <RadioGroup<string>
-                value={paymentMode}
-                onChange={setPaymentMode}
-                direction="row"
-                options={PAYMENT_MODES.map((m) => ({ label: PAYMENT_MODE_LABELS[m], value: m }))}
+          <InputField
+            label={t('form.billBookNumber')}
+            value={billBookNumber}
+            onChangeText={setBillBookNumber}
+            placeholder={t('form.billBookPlaceholder')}
+          />
+
+          {isEditing ? (
+            <Text className="font-sans mb-4 text-xs text-gray-500 dark:text-gray-400">{t('form.billingNotice')}</Text>
+          ) : (
+            <>
+              <View className="mb-4">
+                <Text className="mb-1.5 text-sm font-medium text-gray-700 dark:text-gray-300">{t('form.paymentMode')}</Text>
+                <RadioGroup<string>
+                  value={paymentMode}
+                  onChange={setPaymentMode}
+                  direction="row"
+                  options={PAYMENT_MODES.map((m) => ({ label: PAYMENT_MODE_LABELS[m], value: m }))}
+                />
+              </View>
+
+              <InputField
+                label={t('form.totalAmount')}
+                value={totalAmount}
+                onChangeText={setTotalAmount}
+                placeholder={t('form.totalAmountPlaceholder')}
+                keyboardType="numeric"
               />
-            </View>
-          </>
-        )}
 
-        <Button
-          title={isEditing ? t('form.updateOrder') : t('form.createOrder')}
-          onPress={handleSave}
-          loading={loading}
-        />
-      </ScrollView>
+              <InputField
+                label={t('form.paidAmount')}
+                value={paidAmount}
+                onChangeText={setPaidAmount}
+                placeholder={t('form.paidAmountPlaceholder')}
+                keyboardType="numeric"
+              />
+            </>
+          )}
+
+          <Button
+            title={isEditing ? t('form.updateOrder') : t('form.createOrder')}
+            onPress={handleSave}
+            loading={loading}
+          />
+        </ScrollView>
+      </KeyboardAvoidingView>
     </>
   );
 }

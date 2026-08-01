@@ -3,9 +3,11 @@ import { ScrollView, Text, View } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import { FontAwesome5 } from '@expo/vector-icons';
-import { Card, EmptyState, Header, LoadingSpinner, useToast } from '../../components/ui';
+import { Card, Header, LoadingSpinner, useToast } from '../../components/ui';
 import { supabase } from '../../lib/supabase';
+import { billsRepo, paymentsRepo } from '../../lib/data/repository';
 import { formatCurrency } from '../../lib/format';
+import { useShop } from '../../context/AuthContext';
 import type { SettingsScreenProps } from '../../navigation/types';
 
 type MonthBucket = {
@@ -35,24 +37,65 @@ function localDayString(date: Date): string {
   ).padStart(2, '0')}`;
 }
 
+/**
+ * Plain flexbox bar chart — deliberately avoids SVG/viewBox math (which kept
+ * looking subtly off across devices) in favor of something that can't get
+ * the geometry wrong: each bar's height is just a CSS percentage.
+ */
+function MonthlyBarChart({ months }: { months: MonthBucket[] }) {
+  const ordered = [...months].reverse(); // oldest -> newest, left to right
+  const max = Math.max(...ordered.map((m) => m.amount), 1);
+
+  return (
+    <View className="mt-3 flex-row items-end justify-between" style={{ height: 160 }}>
+      {ordered.map((m, i) => {
+        const isLast = i === ordered.length - 1;
+        const heightPct = Math.max(4, (m.amount / max) * 100);
+        return (
+          <View key={m.key} className="flex-1 items-center">
+            <Text
+              className={`mb-1 text-[10px] font-semibold ${
+                isLast ? 'text-primary-600 dark:text-primary-400' : 'text-transparent'
+              }`}
+              numberOfLines={1}
+            >
+              {isLast ? formatCurrency(m.amount) : '-'}
+            </Text>
+            <View className="w-full flex-1 justify-end px-1">
+              <View
+                className={`w-full rounded-t-md ${isLast ? 'bg-primary-600' : 'bg-primary-200 dark:bg-primary-900'}`}
+                style={{ height: `${heightPct}%` }}
+              />
+            </View>
+            <Text className="font-sans mt-2 text-[10px] text-gray-500 dark:text-gray-400" numberOfLines={1}>
+              {m.label.split(' ')[0]}
+            </Text>
+          </View>
+        );
+      })}
+    </View>
+  );
+}
+
 export default function RevenueScreen({ navigation }: SettingsScreenProps<'Revenue'>) {
   const { t } = useTranslation('revenue');
   const showToast = useToast();
+  const shop = useShop();
 
   const [data, setData] = useState<RevenueData | null>(null);
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
     try {
-      const [paymentsRes, billsRes, workRes] = await Promise.all([
-        supabase.from('payments').select('amount_paid, payment_date'),
-        supabase.from('bills').select('total_amount, payments(amount_paid)'),
+      // Payments and bills come from the local-first mirror (same one every
+      // create/record-payment flow writes through), so this reflects the
+      // real, current data instead of racing the background sync.
+      const [payments, pendingByCustomer, workRes] = await Promise.all([
+        paymentsRepo.listForShop(shop.id),
+        billsRepo.pendingBalanceByCustomer(shop.id),
         supabase.from('staff_work_entries').select('quantity, rate_applied'),
       ]);
 
-      if (paymentsRes.error) throw paymentsRes.error;
-
-      const payments = paymentsRes.data ?? [];
       const now = new Date();
       const todayKey = localDayString(now);
       const monthKey = todayKey.slice(0, 7);
@@ -73,17 +116,16 @@ export default function RevenueScreen({ navigation }: SettingsScreenProps<'Reven
         byMonth.set(mKey, (byMonth.get(mKey) ?? 0) + amount);
       }
 
-      const months: MonthBucket[] = [...byMonth.entries()]
-        .sort((a, b) => (a[0] < b[0] ? 1 : -1))
-        .slice(0, 12)
-        .map(([key, amount]) => ({ key, label: monthLabel(key), amount }));
+      // Always the last 6 calendar months, in order, even ones with zero
+      // payments — filling gaps with 0 (instead of only listing months that
+      // happened to have a payment) keeps bar spacing an honest timeline.
+      const months: MonthBucket[] = Array.from({ length: 6 }, (_, i) => {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+        return { key, label: monthLabel(key), amount: byMonth.get(key) ?? 0 };
+      });
 
-      // Same shape the dashboard uses for totalPendingBalance: bill total minus
-      // everything received against that bill, never below zero.
-      const outstanding = (billsRes.data ?? []).reduce((sum, bill) => {
-        const paid = bill.payments.reduce((s, p) => s + Number(p.amount_paid), 0);
-        return sum + Math.max(Number(bill.total_amount ?? 0) - paid, 0);
-      }, 0);
+      const outstanding = Object.values(pendingByCustomer).reduce((s, v) => s + v, 0);
 
       const staffCost = (workRes.data ?? []).reduce(
         (s, w) => s + Number(w.quantity ?? 0) * Number(w.rate_applied ?? 0),
@@ -94,7 +136,7 @@ export default function RevenueScreen({ navigation }: SettingsScreenProps<'Reven
     } catch (err) {
       showToast(err instanceof Error ? err.message : t('loadError'), 'error');
     }
-  }, [showToast, t]);
+  }, [showToast, t, shop.id]);
 
   useFocusEffect(
     useCallback(() => {
@@ -110,7 +152,7 @@ export default function RevenueScreen({ navigation }: SettingsScreenProps<'Reven
   return (
     <View className="flex-1 bg-gray-50 dark:bg-gray-950">
       <Header title={t('title')} onBack={() => navigation.goBack()} />
-      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 110, gap: 16 }}>
+      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 160, gap: 16 }}>
         {/* Total revenue hero */}
         <View className="rounded-md bg-[#101828] p-4 dark:border dark:border-gray-700">
           <View className="flex-row items-start justify-between">
@@ -127,17 +169,30 @@ export default function RevenueScreen({ navigation }: SettingsScreenProps<'Reven
           <Text className="font-sans mt-2 text-xs text-[#667085] dark:text-gray-400">{t('revenueNote')}</Text>
         </View>
 
-        {/* This month / today */}
+        {/* This month / today / net */}
         <View className="flex-row gap-3">
           <View className="flex-1 rounded-md border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900">
             <Text className="font-sans text-xs font-medium text-gray-500 dark:text-gray-400">{t('thisMonth')}</Text>
-            <Text className="mt-1 text-lg font-bold text-[#101828] dark:text-gray-50">{formatCurrency(data.thisMonth)}</Text>
+            <Text className="mt-1 text-base font-bold text-[#101828] dark:text-gray-50">{formatCurrency(data.thisMonth)}</Text>
           </View>
           <View className="flex-1 rounded-md border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900">
             <Text className="font-sans text-xs font-medium text-gray-500 dark:text-gray-400">{t('today')}</Text>
-            <Text className="mt-1 text-lg font-bold text-[#101828] dark:text-gray-50">{formatCurrency(data.today)}</Text>
+            <Text className="mt-1 text-base font-bold text-[#101828] dark:text-gray-50">{formatCurrency(data.today)}</Text>
+          </View>
+          <View className="flex-1 rounded-md border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900">
+            <Text className="font-sans text-xs font-medium text-gray-500 dark:text-gray-400">{t('net')}</Text>
+            <Text className="mt-1 text-base font-bold text-[#101828] dark:text-gray-50">{formatCurrency(net)}</Text>
           </View>
         </View>
+
+        {/* Monthly trend chart */}
+        <Card>
+          <View className="mb-1 flex-row items-center">
+            <FontAwesome5 name="chart-bar" size={13} color="#6B7280" />
+            <Text className="ml-2 text-base font-semibold text-[#101828] dark:text-gray-50">{t('byMonth')}</Text>
+          </View>
+          <MonthlyBarChart months={data.months} />
+        </Card>
 
         {/* Net summary */}
         <Card>
@@ -162,32 +217,17 @@ export default function RevenueScreen({ navigation }: SettingsScreenProps<'Reven
           </View>
         </Card>
 
-        {/* Month breakdown */}
-        <View>
-          <View className="mb-2 flex-row items-center">
-            <FontAwesome5 name="chart-line" size={13} color="#6B7280" />
-            <Text className="ml-2 text-base font-semibold text-[#101828] dark:text-gray-50">{t('byMonth')}</Text>
-          </View>
-          {data.months.length === 0 ? (
-            <EmptyState
-              variant="compact"
-              icon="chart-line"
-              title={t('emptyTitle')}
-              description={t('emptyDescription')}
-            />
-          ) : (
-            <View className="gap-2">
-              {data.months.map((m) => (
-                <View
-                  key={m.key}
-                  className="flex-row items-center justify-between rounded-md border border-gray-200 bg-white px-4 py-3.5 dark:border-gray-800 dark:bg-gray-900"
-                >
-                  <Text className="font-sans text-sm font-medium text-[#101828] dark:text-gray-50">{m.label}</Text>
-                  <Text className="text-sm font-semibold text-[#1D4ED8]">{formatCurrency(m.amount)}</Text>
-                </View>
-              ))}
+        {/* Month breakdown list */}
+        <View className="gap-2">
+          {data.months.map((m) => (
+            <View
+              key={m.key}
+              className="flex-row items-center justify-between rounded-md border border-gray-200 bg-white px-4 py-3.5 dark:border-gray-800 dark:bg-gray-900"
+            >
+              <Text className="font-sans text-sm font-medium text-[#101828] dark:text-gray-50">{m.label}</Text>
+              <Text className="text-sm font-semibold text-[#1D4ED8]">{formatCurrency(m.amount)}</Text>
             </View>
-          )}
+          ))}
         </View>
       </ScrollView>
     </View>

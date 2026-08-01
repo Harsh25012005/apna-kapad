@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Text, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, Text, View } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { Button, Header, InputField, useToast } from '../../components/ui';
@@ -36,6 +36,11 @@ export default function ForgotPasswordScreen({ navigation }: AuthScreenProps<'Fo
   return (
     <View className="flex-1 bg-white dark:bg-gray-950">
       <Header title={t('forgotPassword.title')} onBack={() => navigation.goBack()} />
+      <KeyboardAvoidingView
+        className="flex-1"
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+      >
       <View className="flex-1 px-6 py-8">
         {sent ? (
           <View className="items-center pt-6">
@@ -64,6 +69,7 @@ export default function ForgotPasswordScreen({ navigation }: AuthScreenProps<'Fo
           </>
         )}
       </View>
+      </KeyboardAvoidingView>
     </View>
   );
 }

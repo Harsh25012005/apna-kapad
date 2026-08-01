@@ -104,7 +104,6 @@ export default function ShopEditScreen({ navigation }: SettingsScreenProps<'Shop
           value={address}
           onChangeText={setAddress}
           placeholder={t('shopEdit.addressPlaceholder')}
-          multiline
         />
 
         <InputField

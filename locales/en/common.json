@@ -63,7 +63,11 @@
     "selectDate": "Select date",
     "select": "Select",
     "noOptions": "No options available",
-    "addPhoto": "Add photo"
+    "addPhoto": "Add photo",
+    "search": "Search",
+    "addNew": "+ Add new",
+    "dictationFailed": "Could not hear that, please try again",
+    "microphonePermissionDenied": "Microphone permission is needed to dictate"
   },
   "empty": {
     "title": "Nothing here yet"

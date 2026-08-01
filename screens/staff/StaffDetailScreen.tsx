@@ -1,25 +1,37 @@
-import { useCallback, useState } from 'react';
-import { ScrollView, Text, View } from 'react-native';
+import { useCallback, useMemo, useState } from 'react';
+import { Pressable, ScrollView, Text, View } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import { FontAwesome5 } from '@expo/vector-icons';
-import { Avatar, Badge, Button, Card, EmptyState, Header, LoadingSpinner, useToast } from '../../components/ui';
+import { Avatar, Button, Card, Header, LoadingSpinner, useToast } from '../../components/ui';
 import { supabase } from '../../lib/supabase';
+import { staffRepo } from '../../lib/data/repository';
 import { formatCurrency, formatDate } from '../../lib/format';
+import { sendWhatsAppMessage } from '../../lib/whatsapp';
+import { useShop } from '../../context/AuthContext';
 import type { SettingsScreenProps } from '../../navigation/types';
 import type { Tables } from '../../lib/database.types';
-import type { Customer, Order, Staff } from '../../types';
-
-type StaffOrder = Order & {
-  customers: Pick<Customer, 'name'> | null;
-};
+import type { Staff } from '../../types';
 
 type WorkEntry = Tables<'staff_work_entries'>;
+
+/** Sums up a work entry's earnings — quantity × the rate applied when it was logged. */
+function entryEarning(entry: WorkEntry): number {
+  return Number(entry.quantity) * Number(entry.rate_applied);
+}
+
+function isInMonth(dateStr: string, monthsAgo: number): boolean {
+  const d = new Date(dateStr);
+  const now = new Date();
+  const target = new Date(now.getFullYear(), now.getMonth() - monthsAgo, 1);
+  return d.getFullYear() === target.getFullYear() && d.getMonth() === target.getMonth();
+}
 
 export default function StaffDetailScreen({ navigation, route }: SettingsScreenProps<'StaffDetail'>) {
   const { t } = useTranslation('staff');
   const { staffId } = route.params;
   const showToast = useToast();
+  const shop = useShop();
 
   const WAGE_LABELS: Record<Staff['wage_type'], string> = {
     daily: t('wageUnit.daily'),
@@ -34,20 +46,15 @@ export default function StaffDetailScreen({ navigation, route }: SettingsScreenP
   };
 
   const [staff, setStaff] = useState<Staff | null>(null);
-  const [orders, setOrders] = useState<StaffOrder[]>([]);
   const [workEntries, setWorkEntries] = useState<WorkEntry[]>([]);
   const [loading, setLoading] = useState(true);
+  const [sendingReport, setSendingReport] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const [staffRes, ordersRes, workRes] = await Promise.all([
-        supabase.from('staff').select('*').eq('id', staffId).single(),
-        supabase
-          .from('orders')
-          .select('*, customers(name)')
-          .eq('assigned_staff_id', staffId)
-          .order('delivery_date', { ascending: true }),
+      const [staffData, workRes] = await Promise.all([
+        staffRepo.get(staffId),
         supabase
           .from('staff_work_entries')
           .select('*')
@@ -56,23 +63,57 @@ export default function StaffDetailScreen({ navigation, route }: SettingsScreenP
           .order('created_at', { ascending: false }),
       ]);
 
-      if (staffRes.error) throw staffRes.error;
+      if (!staffData) {
+        // Staff member no longer exists (e.g. deleted elsewhere) — just
+        // leave, no need to surface a technical error for something the
+        // user can't act on.
+        navigation.goBack();
+        return;
+      }
 
-      setStaff(staffRes.data);
-      setOrders(ordersRes.data ?? []);
+      setStaff(staffData);
       setWorkEntries(workRes.data ?? []);
-    } catch (err) {
-      showToast(err instanceof Error ? err.message : t('detail.loadError'), 'error');
+    } catch {
+      navigation.goBack();
     } finally {
       setLoading(false);
     }
-  }, [staffId, showToast, t]);
+  }, [staffId, navigation]);
 
   useFocusEffect(
     useCallback(() => {
       void load();
     }, [load])
   );
+
+  const thisMonthEarnings = useMemo(
+    () => workEntries.filter((w) => isInMonth(w.work_date, 0)).reduce((s, w) => s + entryEarning(w), 0),
+    [workEntries]
+  );
+  const lastMonthEarnings = useMemo(
+    () => workEntries.filter((w) => isInMonth(w.work_date, 1)).reduce((s, w) => s + entryEarning(w), 0),
+    [workEntries]
+  );
+  const totalEarnings = useMemo(() => workEntries.reduce((s, w) => s + entryEarning(w), 0), [workEntries]);
+
+  const handleSendReport = async () => {
+    if (!staff) return;
+    setSendingReport(true);
+    try {
+      await sendWhatsAppMessage(
+        staff.phone,
+        t('detail.reportMessage', {
+          staffName: staff.name,
+          shopName: shop.shop_name,
+          amount: formatCurrency(thisMonthEarnings),
+        })
+      );
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : t('detail.reportSendFailed'), 'error');
+    } finally {
+      setSendingReport(false);
+    }
+  };
 
   if (loading || !staff) return <LoadingSpinner fullScreen text={t('detail.loading')} />;
 
@@ -124,7 +165,7 @@ export default function StaffDetailScreen({ navigation, route }: SettingsScreenP
                 <Text className="font-sans text-sm text-gray-600 dark:text-gray-300">{t('detail.wageAmount')}</Text>
                 <Text className="text-base font-bold text-[#101828] dark:text-gray-50">
                   {formatCurrency(staff.wage_amount)}
-                  <Text className="font-sans text-xs text-gray-500 dark:text-gray-400">{WAGE_LABELS[staff.wage_type]}</Text>
+                  <Text className="font-sans text-xs text-gray-500 dark:text-gray-400">/{WAGE_LABELS[staff.wage_type]}</Text>
                 </Text>
               </View>
             )}
@@ -138,41 +179,54 @@ export default function StaffDetailScreen({ navigation, route }: SettingsScreenP
           />
         </Card>
 
-        <View>
-          <View className="mb-2 flex-row items-center">
-            <FontAwesome5 name="clipboard-list" size={13} color="#6B7280" />
-            <Text className="ml-2 text-base font-semibold text-[#101828] dark:text-gray-50">{t('detail.workEntries')}</Text>
+        <Card>
+          <View className="mb-3 flex-row items-center">
+            <FontAwesome5 name="chart-line" size={13} color="#6B7280" />
+            <Text className="ml-2 text-base font-semibold text-[#101828] dark:text-gray-50">{t('detail.performanceReport')}</Text>
+          </View>
+          <View className="flex-row gap-3">
+            <View className="flex-1 rounded-md bg-emerald-50 p-3 dark:bg-emerald-950">
+              <Text className="font-sans text-xs text-emerald-700 dark:text-emerald-400">{t('detail.thisMonth')}</Text>
+              <Text className="mt-1 text-lg font-bold text-emerald-800 dark:text-emerald-300">
+                {formatCurrency(thisMonthEarnings)}
+              </Text>
+            </View>
+            <View className="flex-1 rounded-md bg-gray-50 p-3 dark:bg-gray-800">
+              <Text className="font-sans text-xs text-gray-500 dark:text-gray-400">{t('detail.lastMonth')}</Text>
+              <Text className="mt-1 text-lg font-bold text-[#101828] dark:text-gray-50">
+                {formatCurrency(lastMonthEarnings)}
+              </Text>
+            </View>
+          </View>
+          <View className="mt-2 flex-row items-center justify-between rounded-md bg-gray-50 p-3 dark:bg-gray-800">
+            <Text className="font-sans text-sm text-gray-600 dark:text-gray-300">{t('detail.allTimeEarnings')}</Text>
+            <Text className="text-base font-bold text-[#101828] dark:text-gray-50">{formatCurrency(totalEarnings)}</Text>
           </View>
 
-          {workEntries.length === 0 ? (
-            <EmptyState
-              variant="compact"
-              icon="clipboard-list"
-              title={t('detail.emptyWorkTitle')}
-              description={t('detail.emptyWorkDescription')}
-            />
-          ) : (
-            <View className="gap-2">
-              {workEntries.map((w) => (
-                <Card key={w.id}>
-                  <View className="flex-row items-center justify-between">
-                    <View className="flex-1">
-                      <Text className="text-sm font-semibold text-[#101828] dark:text-gray-50">
-                        {WORK_TYPE_LABELS[w.work_type]} × {w.quantity}
-                      </Text>
-                      <Text className="font-sans mt-1 text-xs text-gray-500 dark:text-gray-400">
-                        {formatDate(w.work_date)} · {formatCurrency(w.rate_applied)}
-                        {t('detail.perPieceSuffix')}
-                      </Text>
-                    </View>
-                    <Text className="text-base font-bold text-[#101828] dark:text-gray-50">
-                      {formatCurrency(Number(w.quantity) * Number(w.rate_applied))}
-                    </Text>
-                  </View>
-                </Card>
-              ))}
+          <Button
+            title={t('detail.sendReport')}
+            onPress={handleSendReport}
+            loading={sendingReport}
+            disabled={!staff.phone}
+            variant="secondary"
+            className="mt-4"
+          />
+        </Card>
 
-              <View className="flex-row items-center justify-between rounded-md bg-emerald-50 p-3 dark:bg-emerald-950">
+        {workEntries.length > 0 ? (
+          <View>
+            <View className="mb-2 flex-row items-center justify-between">
+              <View className="flex-row items-center">
+                <FontAwesome5 name="clipboard-list" size={13} color="#6B7280" />
+                <Text className="ml-2 text-base font-semibold text-[#101828] dark:text-gray-50">{t('detail.workEntries')}</Text>
+              </View>
+              <Pressable onPress={() => navigation.navigate('StaffWorkEntryForm', { staffId: staff.id })}>
+                <Text className="text-sm font-semibold text-primary-600 dark:text-primary-400">{t('detail.addWorkEntry')}</Text>
+              </Pressable>
+            </View>
+
+            <Card>
+              <View className="mb-3 flex-row items-center justify-between rounded-md bg-emerald-50 p-3 dark:bg-emerald-950">
                 <Text className="font-sans text-sm font-medium text-emerald-800 dark:text-emerald-300">
                   {t('detail.workTotal')}
                 </Text>
@@ -182,46 +236,42 @@ export default function StaffDetailScreen({ navigation, route }: SettingsScreenP
                   )}
                 </Text>
               </View>
-            </View>
-          )}
 
+              <View className="gap-3">
+                {workEntries.map((w, index) => (
+                  <View
+                    key={w.id}
+                    className={`flex-row items-center ${
+                      index < workEntries.length - 1 ? 'border-b border-gray-100 pb-3 dark:border-gray-800' : ''
+                    }`}
+                  >
+                    <View className="h-10 w-10 items-center justify-center rounded-full bg-primary-50 dark:bg-primary-950">
+                      <FontAwesome5 name="tshirt" size={14} color="#1D4ED8" />
+                    </View>
+                    <View className="ml-3 flex-1">
+                      <Text className="text-sm font-semibold text-[#101828] dark:text-gray-50">
+                        {WORK_TYPE_LABELS[w.work_type]} × {w.quantity}
+                      </Text>
+                      <Text className="font-sans mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+                        {formatDate(w.work_date)} · {formatCurrency(w.rate_applied)}
+                        {t('detail.perPieceSuffix')}
+                      </Text>
+                    </View>
+                    <Text className="text-sm font-bold text-[#101828] dark:text-gray-50">
+                      {formatCurrency(Number(w.quantity) * Number(w.rate_applied))}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            </Card>
+          </View>
+        ) : (
           <Button
             title={t('detail.addWorkEntry')}
             onPress={() => navigation.navigate('StaffWorkEntryForm', { staffId: staff.id })}
             variant="secondary"
-            className="mt-3"
           />
-        </View>
-
-        <View>
-          <View className="mb-2 flex-row items-center">
-            <FontAwesome5 name="tshirt" size={13} color="#6B7280" />
-            <Text className="ml-2 text-base font-semibold text-[#101828] dark:text-gray-50">{t('detail.assignedOrders')}</Text>
-          </View>
-          {orders.length === 0 ? (
-            <EmptyState
-              variant="compact"
-              icon="tshirt"
-              title={t('detail.emptyOrdersTitle')}
-              description={t('detail.emptyOrdersDescription')}
-            />
-          ) : (
-            <View className="gap-2">
-              {orders.map((o) => (
-                <Card key={o.id}>
-                  <View className="flex-row items-center justify-between">
-                    <Text className="text-sm font-semibold text-[#101828] dark:text-gray-50">#{o.order_number}</Text>
-                    <Badge type="order_status" value={o.status} />
-                  </View>
-                  <Text className="font-sans mt-1 text-xs text-gray-500 dark:text-gray-400">
-                    {o.customers?.name ?? t('detail.unknownCustomer')}
-                    {o.delivery_date ? ` · ${t('detail.deliveryPrefix')} ${formatDate(o.delivery_date)}` : ''}
-                  </Text>
-                </Card>
-              ))}
-            </View>
-          )}
-        </View>
+        )}
       </ScrollView>
     </View>
   );

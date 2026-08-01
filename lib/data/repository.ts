@@ -1,6 +1,7 @@
 import * as Crypto from 'expo-crypto';
 import { getDb, runExclusive } from './db';
 import { runSync } from './sync';
+import { supabase } from '../supabase';
 import type { Tables, TablesInsert, TablesUpdate } from '../database.types';
 
 /**
@@ -72,12 +73,13 @@ export const customersRepo = {
       name: input.name,
       phone: input.phone ?? null,
       address: input.address ?? null,
+      book_number: input.book_number ?? null,
       created_at: input.created_at ?? nowIso(),
       updated_at: input.updated_at ?? nowIso(),
     };
     await db.runAsync(
-      'insert into customers (id, shop_id, name, phone, address, created_at, updated_at) values (?,?,?,?,?,?,?)',
-      [row.id, row.shop_id, row.name, row.phone, row.address, row.created_at, row.updated_at]
+      'insert into customers (id, shop_id, name, phone, address, book_number, created_at, updated_at) values (?,?,?,?,?,?,?,?)',
+      [row.id, row.shop_id, row.name, row.phone, row.address, row.book_number, row.created_at, row.updated_at]
     );
     await enqueueOp('customers', row.id, 'insert', row);
     kickSync(row.shop_id);
@@ -91,10 +93,36 @@ export const customersRepo = {
     if (!existing) throw new Error(`customer ${id} not found locally`);
     const merged = { ...existing, ...patch, updated_at };
     await db.runAsync(
-      'update customers set name=?, phone=?, address=?, updated_at=? where id=?',
-      [merged.name, merged.phone, merged.address, updated_at, id]
+      'update customers set name=?, phone=?, address=?, book_number=?, updated_at=? where id=?',
+      [merged.name, merged.phone, merged.address, merged.book_number, updated_at, id]
     );
     await enqueueOp('customers', id, 'update', { id, ...patch, updated_at });
+    kickSync(shopId);
+  },
+
+  /** Cascade-removes a customer's orders (with their bills/payments) and measurements, then the customer. */
+  async remove(id: string, shopId: string): Promise<void> {
+    const db = await getDb();
+    const orders = await db.getAllAsync<{ id: string }>('select id from orders where customer_id = ?', [id]);
+    for (const order of orders) {
+      await ordersRepo.remove(order.id, shopId);
+    }
+    // Bills raised directly (no linked order) still belong to this customer.
+    const bills = await db.getAllAsync<{ id: string }>('select id from bills where customer_id = ?', [id]);
+    for (const bill of bills) {
+      await billsRepo.remove(bill.id, shopId);
+    }
+
+    // Measurements aren't mirrored locally (screens read/write them via
+    // Supabase directly), so their cleanup is a best-effort remote delete.
+    try {
+      await supabase.from('measurements').delete().eq('customer_id', id);
+    } catch {
+      // Non-fatal — an orphaned measurement row isn't worth blocking the delete over.
+    }
+
+    await db.runAsync('delete from customers where id = ?', [id]);
+    await enqueueOp('customers', id, 'delete', { id });
     kickSync(shopId);
   },
 };
@@ -337,30 +365,27 @@ export const ordersRepo = {
     }
   },
 
-  /** Creates one order per customer, all sharing the same item template — for bulk/uniform orders. */
-  async createMany(
-    shopId: string,
-    customerIds: string[],
-    orderTemplate: Omit<TablesInsert<'orders'>, 'shop_id' | 'id' | 'order_number' | 'customer_id'>,
-    items: OrderItemInput[]
-  ): Promise<Tables<'orders'>[]> {
-    const created: Tables<'orders'>[] = [];
-    // Sequential (not parallel) so nextOrderNumber-style callers relying on
-    // ordersRepo.list() between orders see each prior insert.
-    for (const customerId of customerIds) {
-      const orders = await this.list(shopId);
-      const highest = orders.reduce((max, row) => {
-        const n = Number(row.order_number?.match(/(\d+)$/)?.[1] ?? 0);
-        return n > max ? n : max;
-      }, 0);
-      const order = await this.create(
-        shopId,
-        { ...orderTemplate, order_number: `ORD-${highest + 1}`, customer_id: customerId },
-        items
-      );
-      created.push(order);
+  /** Removes an order, its line items, and any bill (with payments) raised against it, then queues the deletes for sync. */
+  async remove(id: string, shopId: string): Promise<void> {
+    const db = await getDb();
+    const items = await this.itemsForOrder(id);
+    const linkedBills = await db.getAllAsync<{ id: string }>('select id from bills where order_id = ?', [id]);
+
+    for (const bill of linkedBills) {
+      await billsRepo.remove(bill.id, shopId);
     }
-    return created;
+
+    await runExclusive(() =>
+      db.withTransactionAsync(async () => {
+        await db.runAsync('delete from order_items where order_id = ?', [id]);
+        await db.runAsync('delete from orders where id = ?', [id]);
+      })
+    );
+    for (const item of items) {
+      await enqueueOp('order_items', item.id, 'delete', { id: item.id });
+    }
+    await enqueueOp('orders', id, 'delete', { id });
+    kickSync(shopId);
   },
 
   async update(id: string, shopId: string, patch: TablesUpdate<'orders'>): Promise<void> {
@@ -392,6 +417,12 @@ export const billsRepo = {
     const db = await getDb();
     const rows = await db.getAllAsync<Record<string, unknown>>('select * from bills where shop_id = ? order by created_at desc', [shopId]);
     return rows.map((r) => fromSqlite<Tables<'bills'>>(r));
+  },
+
+  async get(id: string): Promise<Tables<'bills'> | null> {
+    const db = await getDb();
+    const row = await db.getFirstAsync<Record<string, unknown>>('select * from bills where id = ?', [id]);
+    return row ? fromSqlite<Tables<'bills'>>(row) : null;
   },
 
   /** Outstanding balance per customer: sum(bill.total_amount) - sum(payments.amount_paid), floored at 0. */
@@ -471,6 +502,23 @@ export const billsRepo = {
     kickSync(row.shop_id);
     return row;
   },
+
+  /** Removes a bill and its payments locally, then queues the deletes for sync. */
+  async remove(id: string, shopId: string): Promise<void> {
+    const db = await getDb();
+    const payments = await db.getAllAsync<{ id: string }>('select id from payments where bill_id = ?', [id]);
+    await runExclusive(() =>
+      db.withTransactionAsync(async () => {
+        await db.runAsync('delete from payments where bill_id = ?', [id]);
+        await db.runAsync('delete from bills where id = ?', [id]);
+      })
+    );
+    for (const payment of payments) {
+      await enqueueOp('payments', payment.id, 'delete', { id: payment.id });
+    }
+    await enqueueOp('bills', id, 'delete', { id });
+    kickSync(shopId);
+  },
 };
 
 export const paymentsRepo = {
@@ -491,6 +539,26 @@ export const paymentsRepo = {
       [row.id, row.shop_id, row.bill_id, row.customer_id, row.amount_paid, row.payment_mode, row.payment_date]
     );
     await enqueueOp('payments', row.id, 'insert', row);
+
+    // The server recalculates bills.payment_status via a trigger, but that
+    // only reaches this device after a full push+pull sync round-trip —
+    // recalculating it locally too means the badge is correct immediately
+    // instead of still reading "unpaid" right after recording a payment.
+    const bill = await billsRepo.get(row.bill_id);
+    if (bill) {
+      const payments = await db.getAllAsync<{ amount_paid: number }>(
+        'select amount_paid from payments where bill_id = ?',
+        [row.bill_id]
+      );
+      const paidTotal = payments.reduce((s, p) => s + Number(p.amount_paid), 0);
+      const totalAmount = Number(bill.total_amount ?? 0);
+      const status: Tables<'bills'>['payment_status'] =
+        paidTotal <= 0 ? 'unpaid' : paidTotal >= totalAmount ? 'paid' : 'partial';
+      if (status !== bill.payment_status) {
+        await db.runAsync('update bills set payment_status = ? where id = ?', [status, row.bill_id]);
+      }
+    }
+
     kickSync(row.shop_id);
     return row;
   },

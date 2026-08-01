@@ -1,4 +1,4 @@
-import { Modal as RNModal, Pressable, Text, View } from 'react-native';
+import { KeyboardAvoidingView, Modal as RNModal, Platform, Pressable, Text, View } from 'react-native';
 import type { ReactNode } from 'react';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { useTheme } from '../../context/ThemeContext';
@@ -15,19 +15,24 @@ export function BottomSheet({ visible, onClose, title, children }: ModalProps) {
   const { colors } = useTheme();
   return (
     <RNModal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <Pressable className="flex-1 justify-end bg-black/40" onPress={onClose}>
-        <Pressable className="max-h-[85%] rounded-t-md bg-white p-4 dark:bg-gray-900" onPress={() => {}}>
-          {title ? (
-            <View className="mb-3 flex-row items-center justify-between">
-              <Text className="text-lg font-semibold text-gray-900 dark:text-gray-50">{title}</Text>
-              <Pressable onPress={onClose} hitSlop={8}>
-                <FontAwesome5 name="times" size={18} color={colors.iconMuted} />
-              </Pressable>
-            </View>
-          ) : null}
-          {children}
+      <KeyboardAvoidingView
+        className="flex-1"
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        <Pressable className="flex-1 justify-end bg-black/40" onPress={onClose}>
+          <Pressable className="max-h-[85%] rounded-t-md bg-white p-4 dark:bg-gray-900" onPress={() => {}}>
+            {title ? (
+              <View className="mb-3 flex-row items-center justify-between">
+                <Text className="text-lg font-semibold text-gray-900 dark:text-gray-50">{title}</Text>
+                <Pressable onPress={onClose} hitSlop={8}>
+                  <FontAwesome5 name="times" size={18} color={colors.iconMuted} />
+                </Pressable>
+              </View>
+            ) : null}
+            {children}
+          </Pressable>
         </Pressable>
-      </Pressable>
+      </KeyboardAvoidingView>
     </RNModal>
   );
 }

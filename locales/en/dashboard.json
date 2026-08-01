@@ -39,12 +39,27 @@
   "paid": "Paid",
   "errorLoad": "Could not load dashboard",
   "dueSoon": {
-    "title": "Orders Due Soon"
+    "title": "Orders Due Soon",
+    "emptyTitle": "No orders due soon",
+    "emptyDescription": "Orders with an upcoming delivery date will show up here."
+  },
+  "emptyTopClients": {
+    "title": "No clients yet",
+    "description": "Your most frequent clients will show up here once you start adding orders."
   },
   "pendingPayments": {
     "title": "Pending Payments",
     "subtitle_one": "{{count}} bill not fully paid",
     "subtitle_other": "{{count}} bills not fully paid"
+  },
+  "transactions": {
+    "title": "Transaction History",
+    "loading": "Loading transactions...",
+    "loadError": "Could not load transactions",
+    "emptyTitle": "No transactions yet",
+    "emptyDescription": "Payments recorded against bills will show up here",
+    "unknownCustomer": "Unknown customer",
+    "searchPlaceholder": "Search by customer name"
   },
   "notifications": {
     "title": "Notifications",

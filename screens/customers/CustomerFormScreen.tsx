@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ScrollView } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { Button, Header, InputField, LoadingSpinner, useToast } from '../../components/ui';
 import { customersRepo } from '../../lib/data/repository';
@@ -17,7 +17,10 @@ export default function CustomerFormScreen({ navigation, route }: CustomersScree
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [address, setAddress] = useState('');
+  const [bookNumber, setBookNumber] = useState('');
   const [error, setError] = useState('');
+  const [phoneError, setPhoneError] = useState('');
+  const [bookNumberError, setBookNumberError] = useState('');
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(isEditing);
 
@@ -30,6 +33,7 @@ export default function CustomerFormScreen({ navigation, route }: CustomersScree
       setName(data.name ?? '');
       setPhone(data.phone ?? '');
       setAddress(data.address ?? '');
+      setBookNumber(data.book_number ?? '');
     } catch (err) {
       showToast(err instanceof Error ? err.message : t('form.loadError'), 'error');
     } finally {
@@ -42,17 +46,41 @@ export default function CustomerFormScreen({ navigation, route }: CustomersScree
   }, [load]);
 
   const handleSave = async () => {
+    let hasError = false;
+    if (!bookNumber.trim()) {
+      setBookNumberError(t('form.bookNumberRequired'));
+      hasError = true;
+    } else {
+      setBookNumberError('');
+    }
+
     if (!name.trim()) {
       setError(t('form.nameRequired'));
-      return;
+      hasError = true;
+    } else {
+      setError('');
     }
-    setError('');
+
+    const digits = phone.trim().replace(/\D/g, '');
+    if (!digits) {
+      setPhoneError(t('form.phoneRequired'));
+      hasError = true;
+    } else if (digits.length !== 10) {
+      setPhoneError(t('form.phoneInvalid'));
+      hasError = true;
+    } else {
+      setPhoneError('');
+    }
+
+    if (hasError) return;
+
     setLoading(true);
     try {
       const payload = {
         name: name.trim(),
-        phone: phone.trim() || null,
+        phone: digits,
         address: address.trim() || null,
+        book_number: bookNumber.trim(),
       };
 
       if (isEditing) {
@@ -78,34 +106,60 @@ export default function CustomerFormScreen({ navigation, route }: CustomersScree
         title={t(isEditing ? 'form.editTitle' : 'form.title')}
         onBack={() => navigation.goBack()}
       />
-      <ScrollView className="flex-1 bg-white dark:bg-gray-950" contentContainerStyle={{ padding: 20, paddingBottom: 160 }}>
-        <InputField
-          label={t('form.nameLabel')}
-          value={name}
-          onChangeText={setName}
-          placeholder={t('form.namePlaceholder')}
-          error={error}
-        />
-        <InputField
-          label={t('form.phoneLabel')}
-          value={phone}
-          onChangeText={setPhone}
-          placeholder={t('form.phonePlaceholder')}
-          keyboardType="phone-pad"
-        />
-        <InputField
-          label={t('form.addressLabel')}
-          value={address}
-          onChangeText={setAddress}
-          placeholder={t('form.addressPlaceholder')}
-          multiline
-        />
-        <Button
-          title={t(isEditing ? 'form.updateCustomer' : 'form.saveCustomer')}
-          onPress={handleSave}
-          loading={loading}
-        />
-      </ScrollView>
+      <KeyboardAvoidingView
+        className="flex-1"
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+      >
+        <ScrollView
+          className="flex-1 bg-white dark:bg-gray-950"
+          contentContainerStyle={{ padding: 20, paddingBottom: 160 }}
+          keyboardShouldPersistTaps="handled"
+        >
+          <InputField
+            label={t('form.bookNumberLabel')}
+            value={bookNumber}
+            onChangeText={(v) => {
+              setBookNumber(v);
+              setBookNumberError('');
+            }}
+            placeholder={t('form.bookNumberPlaceholder')}
+            error={bookNumberError}
+            required
+          />
+          <InputField
+            label={t('form.nameLabel')}
+            value={name}
+            onChangeText={setName}
+            placeholder={t('form.namePlaceholder')}
+            error={error}
+            required
+          />
+          <InputField
+            label={t('form.phoneLabel')}
+            value={phone}
+            onChangeText={(v) => {
+              setPhone(v);
+              setPhoneError('');
+            }}
+            placeholder={t('form.phonePlaceholder')}
+            keyboardType="phone-pad"
+            error={phoneError}
+            required
+          />
+          <InputField
+            label={t('form.addressLabel')}
+            value={address}
+            onChangeText={setAddress}
+            placeholder={t('form.addressPlaceholder')}
+          />
+          <Button
+            title={t(isEditing ? 'form.updateCustomer' : 'form.saveCustomer')}
+            onPress={handleSave}
+            loading={loading}
+          />
+        </ScrollView>
+      </KeyboardAvoidingView>
     </>
   );
 }

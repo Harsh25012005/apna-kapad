@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { FontAwesome5 } from '@expo/vector-icons';
@@ -15,7 +15,7 @@ import {
   LoadingSpinner,
   useToast,
 } from '../../components/ui';
-import { supabase } from '../../lib/supabase';
+import { billsRepo, customersRepo, paymentsRepo } from '../../lib/data/repository';
 import { formatCurrency, formatDateTime } from '../../lib/format';
 import { sendWhatsAppMessage, buildBillMessage } from '../../lib/whatsapp';
 import { haptics } from '../../lib/haptics';
@@ -23,7 +23,7 @@ import { useShop } from '../../context/AuthContext';
 import type { BillingScreenProps } from '../../navigation/types';
 import type { BillWithRelations } from '../../types';
 
-const PAYMENT_MODES = ['Cash', 'UPI', 'Card', 'Bank Transfer'] as const;
+const PAYMENT_MODES = ['Cash', 'UPI'] as const;
 
 export default function BillDetailScreen({ navigation, route }: BillingScreenProps<'BillDetail'>) {
   const { billId } = route.params;
@@ -42,19 +42,34 @@ export default function BillDetailScreen({ navigation, route }: BillingScreenPro
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('bills')
-        .select('*, customers(name, phone), payments(*)')
-        .eq('id', billId)
-        .single();
-      if (error) throw error;
-      setBill(data);
-    } catch (err) {
-      showToast(err instanceof Error ? err.message : t('detail.errorLoad'), 'error');
+      // Reads from the local-first mirror (same one bill create/delete write
+      // through) rather than Supabase directly — querying Supabase here raced
+      // the background sync for a freshly-created bill and made this page
+      // look like it "wouldn't open" right after creating one.
+      const bill = await billsRepo.get(billId);
+      if (!bill) {
+        // Bill no longer exists (e.g. deleted elsewhere) — just leave, no need
+        // to surface a technical error for something the user can't act on.
+        navigation.goBack();
+        return;
+      }
+
+      const [customer, shopPayments] = await Promise.all([
+        customersRepo.get(bill.customer_id),
+        paymentsRepo.listForShop(shop.id),
+      ]);
+
+      setBill({
+        ...bill,
+        customers: customer ? { name: customer.name, phone: customer.phone } : null,
+        payments: shopPayments.filter((p) => p.bill_id === bill.id),
+      });
+    } catch {
+      navigation.goBack();
     } finally {
       setLoading(false);
     }
-  }, [billId, showToast]);
+  }, [billId, navigation, shop.id]);
 
   useFocusEffect(
     useCallback(() => {
@@ -76,16 +91,29 @@ export default function BillDetailScreen({ navigation, route }: BillingScreenPro
       showToast(t('detail.errorExceedsPending', { amount: formatCurrency(pending) }), 'error');
       return;
     }
+
+    if (mode === 'UPI') {
+      Alert.alert(t('detail.upiConfirmTitle'), t('detail.upiConfirmMessage'), [
+        { text: t('detail.upiConfirmNo'), style: 'cancel' },
+        { text: t('detail.upiConfirmYes'), onPress: () => void submitPayment(value) },
+      ]);
+      return;
+    }
+
+    await submitPayment(value);
+  };
+
+  const submitPayment = async (value: number) => {
+    if (!bill) return;
     setSaving(true);
     try {
-      const { error } = await supabase.from('payments').insert({
+      await paymentsRepo.create({
         shop_id: shop.id,
         bill_id: bill.id,
         customer_id: bill.customer_id,
         amount_paid: value,
         payment_mode: mode,
       });
-      if (error) throw error;
       setAmount('');
       setSheetOpen(false);
       await load();
@@ -97,6 +125,30 @@ export default function BillDetailScreen({ navigation, route }: BillingScreenPro
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleDelete = () => {
+    if (!bill) return;
+    Alert.alert(
+      t('detail.deleteConfirmTitle'),
+      t('detail.deleteConfirmMessage'),
+      [
+        { text: t('detail.cancel'), style: 'cancel' },
+        {
+          text: t('detail.delete'),
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await billsRepo.remove(bill.id, shop.id);
+              showToast(t('detail.deleteSuccess'), 'success');
+              navigation.goBack();
+            } catch (err) {
+              showToast(err instanceof Error ? err.message : t('detail.deleteFailed'), 'error');
+            }
+          },
+        },
+      ]
+    );
   };
 
   const handleShare = async () => {
@@ -121,7 +173,19 @@ export default function BillDetailScreen({ navigation, route }: BillingScreenPro
 
   return (
     <View className="flex-1 bg-gray-50 dark:bg-gray-950">
-      <Header title={t('detail.billTitle', { name: bill.customers?.name })} onBack={() => navigation.goBack()} />
+      <Header
+        title={t('detail.billTitle', { name: bill.customers?.name })}
+        onBack={() => navigation.goBack()}
+        right={
+          <Pressable
+            onPress={handleDelete}
+            hitSlop={8}
+            className="h-10 w-10 items-center justify-center rounded-full active:bg-gray-100 dark:active:bg-gray-800"
+          >
+            <FontAwesome5 name="trash-alt" size={15} color="#DC2626" />
+          </Pressable>
+        }
+      />
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: insets.bottom + 160, gap: 16 }}>
         {/* Hero card: total / paid / balance due */}
         <View className="rounded-xl bg-[#101828] p-5 dark:border dark:border-gray-700">

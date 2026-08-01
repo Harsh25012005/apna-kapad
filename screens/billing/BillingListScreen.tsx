@@ -1,6 +1,5 @@
 import { useCallback, useMemo, useState } from 'react';
 import { FlatList, Modal, Pressable, RefreshControl, Text, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { Badge, Card, EmptyState, Header, LoadingSpinner, SearchBar, useToast } from '../../components/ui';
@@ -15,7 +14,6 @@ import type { PaymentStatus } from '../../types';
 const PAYMENT_FILTERS: PaymentStatus[] = ['paid', 'partial', 'unpaid'];
 
 export default function BillingListScreen({ navigation }: BillingScreenProps<'BillingList'>) {
-  const insets = useSafeAreaInsets();
   const showToast = useToast();
   const shop = useShop();
   const { t } = useTranslation('billing');
@@ -57,34 +55,22 @@ export default function BillingListScreen({ navigation }: BillingScreenProps<'Bi
     });
   }, [bills, search, statusFilter]);
 
-  const totalPending = bills.reduce((sum, bill) => {
-    const paid = bill.payments.reduce((s, p) => s + Number(p.amount_paid), 0);
-    return sum + Math.max(Number(bill.total_amount ?? 0) - paid, 0);
-  }, 0);
-
   const hasActiveFilters = Boolean(statusFilter);
 
   if (loading) return <LoadingSpinner fullScreen text={t('list.loading')} />;
 
   return (
     <View className="flex-1 bg-white dark:bg-gray-950">
-      <Header
-        showBack={false}
-        title={t('list.title')}
-        searchProps={{
-          value: search,
-          onChangeText: setSearch,
-          placeholder: t('list.searchPlaceholder'),
-          onFilterPress: () => setShowFilterModal(true),
-          hasActiveFilter: hasActiveFilters,
-        }}
-      />
+      <Header title={t('list.title')} onBack={() => navigation.goBack()} />
 
       <View className="px-5 pt-3">
-        <Card className="mb-3">
-          <Text className="font-sans text-sm text-gray-500 dark:text-gray-400">{t('list.totalPending')}</Text>
-          <Text className="mt-1 text-2xl font-bold text-danger">{formatCurrency(totalPending)}</Text>
-        </Card>
+        <SearchBar
+          value={search}
+          onChangeText={setSearch}
+          placeholder={t('list.searchPlaceholder')}
+          onFilterPress={() => setShowFilterModal(true)}
+          hasActiveFilter={hasActiveFilters}
+        />
       </View>
 
       {/* Filter Modal */}
@@ -153,7 +139,9 @@ export default function BillingListScreen({ navigation }: BillingScreenProps<'Bi
         data={filteredBills}
         keyExtractor={(item) => item.id}
         className="px-5"
-        contentContainerStyle={filteredBills.length === 0 ? { flexGrow: 1 } : { paddingBottom: 160, gap: 10 }}
+        contentContainerStyle={
+          filteredBills.length === 0 ? { flexGrow: 1, paddingTop: 12 } : { paddingTop: 12, paddingBottom: 160, gap: 12 }
+        }
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor="#1D4ED8" />
         }

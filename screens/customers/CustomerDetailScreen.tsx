@@ -30,33 +30,47 @@ export default function CustomerDetailScreen({
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const [customerData, measurementRes, allOrders, balanceByCustomer] = await Promise.all([
+      // Core record + orders + balance all come from the local-first mirror,
+      // so they load reliably offline and don't race the background sync.
+      const [customerData, allOrders, balanceByCustomer] = await Promise.all([
         customersRepo.get(customerId),
-        supabase
-          .from('measurements')
-          .select('*')
-          .eq('customer_id', customerId)
-          .order('updated_at', { ascending: false }),
         ordersRepo.list(shop.id),
         billsRepo.pendingBalanceByCustomer(shop.id),
       ]);
 
-      if (!customerData) throw new Error(t('detail.loadError'));
+      if (!customerData) {
+        // Client no longer exists (e.g. deleted elsewhere) — just leave, no
+        // need to surface a technical error for something the user can't act on.
+        navigation.goBack();
+        return;
+      }
 
       setCustomer(customerData);
-      setMeasurements(measurementRes.data ?? []);
       setOrders(
         allOrders
           .filter((o) => o.customer_id === customerId)
           .sort((a, b) => (a.order_date < b.order_date ? 1 : -1))
       );
       setBalance(balanceByCustomer[customerId] ?? 0);
-    } catch (err) {
-      showToast(err instanceof Error ? err.message : t('detail.loadError'), 'error');
+
+      // Measurements aren't mirrored locally, so a transient network blip
+      // here shouldn't take down the rest of an otherwise-loaded page.
+      try {
+        const { data } = await supabase
+          .from('measurements')
+          .select('*')
+          .eq('customer_id', customerId)
+          .order('updated_at', { ascending: false });
+        setMeasurements(data ?? []);
+      } catch {
+        setMeasurements([]);
+      }
+    } catch {
+      navigation.goBack();
     } finally {
       setLoading(false);
     }
-  }, [customerId, showToast, shop.id]);
+  }, [customerId, navigation, shop.id]);
 
   useFocusEffect(
     useCallback(() => {
@@ -76,17 +90,11 @@ export default function CustomerDetailScreen({
           style: 'destructive',
           onPress: async () => {
             try {
-              const { error } = await supabase.from('customers').delete().eq('id', customerId);
-              if (error) throw error;
+              await customersRepo.remove(customerId, shop.id);
               showToast(t('detail.deleteSuccess'), 'success');
               navigation.goBack();
-            } catch (err: unknown) {
-              const isFkViolation =
-                typeof err === 'object' && err !== null && 'code' in err && (err as { code: string }).code === '23503';
-              showToast(
-                isFkViolation ? t('detail.deleteBlocked') : t('detail.deleteFailed'),
-                'error'
-              );
+            } catch (err) {
+              showToast(err instanceof Error ? err.message : t('detail.deleteFailed'), 'error');
             }
           },
         },
@@ -170,6 +178,11 @@ export default function CustomerDetailScreen({
               {customer.address ? (
                 <Text className="font-sans text-sm text-gray-500 dark:text-gray-400">{customer.address}</Text>
               ) : null}
+              {customer.book_number ? (
+                <Text className="font-sans text-sm text-gray-500 dark:text-gray-400">
+                  {t('detail.bookNumberPrefix')} {customer.book_number}
+                </Text>
+              ) : null}
             </View>
           </View>
 
@@ -206,16 +219,7 @@ export default function CustomerDetailScreen({
               <Text className="text-sm font-semibold text-primary-600 dark:text-primary-400">{t('detail.addShort')}</Text>
             </Pressable>
           </View>
-          {measurements.length === 0 ? (
-            <EmptyState
-              variant="compact"
-              icon="ruler-combined"
-              title={t('detail.noMeasurementsTitle')}
-              description={t('detail.noMeasurementsDescription')}
-              actionLabel={t('detail.addMeasurement')}
-              onAction={() => navigation.navigate('MeasurementForm', { customerId })}
-            />
-          ) : (
+          {measurements.length > 0 ? (
             <View className="gap-2">
               {measurements.map((m) => {
                 const customFields = Array.isArray(m.custom_fields)
@@ -269,6 +273,13 @@ export default function CustomerDetailScreen({
                 );
               })}
             </View>
+          ) : (
+            <EmptyState
+              variant="compact"
+              icon="ruler-combined"
+              title={t('detail.noMeasurementsTitle')}
+              description={t('detail.noMeasurementsDescription')}
+            />
           )}
         </View>
 
@@ -285,16 +296,7 @@ export default function CustomerDetailScreen({
               <Text className="text-sm font-semibold text-primary-600 dark:text-primary-400">{t('detail.newOrderShort')}</Text>
             </Pressable>
           </View>
-          {orders.length === 0 ? (
-            <EmptyState
-              variant="compact"
-              icon="tshirt"
-              title={t('detail.noOrdersTitle')}
-              description={t('detail.noOrdersDescription')}
-              actionLabel={t('detail.newOrder')}
-              onAction={() => navigation.navigate('OrderForm', { customerId })}
-            />
-          ) : (
+          {orders.length > 0 ? (
             <View className="gap-2">
               {orders.map((o) => (
                 <Card
@@ -311,6 +313,13 @@ export default function CustomerDetailScreen({
                 </Card>
               ))}
             </View>
+          ) : (
+            <EmptyState
+              variant="compact"
+              icon="tshirt"
+              title={t('detail.noOrdersTitle')}
+              description={t('detail.noOrdersDescription')}
+            />
           )}
         </View>
       </ScrollView>

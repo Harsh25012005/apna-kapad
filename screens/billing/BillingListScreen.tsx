@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useState } from 'react';
 import { FlatList, Modal, Pressable, RefreshControl, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { Badge, Card, EmptyState, Header, LoadingSpinner, SearchBar, useToast } from '../../components/ui';
@@ -16,6 +17,7 @@ const PAYMENT_FILTERS: PaymentStatus[] = ['paid', 'partial', 'unpaid'];
 export default function BillingListScreen({ navigation }: BillingScreenProps<'BillingList'>) {
   const showToast = useToast();
   const shop = useShop();
+  const insets = useSafeAreaInsets();
   const { t } = useTranslation('billing');
   const [bills, setBills] = useState<BillWithRelations[]>([]);
   const [loading, setLoading] = useState(true);
@@ -84,7 +86,11 @@ export default function BillingListScreen({ navigation }: BillingScreenProps<'Bi
           className="flex-1 justify-end bg-black/40"
           onPress={() => setShowFilterModal(false)}
         >
-          <Pressable className="rounded-t-2xl bg-white p-5 gap-4 dark:bg-gray-900" onPress={() => {}}>
+          <Pressable
+            className="rounded-t-2xl bg-white p-5 gap-4 dark:bg-gray-900"
+            style={{ paddingBottom: insets.bottom + 20 }}
+            onPress={() => {}}
+          >
             <View className="flex-row items-center justify-between border-b border-gray-100 pb-3 dark:border-gray-800">
               <Text className="text-base font-semibold text-gray-900 dark:text-gray-50">{t('list.filterModalTitle')}</Text>
               {hasActiveFilters ? (

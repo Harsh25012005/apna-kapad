@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react';
 import { FlatList, Modal, Pressable, RefreshControl, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import {
@@ -22,6 +23,7 @@ type PriorityFilter = OrderPriority | 'all';
 export default function OrderListScreen({ navigation }: OrdersScreenProps<'OrderList'>) {
   const showToast = useToast();
   const shop = useShop();
+  const insets = useSafeAreaInsets();
   const { t } = useTranslation('orders');
 
   const STATUS_FILTERS: { label: string; value: StatusFilter }[] = [
@@ -107,7 +109,11 @@ export default function OrderListScreen({ navigation }: OrdersScreenProps<'Order
           className="flex-1 justify-end bg-black/40"
           onPress={() => setShowFilterModal(false)}
         >
-          <Pressable className="rounded-t-2xl bg-white p-5 gap-4 dark:bg-gray-900" onPress={() => {}}>
+          <Pressable
+            className="rounded-t-2xl bg-white p-5 gap-4 dark:bg-gray-900"
+            style={{ paddingBottom: insets.bottom + 20 }}
+            onPress={() => {}}
+          >
             <View className="flex-row items-center justify-between border-b border-gray-100 pb-3 dark:border-gray-800">
               <Text className="text-base font-semibold text-gray-900 dark:text-gray-50">{t('list.filterModalTitle')}</Text>
               {hasActiveFilters ? (

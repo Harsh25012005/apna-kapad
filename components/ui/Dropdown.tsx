@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Modal, Pressable, Text, TextInput, View, FlatList } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FontAwesome5 } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { ExpoSpeechRecognitionModule, useSpeechRecognitionEvent } from 'expo-speech-recognition';
@@ -41,6 +42,7 @@ export function Dropdown<T extends string = string>({
   const { t } = useTranslation('common');
   const { colors } = useTheme();
   const showToast = useToast();
+  const insets = useSafeAreaInsets();
   const placeholderText = placeholder ?? t('fields.select');
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
@@ -105,7 +107,11 @@ export function Dropdown<T extends string = string>({
 
       <Modal visible={open} transparent animationType="fade" onRequestClose={closeSheet}>
         <Pressable className="flex-1 justify-end bg-black/40" onPress={closeSheet}>
-          <Pressable className="max-h-[70%] rounded-t-md bg-white p-4 dark:bg-gray-900" onPress={() => {}}>
+          <Pressable
+            className="max-h-[70%] rounded-t-md bg-white p-4 dark:bg-gray-900"
+            style={{ paddingBottom: insets.bottom + 16 }}
+            onPress={() => {}}
+          >
             {label ? (
               <Text className="mb-3 text-base font-semibold text-gray-900 dark:text-gray-50">{label}</Text>
             ) : null}

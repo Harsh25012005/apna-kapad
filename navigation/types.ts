@@ -38,6 +38,7 @@ export type DashboardStackParamList = SharedOrderRoutes & {
   Notifications: undefined;
   Calendar: undefined;
   Transactions: undefined;
+  Search: undefined;
 };
 
 export type SettingsStackParamList = {

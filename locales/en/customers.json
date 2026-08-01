@@ -50,6 +50,10 @@
     "cancel": "Cancel",
     "delete": "Delete"
   },
+  "quickAdd": {
+    "title": "Add Client",
+    "save": "Add & Continue"
+  },
   "form": {
     "title": "New Client",
     "nameLabel": "Name",
@@ -59,10 +63,12 @@
     "phonePlaceholder": "10-digit phone number",
     "phoneRequired": "Phone number is required",
     "phoneInvalid": "Enter a valid 10-digit phone number",
+    "phoneValid": "✓ Looks good",
     "addressLabel": "Address",
     "addressPlaceholder": "Address",
     "bookNumberLabel": "Client No.",
     "bookNumberPlaceholder": "e.g. C-104",
+    "bookNumberHelper": "The number from your order book, if you keep one. Leave blank if not.",
     "bookNumberRequired": "Client number is required",
     "saveCustomer": "Save Client",
     "saveSuccess": "Client added",

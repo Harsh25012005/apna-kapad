@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useState } from 'react';
-import { Alert, KeyboardAvoidingView, Platform, ScrollView, Text, View } from 'react-native';
+import { useCallback, useMemo, useState } from 'react';
+import { Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useFocusEffect } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import { FontAwesome5 } from '@expo/vector-icons';
-import { Button, Dropdown, EmptyState, Header, InputField, useToast } from '../../components/ui';
-import { customersRepo, billsRepo } from '../../lib/data/repository';
+import { Button, Dropdown, EmptyState, Header, InputField, QuickAddCustomerSheet, RadioGroup, useToast } from '../../components/ui';
+import { customersRepo, billsRepo, paymentsRepo } from '../../lib/data/repository';
 import { formatCurrency } from '../../lib/format';
 import { sendWhatsAppMessage, buildBillMessage } from '../../lib/whatsapp';
 import { useShop } from '../../context/AuthContext';
@@ -29,55 +30,95 @@ export default function BillFormScreen({ navigation, route }: AppScreenProps<'Bi
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [customersLoaded, setCustomersLoaded] = useState(false);
   const [customerId, setCustomerId] = useState<string>(presetCustomerId ?? '');
+  // Most shops just want to type one number and move on — the itemized
+  // fields are an opt-in expansion, not the default.
+  const [itemized, setItemized] = useState(false);
+  const [billAmount, setBillAmount] = useState('');
   const [fabricCost, setFabricCost] = useState('');
   const [stitchingCharge, setStitchingCharge] = useState('');
   const [discount, setDiscount] = useState('');
   const [tax, setTax] = useState('');
   const [error, setError] = useState('');
+  const [amountError, setAmountError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [quickAddVisible, setQuickAddVisible] = useState(false);
+  const [paidStatus, setPaidStatus] = useState<'unpaid' | 'paid'>('unpaid');
 
-  const loadCustomers = async () => {
-    const data = await customersRepo.list(shop.id);
-    setCustomers(data);
-    setCustomersLoaded(true);
-  };
-
-  useEffect(() => {
-    void loadCustomers();
-  }, [shop.id]);
+  useFocusEffect(
+    useCallback(() => {
+      void (async () => {
+        const data = await customersRepo.list(shop.id);
+        setCustomers(data);
+        setCustomersLoaded(true);
+      })();
+    }, [shop.id])
+  );
 
   const customerOptions: Option[] = customers.map((c) => ({ label: c.name, value: c.id }));
   const selectedCustomer = customers.find((c) => c.id === customerId) ?? null;
 
   const total = useMemo(
     () =>
-      Math.max(toAmount(fabricCost) + toAmount(stitchingCharge) + toAmount(tax) - toAmount(discount), 0),
-    [fabricCost, stitchingCharge, discount, tax]
+      itemized
+        ? Math.max(toAmount(fabricCost) + toAmount(stitchingCharge) + toAmount(tax) - toAmount(discount), 0)
+        : toAmount(billAmount),
+    [itemized, billAmount, fabricCost, stitchingCharge, discount, tax]
   );
 
   const handleSave = async () => {
+    let hasError = false;
     if (!customerId) {
       setError(t('form.customerRequired'));
-      return;
+      hasError = true;
+    } else {
+      setError('');
     }
-    setError('');
+    if (!itemized && toAmount(billAmount) <= 0) {
+      setAmountError(t('form.amountRequired'));
+      hasError = true;
+    } else {
+      setAmountError('');
+    }
+    if (hasError) return;
+
     setLoading(true);
     try {
       const bill = await billsRepo.create({
         shop_id: shop.id,
         order_id: orderId ?? null,
         customer_id: customerId,
-        fabric_cost: toAmount(fabricCost),
-        stitching_charge: toAmount(stitchingCharge),
-        discount: toAmount(discount),
-        tax: toAmount(tax),
+        fabric_cost: itemized ? toAmount(fabricCost) : toAmount(billAmount),
+        stitching_charge: itemized ? toAmount(stitchingCharge) : 0,
+        discount: itemized ? toAmount(discount) : 0,
+        tax: itemized ? toAmount(tax) : 0,
       });
       showToast(t('form.successCreated'), 'success');
+
+      // Payment status is now chosen up-front in the form (paidStatus state)
+      // instead of an Alert fired after the bill already exists — many bills
+      // are settled on the spot, and asking here means the whole "create a
+      // bill" action is one decision instead of two sequential pop-ups.
+      let paidAmount = 0;
+      if (paidStatus === 'paid') {
+        try {
+          await paymentsRepo.create({
+            shop_id: shop.id,
+            bill_id: bill.id,
+            customer_id: customerId,
+            amount_paid: total,
+            payment_mode: 'Cash',
+          });
+          paidAmount = total;
+        } catch {
+          // Bill is already saved — a failed payment record shouldn't be reported as a save failure.
+        }
+      }
 
       const goToBillDetail = () => {
         navigation.replace('BillDetail', { billId: bill.id });
       };
 
+      const pending = Math.max(total - paidAmount, 0);
       if (selectedCustomer?.phone) {
         Alert.alert(t('form.sendMessageTitle'), t('form.sendMessageMessage'), [
           {
@@ -95,8 +136,8 @@ export default function BillFormScreen({ navigation, route }: AppScreenProps<'Bi
                     shopName: shop.shop_name,
                     customerName: selectedCustomer.name,
                     total,
-                    paid: 0,
-                    pending: total,
+                    paid: paidAmount,
+                    pending,
                   })
                 );
               } catch {
@@ -137,7 +178,7 @@ export default function BillFormScreen({ navigation, route }: AppScreenProps<'Bi
               title={t('form.noClientsTitle')}
               description={t('form.noClientsDescription')}
               actionLabel={t('form.addClient')}
-              onAction={() => navigation.navigate('CustomersTab' as any, { screen: 'CustomerForm' })}
+              onAction={() => setQuickAddVisible(true)}
             />
           </View>
         ) : (
@@ -152,7 +193,7 @@ export default function BillFormScreen({ navigation, route }: AppScreenProps<'Bi
               required
               searchable
               searchPlaceholder={t('form.searchClientPlaceholder')}
-              onAddNew={() => navigation.navigate('CustomersTab' as any, { screen: 'CustomerForm' })}
+              onAddNew={() => setQuickAddVisible(true)}
               addNewLabel={t('form.addClient')}
             />
 
@@ -167,43 +208,98 @@ export default function BillFormScreen({ navigation, route }: AppScreenProps<'Bi
           </>
         )}
 
-        <InputField
-          label={t('form.fabricCost')}
-          value={fabricCost}
-          onChangeText={setFabricCost}
-          placeholder={t('form.fabricCostPlaceholder')}
-          keyboardType="numeric"
-        />
-        <InputField
-          label={t('form.stitchingCharge')}
-          value={stitchingCharge}
-          onChangeText={setStitchingCharge}
-          placeholder={t('form.stitchingChargePlaceholder')}
-          keyboardType="numeric"
-        />
-        <InputField
-          label={t('form.discount')}
-          value={discount}
-          onChangeText={setDiscount}
-          placeholder={t('form.discountPlaceholder')}
-          keyboardType="numeric"
-        />
-        <InputField
-          label={t('form.tax')}
-          value={tax}
-          onChangeText={setTax}
-          placeholder={t('form.taxPlaceholder')}
-          keyboardType="numeric"
-        />
+        {itemized ? (
+          <>
+            <InputField
+              label={t('form.fabricCost')}
+              value={fabricCost}
+              onChangeText={setFabricCost}
+              placeholder={t('form.fabricCostPlaceholder')}
+              keyboardType="numeric"
+            />
+            <InputField
+              label={t('form.stitchingCharge')}
+              value={stitchingCharge}
+              onChangeText={setStitchingCharge}
+              placeholder={t('form.stitchingChargePlaceholder')}
+              keyboardType="numeric"
+            />
+            <InputField
+              label={t('form.discount')}
+              value={discount}
+              onChangeText={setDiscount}
+              placeholder={t('form.discountPlaceholder')}
+              keyboardType="numeric"
+            />
+            <InputField
+              label={t('form.tax')}
+              value={tax}
+              onChangeText={setTax}
+              placeholder={t('form.taxPlaceholder')}
+              keyboardType="numeric"
+            />
+            <Pressable onPress={() => setItemized(false)} hitSlop={8} className="mb-4 -mt-1 self-start py-2">
+              <Text className="text-base font-semibold text-primary-600 dark:text-primary-400">
+                {t('form.useSimpleTotal')}
+              </Text>
+            </Pressable>
+          </>
+        ) : (
+          <>
+            <InputField
+              label={t('form.billAmount')}
+              value={billAmount}
+              onChangeText={(v) => {
+                setBillAmount(v);
+                setAmountError('');
+              }}
+              placeholder={t('form.billAmountPlaceholder')}
+              keyboardType="numeric"
+              error={amountError}
+              required
+            />
+            <Pressable onPress={() => setItemized(true)} hitSlop={8} className="mb-4 -mt-1 self-start py-2">
+              <Text className="text-base font-semibold text-primary-600 dark:text-primary-400">
+                {t('form.splitIntoItems')}
+              </Text>
+            </Pressable>
+          </>
+        )}
 
-        <View className="mb-6 flex-row items-center justify-between rounded-lg bg-primary-50 p-4 dark:bg-primary-950">
-          <Text className="text-sm font-medium text-primary-700 dark:text-primary-300">{t('form.totalAmount')}</Text>
-          <Text className="text-xl font-bold text-primary-700 dark:text-primary-300">{formatCurrency(total)}</Text>
+        <View className="mb-4">
+          <Text className="mb-1.5 text-xs font-bold uppercase tracking-[0.4px] text-gray-500 dark:text-gray-400">
+            {t('form.paymentStatus')}
+          </Text>
+          <RadioGroup
+            variant="cards"
+            direction="row"
+            value={paidStatus}
+            onChange={setPaidStatus}
+            options={[
+              { label: t('form.markUnpaid'), value: 'unpaid' },
+              { label: t('form.markPaid'), value: 'paid' },
+            ]}
+          />
         </View>
 
-        <Button title={t('form.createBill')} onPress={handleSave} loading={loading} />
+        <View className="mb-6 flex-row items-center justify-between rounded-lg bg-primary-50 p-4 dark:bg-primary-950">
+          <Text className="text-base font-medium text-primary-700 dark:text-primary-300">{t('form.totalAmount')}</Text>
+          <Text className="text-2xl font-bold text-primary-700 dark:text-primary-300">{formatCurrency(total)}</Text>
+        </View>
+
+        <Button title={t('form.createBill')} size="lg" onPress={handleSave} loading={loading} />
       </ScrollView>
       </KeyboardAvoidingView>
+
+      <QuickAddCustomerSheet
+        visible={quickAddVisible}
+        onClose={() => setQuickAddVisible(false)}
+        onCreated={(customer) => {
+          setQuickAddVisible(false);
+          setCustomers((prev) => [...prev, customer].sort((a, b) => a.name.localeCompare(b.name)));
+          setCustomerId(customer.id);
+        }}
+      />
     </>
   );
 }

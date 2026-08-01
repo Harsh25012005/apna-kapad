@@ -24,8 +24,20 @@
   "loading": "Loading dashboard...",
   "greeting": "Hi, {{name}}",
   "defaultUser": "User",
-  "todaysCollections": "Today's collections",
-  "collectionsAsOf": "Collections — {{date}}",
+  "alerts": "Alerts",
+  "calendar": "Calendar",
+  "searchPlaceholder": "Search clients by name or phone",
+  "dueToday": {
+    "title": "Due Today",
+    "count_one": "{{count}} order",
+    "count_other": "{{count}} orders"
+  },
+  "owedToday": {
+    "title": "Owed Today"
+  },
+  "overdueAlert_one": "{{count}} order overdue — tap to view",
+  "overdueAlert_other": "{{count}} orders overdue — tap to view",
+  "newOrder": "New Order",
   "order": "Order",
   "client": "Client",
   "topClients": "Top Clients",
@@ -38,19 +50,18 @@
   "garmentOrder": "Garment Order",
   "paid": "Paid",
   "errorLoad": "Could not load dashboard",
-  "dueSoon": {
-    "title": "Orders Due Soon",
-    "emptyTitle": "No orders due soon",
-    "emptyDescription": "Orders with an upcoming delivery date will show up here."
-  },
   "emptyTopClients": {
     "title": "No clients yet",
     "description": "Your most frequent clients will show up here once you start adding orders."
   },
-  "pendingPayments": {
-    "title": "Pending Payments",
-    "subtitle_one": "{{count}} bill not fully paid",
-    "subtitle_other": "{{count}} bills not fully paid"
+  "overdue": {
+    "title": "Overdue Orders",
+    "dueOn": "Was due {{date}}"
+  },
+  "recentPayments": {
+    "title": "Recent Payments",
+    "emptyTitle": "No payments yet",
+    "emptyDescription": "Payments you record against bills will show up here."
   },
   "transactions": {
     "title": "Transaction History",
@@ -60,6 +71,22 @@
     "emptyDescription": "Payments recorded against bills will show up here",
     "unknownCustomer": "Unknown customer",
     "searchPlaceholder": "Search by customer name"
+  },
+  "search": {
+    "title": "Search",
+    "placeholder": "Search by client name or phone",
+    "emptyPromptTitle": "Search for a client",
+    "emptyPromptDescription": "Type a name or phone number, or tap the mic to search by voice.",
+    "noResultsTitle": "No client found",
+    "noResultsDescription": "Add them as a new client to continue.",
+    "addClient": "Add Client",
+    "noPhone": "No phone",
+    "createOrder": "Create Order",
+    "viewProfile": "View Profile",
+    "dictationFailed": "Could not hear that — try again",
+    "microphonePermissionDenied": "Microphone permission is required for voice search",
+    "listening": "Listening…",
+    "listeningHint": "Say a client's name, or tap anywhere to stop"
   },
   "notifications": {
     "title": "Notifications",

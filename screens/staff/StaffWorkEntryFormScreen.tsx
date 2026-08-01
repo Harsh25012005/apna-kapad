@@ -63,6 +63,10 @@ export default function StaffWorkEntryFormScreen({
       setError(t('workEntry.quantityRequired'));
       return;
     }
+    if (rate === 0) {
+      showToast(t('workEntry.noRateWarning'), 'error');
+      return;
+    }
     setError('');
     setLoading(true);
     try {
@@ -134,7 +138,7 @@ export default function StaffWorkEntryFormScreen({
             ) : null}
           </View>
 
-          <Button title={t('workEntry.save')} onPress={handleSave} loading={loading} />
+          <Button title={t('workEntry.save')} onPress={handleSave} loading={loading} disabled={rate === 0} />
         </ScrollView>
       </KeyboardAvoidingView>
     </>

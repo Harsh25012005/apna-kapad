@@ -67,7 +67,9 @@
     "search": "Search",
     "addNew": "+ Add new",
     "dictationFailed": "Could not hear that, please try again",
-    "microphonePermissionDenied": "Microphone permission is needed to dictate"
+    "microphonePermissionDenied": "Microphone permission is needed to dictate",
+    "listening": "Listening…",
+    "listeningHint": "Speak now, or tap anywhere to stop"
   },
   "empty": {
     "title": "Nothing here yet"

@@ -81,7 +81,13 @@
     "addWorkEntry": "+ Add Work Entry",
     "workTotal": "Total piece work earned",
     "perPieceSuffix": " each",
-    "loadError": "Could not load staff"
+    "loadError": "Could not load staff",
+    "deleteConfirmTitle": "Delete this staff member?",
+    "deleteConfirmMessage": "This removes {{name}} and their work entries permanently. Any orders assigned to them will be unassigned, not deleted. This cannot be undone.",
+    "deleteSuccess": "Staff member deleted",
+    "deleteFailed": "Could not delete staff member",
+    "cancel": "Cancel",
+    "delete": "Delete"
   },
   "workEntry": {
     "title": "Add Work Entry",
@@ -94,7 +100,7 @@
     "quantityRequired": "Enter a quantity greater than 0",
     "rateApplied": "Rate applied",
     "totalPay": "Total pay",
-    "noRateWarning": "No per-piece rate set for this work type. Edit the staff member to add one.",
+    "noRateWarning": "No per-piece rate set for this work type. Edit the staff member to add one before saving.",
     "save": "Save Entry",
     "saveSuccess": "Work entry added",
     "saveError": "Could not save work entry",

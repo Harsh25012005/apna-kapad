@@ -56,7 +56,7 @@ export function InputField({
     <View className="w-full mb-4">
       {label ? (
         <Text
-          className={`mb-1.5 text-sm font-semibold ${error ? 'text-danger' : isFocused ? 'text-primary-600' : 'text-gray-500 dark:text-gray-400'
+          className={`mb-1.5 text-base font-semibold ${error ? 'text-danger' : isFocused ? 'text-primary-600' : 'text-gray-600 dark:text-gray-400'
             }`}
         >
           {label}
@@ -100,9 +100,9 @@ export function InputField({
       </View>
 
       {error ? (
-        <Text className="mt-1.5 text-xs font-medium text-danger">{error}</Text>
+        <Text className="mt-1.5 text-sm font-medium text-danger">{error}</Text>
       ) : helperText ? (
-        <Text className="font-sans mt-1.5 text-xs text-gray-500 dark:text-gray-400">{helperText}</Text>
+        <Text className="font-sans mt-1.5 text-sm text-gray-500 dark:text-gray-400">{helperText}</Text>
       ) : null}
     </View>
   );

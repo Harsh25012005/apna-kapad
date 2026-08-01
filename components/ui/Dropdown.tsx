@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { ExpoSpeechRecognitionModule, useSpeechRecognitionEvent } from 'expo-speech-recognition';
 import { useTheme } from '../../context/ThemeContext';
 import { useToast } from './Toast';
+import { VoiceListeningOverlay } from './VoiceListeningOverlay';
 
 export type DropdownOption<T extends string = string> = { label: string; value: T };
 
@@ -178,6 +179,13 @@ export function Dropdown<T extends string = string>({
           </Pressable>
         </Pressable>
       </Modal>
+
+      <VoiceListeningOverlay
+        visible={dictating}
+        onStop={stopDictation}
+        label={t('fields.listening')}
+        hint={t('fields.listeningHint')}
+      />
     </View>
   );
 }

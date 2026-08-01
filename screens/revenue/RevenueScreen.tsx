@@ -3,7 +3,7 @@ import { ScrollView, Text, View } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import { FontAwesome5 } from '@expo/vector-icons';
-import { Card, Header, LoadingSpinner, useToast } from '../../components/ui';
+import { Card, EmptyState, Header, LoadingSpinner, useToast } from '../../components/ui';
 import { supabase } from '../../lib/supabase';
 import { billsRepo, paymentsRepo } from '../../lib/data/repository';
 import { formatCurrency } from '../../lib/format';
@@ -55,11 +55,12 @@ function MonthlyBarChart({ months }: { months: MonthBucket[] }) {
           <View key={m.key} className="flex-1 items-center">
             <Text
               className={`mb-1 text-[10px] font-semibold ${
-                isLast ? 'text-primary-600 dark:text-primary-400' : 'text-transparent'
+                isLast ? 'text-primary-600 dark:text-primary-400' : 'text-gray-500 dark:text-gray-400'
               }`}
               numberOfLines={1}
+              adjustsFontSizeToFit
             >
-              {isLast ? formatCurrency(m.amount) : '-'}
+              {formatCurrency(m.amount)}
             </Text>
             <View className="w-full flex-1 justify-end px-1">
               <View
@@ -149,6 +150,15 @@ export default function RevenueScreen({ navigation }: SettingsScreenProps<'Reven
 
   const net = data.total - data.staffCost;
 
+  if (data.total === 0) {
+    return (
+      <View className="flex-1 bg-gray-50 dark:bg-gray-950">
+        <Header title={t('title')} onBack={() => navigation.goBack()} />
+        <EmptyState icon="chart-bar" title={t('emptyTitle')} description={t('emptyDescription')} />
+      </View>
+    );
+  }
+
   return (
     <View className="flex-1 bg-gray-50 dark:bg-gray-950">
       <Header title={t('title')} onBack={() => navigation.goBack()} />
@@ -216,19 +226,6 @@ export default function RevenueScreen({ navigation }: SettingsScreenProps<'Reven
             </View>
           </View>
         </Card>
-
-        {/* Month breakdown list */}
-        <View className="gap-2">
-          {data.months.map((m) => (
-            <View
-              key={m.key}
-              className="flex-row items-center justify-between rounded-md border border-gray-200 bg-white px-4 py-3.5 dark:border-gray-800 dark:bg-gray-900"
-            >
-              <Text className="font-sans text-sm font-medium text-[#101828] dark:text-gray-50">{m.label}</Text>
-              <Text className="text-sm font-semibold text-[#1D4ED8]">{formatCurrency(m.amount)}</Text>
-            </View>
-          ))}
-        </View>
       </ScrollView>
     </View>
   );

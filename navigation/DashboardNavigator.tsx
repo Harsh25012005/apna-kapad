@@ -7,6 +7,7 @@ import BillDetailScreen from '../screens/billing/BillDetailScreen';
 import NotificationsScreen from '../screens/dashboard/NotificationsScreen';
 import CalendarScreen from '../screens/dashboard/CalendarScreen';
 import TransactionsScreen from '../screens/dashboard/TransactionsScreen';
+import SearchScreen from '../screens/dashboard/SearchScreen';
 import type { DashboardStackParamList } from './types';
 
 const Stack = createNativeStackNavigator<DashboardStackParamList>();
@@ -22,6 +23,7 @@ export function DashboardNavigator() {
       <Stack.Screen name="Notifications" component={NotificationsScreen} />
       <Stack.Screen name="Calendar" component={CalendarScreen} />
       <Stack.Screen name="Transactions" component={TransactionsScreen} />
+      <Stack.Screen name="Search" component={SearchScreen} />
     </Stack.Navigator>
   );
 }

@@ -24,8 +24,9 @@
   "loading": "ડેશબોર્ડ લોડ થઈ રહ્યું છે...",
   "greeting": "નમસ્તે, {{name}}",
   "defaultUser": "યુઝર",
-  "todaysCollections": "આજની વસૂલાત",
-  "collectionsAsOf": "વસૂલાત — {{date}}",
+  "owedToday": {
+    "title": "આજે બાકી"
+  },
   "order": "ઓર્ડર",
   "client": "ગ્રાહક",
   "topClients": "મુખ્ય ગ્રાહકો",

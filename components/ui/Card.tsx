@@ -8,7 +8,7 @@ export type CardProps = {
 };
 
 export function Card({ children, onPress, className = '' }: CardProps) {
-  const baseClass = `rounded-md border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900 ${className}`;
+  const baseClass = `rounded-md border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-900 ${className}`;
 
   if (onPress) {
     return (

@@ -20,8 +20,9 @@ export default function CustomerFormScreen({ navigation, route }: CustomersScree
   const [bookNumber, setBookNumber] = useState('');
   const [error, setError] = useState('');
   const [phoneError, setPhoneError] = useState('');
-  const [bookNumberError, setBookNumberError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const phoneDigits = phone.trim().replace(/\D/g, '');
   const [fetching, setFetching] = useState(isEditing);
 
   const load = useCallback(async () => {
@@ -47,12 +48,6 @@ export default function CustomerFormScreen({ navigation, route }: CustomersScree
 
   const handleSave = async () => {
     let hasError = false;
-    if (!bookNumber.trim()) {
-      setBookNumberError(t('form.bookNumberRequired'));
-      hasError = true;
-    } else {
-      setBookNumberError('');
-    }
 
     if (!name.trim()) {
       setError(t('form.nameRequired'));
@@ -80,7 +75,7 @@ export default function CustomerFormScreen({ navigation, route }: CustomersScree
         name: name.trim(),
         phone: digits,
         address: address.trim() || null,
-        book_number: bookNumber.trim(),
+        book_number: bookNumber.trim() || null,
       };
 
       if (isEditing) {
@@ -117,17 +112,6 @@ export default function CustomerFormScreen({ navigation, route }: CustomersScree
           keyboardShouldPersistTaps="handled"
         >
           <InputField
-            label={t('form.bookNumberLabel')}
-            value={bookNumber}
-            onChangeText={(v) => {
-              setBookNumber(v);
-              setBookNumberError('');
-            }}
-            placeholder={t('form.bookNumberPlaceholder')}
-            error={bookNumberError}
-            required
-          />
-          <InputField
             label={t('form.nameLabel')}
             value={name}
             onChangeText={setName}
@@ -145,7 +129,15 @@ export default function CustomerFormScreen({ navigation, route }: CustomersScree
             placeholder={t('form.phonePlaceholder')}
             keyboardType="phone-pad"
             error={phoneError}
+            helperText={!phoneError && phoneDigits.length === 10 ? t('form.phoneValid') : undefined}
             required
+          />
+          <InputField
+            label={t('form.bookNumberLabel')}
+            value={bookNumber}
+            onChangeText={setBookNumber}
+            placeholder={t('form.bookNumberPlaceholder')}
+            helperText={t('form.bookNumberHelper')}
           />
           <InputField
             label={t('form.addressLabel')}
@@ -155,6 +147,7 @@ export default function CustomerFormScreen({ navigation, route }: CustomersScree
           />
           <Button
             title={t(isEditing ? 'form.updateCustomer' : 'form.saveCustomer')}
+            size="lg"
             onPress={handleSave}
             loading={loading}
           />

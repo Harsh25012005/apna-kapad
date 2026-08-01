@@ -104,12 +104,13 @@ export default function LoginScreen({ navigation }: AuthScreenProps<'Login'>) {
 
           <Pressable
             onPress={() => navigation.navigate('ForgotPassword')}
-            className="mb-6 self-end"
+            hitSlop={10}
+            className="mb-6 min-h-[44px] items-end justify-center self-end"
           >
-            <Text className="text-sm font-medium text-primary-600">{t('login.forgotPassword')}</Text>
+            <Text className="text-base font-medium text-primary-600">{t('login.forgotPassword')}</Text>
           </Pressable>
 
-          <Button title={t('login.signIn')} onPress={handleLogin} loading={loading} />
+          <Button title={t('login.signIn')} size="lg" onPress={handleLogin} loading={loading} />
 
           <View className="my-6 flex-row items-center">
             <View className="h-px flex-1 bg-gray-200 dark:bg-gray-800" />
@@ -120,15 +121,16 @@ export default function LoginScreen({ navigation }: AuthScreenProps<'Login'>) {
           <Button
             title={t('login.continueWithGoogle')}
             variant="google"
+            size="lg"
             onPress={handleGoogle}
             loading={googleLoading}
             icon={<GoogleIcon size={20} />}
           />
 
           <View className="mt-8 flex-row items-center justify-center gap-1">
-            <Text className="font-sans text-sm text-gray-500 dark:text-gray-400">{t('login.noAccount')}</Text>
-            <Pressable onPress={() => navigation.navigate('Signup')}>
-              <Text className="text-sm font-semibold text-primary-600">{t('login.signUp')}</Text>
+            <Text className="font-sans text-base text-gray-500 dark:text-gray-400">{t('login.noAccount')}</Text>
+            <Pressable onPress={() => navigation.navigate('Signup')} hitSlop={10} className="min-h-[44px] justify-center">
+              <Text className="text-base font-semibold text-primary-600">{t('login.signUp')}</Text>
             </Pressable>
           </View>
         </View>

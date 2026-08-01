@@ -31,6 +31,7 @@ export default function ShopSetupScreen() {
   const [logoUri, setLogoUri] = useState<string | null>(null);
   const [errors, setErrors] = useState<ShopSetupErrors>({});
   const [loading, setLoading] = useState(false);
+  const [showMoreDetails, setShowMoreDetails] = useState(false);
 
   const validate = () => {
     const next: ShopSetupErrors = {};
@@ -94,7 +95,7 @@ export default function ShopSetupScreen() {
         </Text>
 
         <View className="mb-6">
-          <Text className="mb-1.5 text-xs font-bold uppercase tracking-[0.4px] text-gray-500 dark:text-gray-400">
+          <Text className="mb-1.5 text-base font-bold text-gray-600 dark:text-gray-400">
             {t('shopSetup.language')}
           </Text>
           <View className="flex-row gap-2">
@@ -104,12 +105,12 @@ export default function ShopSetupScreen() {
                 <Pressable
                   key={lang}
                   onPress={() => setAppLanguage(lang)}
-                  className={`flex-1 items-center rounded-md border py-2.5 ${
+                  className={`min-h-[52px] flex-1 items-center justify-center rounded-md border py-3 ${
                     active ? 'border-primary-600 bg-primary-50 dark:bg-primary-950' : 'border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-900'
                   }`}
                 >
                   <Text
-                    className={`font-sans text-sm font-medium ${
+                    className={`font-sans text-base font-medium ${
                       active ? 'text-primary-600 dark:text-primary-400' : 'text-gray-600 dark:text-gray-400'
                     }`}
                   >
@@ -119,10 +120,8 @@ export default function ShopSetupScreen() {
               );
             })}
           </View>
-          <Text className="font-sans mt-1.5 text-xs text-gray-400 dark:text-gray-500">{t('shopSetup.languageHint')}</Text>
+          <Text className="font-sans mt-1.5 text-sm text-gray-400 dark:text-gray-500">{t('shopSetup.languageHint')}</Text>
         </View>
-
-        <ImagePickerField label={t('shopSetup.shopLogo')} uri={logoUri} onChange={setLogoUri} />
 
         <InputField
           label={t('shopSetup.shopName')}
@@ -142,22 +141,40 @@ export default function ShopSetupScreen() {
           required
         />
 
-        <InputField
-          label={t('shopSetup.address')}
-          value={address}
-          onChangeText={setAddress}
-          placeholder={t('shopSetup.addressPlaceholder')}
-        />
+        {/* Progressive disclosure: only the two fields above are required to
+            get into the app. Everything else — logo, address, phone — is an
+            optional expansion the user opts into, not a gate they must clear. */}
+        {showMoreDetails ? (
+          <View className="mb-2">
+            <ImagePickerField label={t('shopSetup.shopLogo')} uri={logoUri} onChange={setLogoUri} />
 
-        <InputField
-          label={t('shopSetup.phone')}
-          value={phone}
-          onChangeText={setPhone}
-          placeholder={t('shopSetup.phonePlaceholder')}
-          keyboardType="phone-pad"
-        />
+            <InputField
+              label={t('shopSetup.address')}
+              value={address}
+              onChangeText={setAddress}
+              placeholder={t('shopSetup.addressPlaceholder')}
+            />
 
-        <Button title={t('shopSetup.continue')} onPress={handleSave} loading={loading} />
+            <InputField
+              label={t('shopSetup.phone')}
+              value={phone}
+              onChangeText={setPhone}
+              placeholder={t('shopSetup.phonePlaceholder')}
+              keyboardType="phone-pad"
+            />
+          </View>
+        ) : (
+          <Pressable onPress={() => setShowMoreDetails(true)} className="mb-6 py-2">
+            <Text className="text-base font-semibold text-primary-600 dark:text-primary-400">
+              {t('shopSetup.addMoreDetails')}
+            </Text>
+            <Text className="font-sans mt-1 text-sm text-gray-500 dark:text-gray-400">
+              {t('shopSetup.addMoreDetailsHint')}
+            </Text>
+          </Pressable>
+        )}
+
+        <Button title={t('shopSetup.continue')} size="lg" onPress={handleSave} loading={loading} />
       </ScrollView>
     </KeyboardAvoidingView>
   );

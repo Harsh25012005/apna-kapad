@@ -7,7 +7,7 @@ import { Button, GoogleIcon, InputField, useToast } from '../../components/ui';
 import { useAuth } from '../../context/AuthContext';
 import type { AuthScreenProps } from '../../navigation/types';
 
-type SignupErrors = { email?: string; password?: string; confirmPassword?: string };
+type SignupErrors = { email?: string; password?: string };
 
 export default function SignupScreen({ navigation }: AuthScreenProps<'Signup'>) {
   const { signUpWithEmail, signInWithGoogle } = useAuth();
@@ -17,7 +17,6 @@ export default function SignupScreen({ navigation }: AuthScreenProps<'Signup'>) 
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
   const [errors, setErrors] = useState<SignupErrors>({});
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
@@ -27,7 +26,6 @@ export default function SignupScreen({ navigation }: AuthScreenProps<'Signup'>) 
     if (!email.trim()) next.email = t('signup.errorEmailRequired');
     if (!password) next.password = t('signup.errorPasswordRequired');
     else if (password.length < 6) next.password = t('signup.errorPasswordLength');
-    if (confirmPassword !== password) next.confirmPassword = t('signup.errorPasswordMismatch');
     setErrors(next);
     return Object.keys(next).length === 0;
   };
@@ -94,18 +92,10 @@ export default function SignupScreen({ navigation }: AuthScreenProps<'Signup'>) 
             placeholder="••••••••"
             secureTextEntry
             error={errors.password}
+            helperText={errors.password ? undefined : t('signup.passwordHint')}
           />
 
-          <InputField
-            label={t('signup.confirmPassword')}
-            value={confirmPassword}
-            onChangeText={setConfirmPassword}
-            placeholder="••••••••"
-            secureTextEntry
-            error={errors.confirmPassword}
-          />
-
-          <Button title={t('signup.signUp')} onPress={handleSignup} loading={loading} />
+          <Button title={t('signup.signUp')} size="lg" onPress={handleSignup} loading={loading} />
 
           <View className="my-6 flex-row items-center">
             <View className="h-px flex-1 bg-gray-200 dark:bg-gray-800" />
@@ -116,15 +106,16 @@ export default function SignupScreen({ navigation }: AuthScreenProps<'Signup'>) 
           <Button
             title={t('signup.continueWithGoogle')}
             variant="google"
+            size="lg"
             onPress={handleGoogle}
             loading={googleLoading}
             icon={<GoogleIcon size={20} />}
           />
 
           <View className="mt-8 flex-row items-center justify-center gap-1">
-            <Text className="font-sans text-sm text-gray-500 dark:text-gray-400">{t('signup.haveAccount')}</Text>
-            <Pressable onPress={() => navigation.navigate('Login')}>
-              <Text className="text-sm font-semibold text-primary-600">{t('signup.signIn')}</Text>
+            <Text className="font-sans text-base text-gray-500 dark:text-gray-400">{t('signup.haveAccount')}</Text>
+            <Pressable onPress={() => navigation.navigate('Login')} hitSlop={10} className="min-h-[44px] justify-center">
+              <Text className="text-base font-semibold text-primary-600">{t('signup.signIn')}</Text>
             </Pressable>
           </View>
         </View>

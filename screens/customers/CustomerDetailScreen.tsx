@@ -39,8 +39,9 @@ export default function CustomerDetailScreen({
       ]);
 
       if (!customerData) {
-        // Client no longer exists (e.g. deleted elsewhere) — just leave, no
-        // need to surface a technical error for something the user can't act on.
+        // Client no longer exists (e.g. deleted elsewhere) — leave, but say
+        // why instead of silently bouncing back with no explanation.
+        showToast(t('detail.loadError'), 'error');
         navigation.goBack();
         return;
       }
@@ -66,11 +67,12 @@ export default function CustomerDetailScreen({
         setMeasurements([]);
       }
     } catch {
+      showToast(t('detail.loadError'), 'error');
       navigation.goBack();
     } finally {
       setLoading(false);
     }
-  }, [customerId, navigation, shop.id]);
+  }, [customerId, navigation, shop.id, showToast, t]);
 
   useFocusEffect(
     useCallback(() => {

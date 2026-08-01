@@ -43,6 +43,7 @@ export default function OrderDetailScreen({ navigation, route }: AppScreenProps<
    * source the payment figures from it instead.
    */
   const [billAmounts, setBillAmounts] = useState<{ total: number; paid: number } | null>(null);
+  const [garmentType, setGarmentType] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -53,21 +54,24 @@ export default function OrderDetailScreen({ navigation, route }: AppScreenProps<
       // detail page look like it "wouldn't open" right after creating one.
       const order = await ordersRepo.get(orderId);
       if (!order) {
-        // Order no longer exists (e.g. deleted elsewhere) — just leave, no
-        // need to surface a technical error for something the user can't act on.
+        // Order no longer exists (e.g. deleted elsewhere) — leave, but say
+        // why instead of silently bouncing back with no explanation.
+        showToast(t('detail.loadOrderFailed'), 'error');
         navigation.goBack();
         return;
       }
 
-      const [customer, staffMember] = await Promise.all([
+      const [customer, staffMember, orderItems] = await Promise.all([
         customersRepo.get(order.customer_id),
         order.assigned_staff_id ? staffRepo.get(order.assigned_staff_id) : Promise.resolve(null),
+        ordersRepo.itemsForOrder(orderId),
       ]);
       setOrder({
         ...order,
         customers: customer ? { name: customer.name, phone: customer.phone } : null,
         staff: staffMember ? { name: staffMember.name } : null,
       });
+      setGarmentType(orderItems[0]?.garment_type ?? null);
 
       const [shopBills, shopPayments] = await Promise.all([
         billsRepo.list(shop.id),
@@ -85,11 +89,12 @@ export default function OrderDetailScreen({ navigation, route }: AppScreenProps<
           : null
       );
     } catch {
+      showToast(t('detail.loadOrderFailed'), 'error');
       navigation.goBack();
     } finally {
       setLoading(false);
     }
-  }, [orderId, navigation, shop.id]);
+  }, [orderId, navigation, shop.id, showToast, t]);
 
   useFocusEffect(
     useCallback(() => {
@@ -281,7 +286,7 @@ export default function OrderDetailScreen({ navigation, route }: AppScreenProps<
             {order.cloth_count != null ? (
               <View className="flex-row items-center justify-between">
                 <Text className="font-sans text-sm text-gray-500 dark:text-gray-400">
-                  {clothPieceLabel(undefined)}
+                  {clothPieceLabel(garmentType)}
                 </Text>
                 <Text className="font-sans text-sm font-semibold text-[#101828] dark:text-gray-50">{order.cloth_count}</Text>
               </View>

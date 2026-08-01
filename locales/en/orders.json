@@ -1,10 +1,32 @@
 {
   "form": {
     "title": "New Order",
+    "stepOf": "Step {{current}} of {{total}}",
+    "stepTitles": {
+      "whoWhat": "Who & What",
+      "photos": "Measurements & Photos",
+      "delivery": "When's it due?",
+      "payment": "Payment"
+    },
+    "next": "Next",
+    "back": "Back",
+    "skipStep": "Skip this step",
+    "skipPayment": "Skip — I'll collect payment later",
+    "urgentQuestion": "Is this urgent?",
+    "measurementsOnFile": "This client has measurements on file.",
+    "noMeasurementsOnFile": "No measurements saved for this client yet.",
+    "viewEditMeasurements": "View / Edit Measurements",
+    "addMeasurementsNow": "+ Add Measurements Now",
+    "createOrderFinal": "Create Order",
+    "orderCreatedWithPayment": "Order #{{number}} created for {{customer}}. {{paid}} of {{total}} collected — {{due}} still due.",
+    "orderCreatedFullyPaid": "Order #{{number}} created for {{customer}}. Fully paid — {{total}} collected.",
+    "orderCreatedNoPayment": "Order #{{number}} created for {{customer}}.",
     "customer": "Customer",
     "selectCustomer": "Select customer",
     "searchClientPlaceholder": "Search by client name",
     "addClient": "+ Add Client",
+    "noClientsTitle": "No clients yet",
+    "noClientsDescription": "Add a client before creating an order",
     "clothCount": "Number of Cloth Pieces",
     "clothCountPlaceholder": "e.g. 2",
     "designPhotos": "Design Photos",
@@ -94,7 +116,7 @@
     "orderUpdateFailed": "Could not update order",
     "loading": "Loading order...",
     "loadError": "Could not load order",
-    "billingNotice": "Total, paid amount, and payment mode are managed from this order's bill once created — use \"Add Payment / View Bill\" on the order detail screen to record payments."
+    "billingNotice": "Total, paid amount, and payment mode are managed from this order's bill once created — find it under Billing to record payments."
   },
   "detail": {
     "pantPieces": "Pant pieces",
@@ -127,6 +149,7 @@
     "paidAmount": "Paid Amount",
     "balanceDue": "Balance Due",
     "paymentMode": "Payment Mode",
+    "viewBill": "View Bill / Record Payment",
     "markComplete": "Mark as Complete",
     "orderDelivered": "Order Delivered",
     "deleteOrder": "Delete Order",

@@ -40,7 +40,9 @@ const DARK_SPINNER_OVERRIDES: Partial<Record<ButtonVariant, string>> = {
 };
 
 const SIZE_STYLES: Record<ButtonSize, { container: string; text: string }> = {
-  sm: { container: 'h-10 px-4', text: 'text-sm' },
+  // 48dp floor — the old h-10 (40px) sat under the minimum comfortable tap
+  // target for a busy-counter, one-handed user.
+  sm: { container: 'h-12 px-4', text: 'text-base' },
   md: { container: 'h-[52px] px-5', text: 'text-base' },
   lg: { container: 'h-14 px-6', text: 'text-lg' },
 };

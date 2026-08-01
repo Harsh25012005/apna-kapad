@@ -114,6 +114,22 @@ const TAB_ROOT_SCREENS: Record<string, string> = {
   SettingsTab: 'SettingsHome',
 };
 
+/**
+ * Which quick-add screens are registered inside which tab's own stack (see
+ * SharedOrderRoutes in navigation/types.ts). When the screen the user wants
+ * already lives in the tab they're currently on, we push it onto that same
+ * stack instead of switching tabs — so "Update"/"Save"/back returns them to
+ * exactly the screen they tapped Add from, instead of stranding it on a
+ * different tab's stack (the same class of bug fixed for the in-flow
+ * "Add Client" escape hatches in OrderForm/BillForm).
+ */
+const LOCAL_SCREEN_AVAILABILITY: Partial<Record<keyof MainTabParamList, string[]>> = {
+  DashboardTab: ['OrderForm', 'BillForm'],
+  CustomersTab: ['OrderForm', 'BillForm', 'CustomerForm'],
+  OrdersTab: ['OrderForm', 'BillForm'],
+  SettingsTab: ['StaffForm'],
+};
+
 const ACTIVE = '#2563EB';
 const INACTIVE = '#8A8A8A';
 const FAB_SIZE = 54;
@@ -219,6 +235,21 @@ export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
       screen,
     });
 
+  /**
+   * Prefers pushing the requested form onto the CURRENT tab's own stack
+   * (preserving whatever screen the user was already on underneath) and only
+   * falls back to switching tabs when that screen genuinely isn't reachable
+   * from where the user is right now (e.g. "Add Order" while on Settings).
+   */
+  const openQuickAction = (tab: keyof MainTabParamList, screen: string) => {
+    const currentTab = state.routes[state.index]?.name as keyof MainTabParamList | undefined;
+    if (currentTab && LOCAL_SCREEN_AVAILABILITY[currentTab]?.includes(screen)) {
+      jumpTo(currentTab, screen);
+      return;
+    }
+    jumpTo(tab, screen);
+  };
+
   return (
     <View pointerEvents="box-none" style={styles.wrapper}>
       <QuickAddMenu
@@ -237,7 +268,7 @@ export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
             if (tourStep) return;
             setIsAddMenuOpen(false);
             haptics.tap();
-            jumpTo(a.tab, a.screen);
+            openQuickAction(a.tab, a.screen);
           },
         }))}
       />
@@ -342,8 +373,16 @@ export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
               });
               if (!event.defaultPrevented) {
                 haptics.tap();
+                // Re-tapping the tab you're already on jumps back to its
+                // root screen (standard "tap to go home" convention).
+                // Switching TO a different tab preserves whatever screen was
+                // last open there instead of discarding it — a shop owner
+                // who steps deep into Customers, checks Dashboard, then taps
+                // Clients again should land back where they left off, not
+                // get bounced to the Customer List every time.
+                const alreadyFocused = state.index === routeIndex;
                 const rootScreen = TAB_ROOT_SCREENS[route.name];
-                if (rootScreen) {
+                if (alreadyFocused && rootScreen) {
                   (navigation as any).navigate(route.name, {
                     screen: rootScreen,
                   });

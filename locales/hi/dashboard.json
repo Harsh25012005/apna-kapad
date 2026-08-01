@@ -24,8 +24,9 @@
   "loading": "डैशबोर्ड लोड हो रहा है...",
   "greeting": "नमस्ते, {{name}}",
   "defaultUser": "यूज़र",
-  "todaysCollections": "आज की वसूली",
-  "collectionsAsOf": "वसूली — {{date}}",
+  "owedToday": {
+    "title": "आज बकाया"
+  },
   "order": "ऑर्डर",
   "client": "ग्राहक",
   "topClients": "प्रमुख ग्राहक",

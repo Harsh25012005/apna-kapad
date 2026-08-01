@@ -27,7 +27,11 @@ export const THEME_COLORS = {
     bgSunken: '#F4F6F9',
     borderDefault: '#E5E7EB',
     borderSubtle: '#F3F4F6',
-    primary: '#1D4ED8',
+    // Matches Tailwind's primary-600 (tailwind.config.js) — the same blue
+    // every button/link/badge uses via className — so icon `color` props
+    // (which can't take a className) land on the exact same hex instead of
+    // the slightly darker primary-700 this drifted to.
+    primary: '#2563EB',
     primaryTint: '#EFF6FF',
   },
   dark: {

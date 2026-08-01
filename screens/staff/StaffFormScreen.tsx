@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
-import { Button, Dropdown, Header, InputField, useToast } from '../../components/ui';
+import { Button, Header, InputField, RadioGroup, useToast } from '../../components/ui';
 import { staffRepo } from '../../lib/data/repository';
 import { useShop } from '../../context/AuthContext';
 import type { SettingsScreenProps } from '../../navigation/types';
@@ -112,13 +112,18 @@ export default function StaffFormScreen({ navigation, route }: SettingsScreenPro
             placeholder={t('form.phonePlaceholder')}
             keyboardType="phone-pad"
           />
-          <Dropdown<WageType>
-            label={t('form.wageTypeLabel')}
-            value={wageType}
-            onChange={setWageType}
-            options={WAGE_TYPES}
-            placeholder={t('form.wageTypePlaceholder')}
-          />
+          <View className="mb-4">
+            <Text className="mb-1.5 text-base font-semibold text-gray-600 dark:text-gray-400">
+              {t('form.wageTypeLabel')}
+            </Text>
+            <RadioGroup<WageType>
+              variant="cards"
+              direction="column"
+              value={wageType}
+              onChange={setWageType}
+              options={WAGE_TYPES}
+            />
+          </View>
           {wageType === 'per_piece' ? (
             <>
               <InputField
@@ -147,6 +152,7 @@ export default function StaffFormScreen({ navigation, route }: SettingsScreenPro
           )}
           <Button
             title={staffId ? t('form.updateStaff') : t('form.saveStaff')}
+            size="lg"
             onPress={handleSave}
             loading={loading}
           />

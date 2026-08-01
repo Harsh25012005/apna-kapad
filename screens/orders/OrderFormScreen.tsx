@@ -6,19 +6,23 @@ import {
   Button,
   DatePickerField,
   Dropdown,
+  EmptyState,
   Header,
   ImagePickerField,
   InputField,
   LoadingSpinner,
+  QuickAddCustomerSheet,
   RadioGroup,
   useToast,
 } from '../../components/ui';
 import { uploadImage } from '../../lib/storage';
 import { useShop } from '../../context/AuthContext';
+import { supabase } from '../../lib/supabase';
 import { customersRepo, ordersRepo, billsRepo, paymentsRepo } from '../../lib/data/repository';
+import { formatCurrency } from '../../lib/format';
 import { suggestDeliveryDate } from '../../lib/orderScheduling';
 import type { AppScreenProps } from '../../navigation/types';
-import type { OrderPriority } from '../../types';
+import type { Measurement, OrderPriority } from '../../types';
 
 type Option = { label: string; value: string };
 
@@ -87,8 +91,19 @@ export default function OrderFormScreen({ navigation, route }: AppScreenProps<'O
   const [loading, setLoading] = useState(false);
   const [loadingOrder, setLoadingOrder] = useState(isEditing);
 
+  // Creating an order is chunked into a 4-step wizard so a busy counter
+  // doesn't have to scroll through everything (garment, photos, delivery,
+  // payment) at once — editing an existing order stays the original single
+  // scroll, since that's a more deliberate, lower-frequency action.
+  const STEP_COUNT = 4;
+  const [step, setStep] = useState(0);
+  const [measurement, setMeasurement] = useState<Measurement | null | undefined>(undefined);
+  const [customersLoaded, setCustomersLoaded] = useState(false);
+  const [quickAddVisible, setQuickAddVisible] = useState(false);
+
   const clothCountNum = Math.max(0, Math.floor(Number(clothCount) || 0));
   const totalAmountNum = Math.max(0, Number(totalAmount) || 0);
+  const selectedCustomerName = customers.find((c) => c.value === customerId)?.label ?? '';
 
   const GARMENT_TYPE_LABELS: Record<GarmentType, string> = {
     shirt: t('form.garmentTypes.shirt'),
@@ -122,8 +137,9 @@ export default function OrderFormScreen({ navigation, route }: AppScreenProps<'O
           const [data, orderItems] = await Promise.all([ordersRepo.get(orderId), ordersRepo.itemsForOrder(orderId)]);
           if (!active) return;
           if (!data) {
-            // Order no longer exists (e.g. deleted elsewhere) — just leave,
-            // no need to surface a technical error for something the user can't act on.
+            // Order no longer exists (e.g. deleted elsewhere) — leave, but
+            // say why instead of silently bouncing back with no explanation.
+            showToast(t('form.loadError'), 'error');
             navigation.goBack();
             return;
           }
@@ -153,6 +169,7 @@ export default function OrderFormScreen({ navigation, route }: AppScreenProps<'O
           setBillBookNumber(data.bill_book_number ?? '');
           setTotalAmount(data.total_amount ? String(data.total_amount) : '');
         } catch {
+          showToast(t('form.loadError'), 'error');
           navigation.goBack();
         } finally {
           if (active) setLoadingOrder(false);
@@ -161,15 +178,54 @@ export default function OrderFormScreen({ navigation, route }: AppScreenProps<'O
       return () => {
         active = false;
       };
-    }, [orderId, navigation])
+    }, [orderId, navigation, showToast, t])
   );
 
-  useEffect(() => {
-    void (async () => {
-      const customerRows = await customersRepo.list(shop.id);
-      setCustomers(customerRows.map((c) => ({ label: c.name, value: c.id })));
-    })();
+  const loadCustomers = useCallback(async () => {
+    const customerRows = await customersRepo.list(shop.id);
+    setCustomers(customerRows.map((c) => ({ label: c.name, value: c.id })));
+    setCustomersLoaded(true);
   }, [shop.id]);
+
+  useFocusEffect(
+    useCallback(() => {
+      void loadCustomers();
+    }, [loadCustomers])
+  );
+
+  // Fetches the selected client's saved measurement (not just whether one
+  // exists), so step 2 can show the actual numbers inline instead of forcing
+  // a separate trip through Customer Detail to check them.
+  useEffect(() => {
+    if (!customerId) {
+      setMeasurement(undefined);
+      return;
+    }
+    let active = true;
+    void supabase
+      .from('measurements')
+      .select('*')
+      .eq('customer_id', customerId)
+      .order('updated_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (active) setMeasurement(data ?? null);
+      });
+    return () => {
+      active = false;
+    };
+  }, [customerId]);
+
+  const goNext = () => {
+    if (step === 0 && !customerId) {
+      setError(t('form.customerRequired'));
+      return;
+    }
+    setError('');
+    setStep((s) => Math.min(s + 1, STEP_COUNT - 1));
+  };
+  const goBack = () => setStep((s) => Math.max(s - 1, 0));
 
   /** Uploads any freshly-picked local photo URIs, leaving already-remote ones (edit mode) untouched. */
   const resolveDesignPhotoUrls = async (fileNamePrefix: string): Promise<string[]> => {
@@ -314,7 +370,36 @@ export default function OrderFormScreen({ navigation, route }: AppScreenProps<'O
         }
       }
 
-      showToast(t('form.orderCreated'), 'success');
+      // Order creation silently also writes a Bill (and a Payment, if any was
+      // collected) behind the scenes — say so plainly instead of a generic
+      // "order created" toast, so the user isn't left guessing where a bill
+      // came from later.
+      if (totalAmountNum > 0 && paidAmountNum > 0 && paidAmountNum >= totalAmountNum) {
+        showToast(
+          t('form.orderCreatedFullyPaid', {
+            number: orderNumber,
+            customer: selectedCustomerName,
+            total: formatCurrency(totalAmountNum),
+          }),
+          'success'
+        );
+      } else if (totalAmountNum > 0 && paidAmountNum > 0) {
+        showToast(
+          t('form.orderCreatedWithPayment', {
+            number: orderNumber,
+            customer: selectedCustomerName,
+            paid: formatCurrency(paidAmountNum),
+            total: formatCurrency(totalAmountNum),
+            due: formatCurrency(totalAmountNum - paidAmountNum),
+          }),
+          'success'
+        );
+      } else {
+        showToast(
+          t('form.orderCreatedNoPayment', { number: orderNumber, customer: selectedCustomerName }),
+          'success'
+        );
+      }
       navigation.goBack();
     } catch (err) {
       showToast(err instanceof Error ? err.message : t('form.orderCreateFailed'), 'error');
@@ -325,9 +410,193 @@ export default function OrderFormScreen({ navigation, route }: AppScreenProps<'O
 
   if (loadingOrder) return <LoadingSpinner fullScreen text={t('form.loading')} />;
 
+  // Editing keeps the original single-scroll layout — it's a deliberate,
+  // lower-frequency action where the current fields are already fine.
+  // Photo/payment sections still branch on isEditing exactly as before.
+  if (isEditing) {
+    return (
+      <>
+        <Header title={t('form.editTitle')} onBack={() => navigation.goBack()} />
+        <KeyboardAvoidingView
+          className="flex-1"
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+        >
+          <ScrollView
+            className="flex-1 bg-white dark:bg-gray-950"
+            contentContainerStyle={{ padding: 20, paddingBottom: 160 }}
+            keyboardShouldPersistTaps="handled"
+          >
+            <Dropdown
+              label={t('form.customer')}
+              value={customerId}
+              onChange={setCustomerId}
+              options={customers}
+              placeholder={t('form.selectCustomer')}
+              error={error}
+              required
+              searchable
+              searchPlaceholder={t('form.searchClientPlaceholder')}
+              onAddNew={() => setQuickAddVisible(true)}
+              addNewLabel={t('form.addClient')}
+            />
+
+            <Dropdown
+              label={t('form.garmentType')}
+              value={garmentType}
+              onChange={(v) => setGarmentType(v as GarmentType)}
+              options={GARMENT_TYPES.map((g) => ({ label: GARMENT_TYPE_LABELS[g], value: g }))}
+              placeholder={t('form.garmentTypePlaceholder')}
+              required
+            />
+
+            <InputField
+              label={t('form.clothCount')}
+              value={clothCount}
+              onChangeText={setClothCount}
+              placeholder={t('form.clothCountPlaceholder')}
+              keyboardType="numeric"
+            />
+
+            <InputField
+              label={t('form.itemNotes')}
+              value={notes}
+              onChangeText={setNotes}
+              placeholder={t('form.itemNotesPlaceholder')}
+            />
+
+            {garmentType === 'shirt' || garmentType === 'both' ? (
+              <View className="mb-4 w-full">
+                <Text className="mb-1.5 text-sm font-medium text-gray-700 dark:text-gray-300">
+                  {t('form.shirtPhotosCount', { count: shirtPhotoUris.length })}
+                </Text>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                  <View className="flex-row gap-3">
+                    {shirtPhotoUris.map((uri, index) => (
+                      <ImagePickerField
+                        key={index}
+                        label={t('form.piece', { number: index + 1 })}
+                        uri={uri}
+                        onChange={(newUri) =>
+                          setShirtPhotoUris((prev) => {
+                            const next = [...prev];
+                            next[index] = newUri;
+                            return next;
+                          })
+                        }
+                        aspect={[3, 4]}
+                        source="camera"
+                        size={photoSlotSize}
+                        onPermissionDenied={() => showToast(t('form.cameraPermissionDenied'), 'error')}
+                      />
+                    ))}
+                  </View>
+                </ScrollView>
+              </View>
+            ) : null}
+
+            {garmentType === 'pant' || garmentType === 'both' ? (
+              <View className="mb-4 w-full">
+                <Text className="mb-1.5 text-sm font-medium text-gray-700 dark:text-gray-300">
+                  {t('form.pantPhotosCount', { count: pantPhotoUris.length })}
+                </Text>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                  <View className="flex-row gap-3">
+                    {pantPhotoUris.map((uri, index) => (
+                      <ImagePickerField
+                        key={index}
+                        label={t('form.piece', { number: index + 1 })}
+                        uri={uri}
+                        onChange={(newUri) =>
+                          setPantPhotoUris((prev) => {
+                            const next = [...prev];
+                            next[index] = newUri;
+                            return next;
+                          })
+                        }
+                        aspect={[3, 4]}
+                        source="camera"
+                        size={photoSlotSize}
+                        onPermissionDenied={() => showToast(t('form.cameraPermissionDenied'), 'error')}
+                      />
+                    ))}
+                  </View>
+                </ScrollView>
+              </View>
+            ) : null}
+
+            <DatePickerField
+              label={t('form.deliveryDate')}
+              value={deliveryDate}
+              onChange={(d) => {
+                setDeliveryDate(d);
+                setDeliveryDateTouched(true);
+              }}
+              minimumDate={new Date()}
+            />
+
+            <View className="mb-4">
+              <Text className="mb-1.5 text-base font-medium text-gray-700 dark:text-gray-300">{t('form.priority')}</Text>
+              <RadioGroup<OrderPriority>
+                variant="cards"
+                value={priority}
+                onChange={setPriority}
+                direction="row"
+                options={[
+                  { label: t('form.priorityNormal'), value: 'normal' },
+                  { label: t('form.priorityUrgent'), value: 'urgent' },
+                ]}
+              />
+            </View>
+
+            <InputField
+              label={t('form.billBookNumber')}
+              value={billBookNumber}
+              onChangeText={setBillBookNumber}
+              placeholder={t('form.billBookPlaceholder')}
+            />
+
+            <Text className="font-sans mb-4 text-sm text-gray-500 dark:text-gray-400">{t('form.billingNotice')}</Text>
+
+            <Button title={t('form.updateOrder')} size="lg" onPress={handleSave} loading={loading} />
+          </ScrollView>
+        </KeyboardAvoidingView>
+
+        <QuickAddCustomerSheet
+          visible={quickAddVisible}
+          onClose={() => setQuickAddVisible(false)}
+          onCreated={(customer) => {
+            setQuickAddVisible(false);
+            setCustomers((prev) => [...prev, { label: customer.name, value: customer.id }].sort((a, b) => a.label.localeCompare(b.label)));
+            setCustomerId(customer.id);
+          }}
+        />
+      </>
+    );
+  }
+
+  // New order: 4-step wizard. Chunks "who/what, photos+measurements,
+  // delivery, payment" into separate screens with a visible step count,
+  // instead of one long scroll — steps 2-4 are all skippable.
+  const STEP_TITLE_KEYS = ['whoWhat', 'photos', 'delivery', 'payment'] as const;
+
   return (
     <>
-      <Header title={isEditing ? t('form.editTitle') : t('form.title')} onBack={() => navigation.goBack()} />
+      <Header title={t('form.title')} onBack={() => navigation.goBack()} />
+      <View className="border-b border-gray-100 bg-white px-5 pb-3 dark:border-gray-800 dark:bg-gray-950">
+        <Text className="mb-2 text-sm font-semibold text-primary-600 dark:text-primary-400">
+          {t('form.stepOf', { current: step + 1, total: STEP_COUNT })} · {t(`form.stepTitles.${STEP_TITLE_KEYS[step]}`)}
+        </Text>
+        <View className="flex-row gap-1.5">
+          {Array.from({ length: STEP_COUNT }).map((_, i) => (
+            <View
+              key={i}
+              className={`h-1.5 flex-1 rounded-full ${i <= step ? 'bg-primary-600' : 'bg-gray-200 dark:bg-gray-700'}`}
+            />
+          ))}
+        </View>
+      </View>
+
       <KeyboardAvoidingView
         className="flex-1"
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -338,144 +607,229 @@ export default function OrderFormScreen({ navigation, route }: AppScreenProps<'O
           contentContainerStyle={{ padding: 20, paddingBottom: 160 }}
           keyboardShouldPersistTaps="handled"
         >
-          <Dropdown
-            label={t('form.customer')}
-            value={customerId}
-            onChange={setCustomerId}
-            options={customers}
-            placeholder={t('form.selectCustomer')}
-            error={error}
-            required
-            searchable
-            searchPlaceholder={t('form.searchClientPlaceholder')}
-            onAddNew={() => navigation.navigate('CustomersTab' as any, { screen: 'CustomerForm' })}
-            addNewLabel={t('form.addClient')}
-          />
+          {step === 0 ? (
+            customersLoaded && customers.length === 0 ? (
+              <EmptyState
+                icon="user-plus"
+                title={t('form.noClientsTitle')}
+                description={t('form.noClientsDescription')}
+                actionLabel={t('form.addClient')}
+                onAction={() => setQuickAddVisible(true)}
+              />
+            ) : (
+              <>
+                <Dropdown
+                  label={t('form.customer')}
+                  value={customerId}
+                  onChange={setCustomerId}
+                  options={customers}
+                  placeholder={t('form.selectCustomer')}
+                  error={error}
+                  required
+                  searchable
+                  searchPlaceholder={t('form.searchClientPlaceholder')}
+                  onAddNew={() => setQuickAddVisible(true)}
+                  addNewLabel={t('form.addClient')}
+                />
 
-          <Dropdown
-            label={t('form.garmentType')}
-            value={garmentType}
-            onChange={(v) => setGarmentType(v as GarmentType)}
-            options={GARMENT_TYPES.map((g) => ({ label: GARMENT_TYPE_LABELS[g], value: g }))}
-            placeholder={t('form.garmentTypePlaceholder')}
-            required
-          />
+                <Dropdown
+                  label={t('form.garmentType')}
+                  value={garmentType}
+                  onChange={(v) => setGarmentType(v as GarmentType)}
+                  options={GARMENT_TYPES.map((g) => ({ label: GARMENT_TYPE_LABELS[g], value: g }))}
+                  placeholder={t('form.garmentTypePlaceholder')}
+                  required
+                />
 
-          <InputField
-            label={t('form.clothCount')}
-            value={clothCount}
-            onChangeText={setClothCount}
-            placeholder={t('form.clothCountPlaceholder')}
-            keyboardType="numeric"
-          />
+                <InputField
+                  label={t('form.clothCount')}
+                  value={clothCount}
+                  onChangeText={setClothCount}
+                  placeholder={t('form.clothCountPlaceholder')}
+                  keyboardType="numeric"
+                />
+              </>
+            )
+          ) : null}
 
-          <InputField
-            label={t('form.itemNotes')}
-            value={notes}
-            onChangeText={setNotes}
-            placeholder={t('form.itemNotesPlaceholder')}
-          />
-
-          {garmentType === 'shirt' || garmentType === 'both' ? (
-            <View className="mb-4 w-full">
-              <Text className="mb-1.5 text-sm font-medium text-gray-700 dark:text-gray-300">
-                {t('form.shirtPhotosCount', { count: shirtPhotoUris.length })}
-              </Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                <View className="flex-row gap-3">
-                  {shirtPhotoUris.map((uri, index) => (
-                    <ImagePickerField
-                      key={index}
-                      label={t('form.piece', { number: index + 1 })}
-                      uri={uri}
-                      onChange={(newUri) =>
-                        setShirtPhotoUris((prev) => {
-                          const next = [...prev];
-                          next[index] = newUri;
-                          return next;
-                        })
-                      }
-                      aspect={[3, 4]}
-                      source="camera"
-                      size={photoSlotSize}
-                      onPermissionDenied={() => showToast(t('form.cameraPermissionDenied'), 'error')}
-                    />
-                  ))}
+          {step === 1 ? (
+            <>
+              {customerId ? (
+                <View className="mb-5 rounded-md border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800">
+                  {measurement ? (
+                    <>
+                      <View className="mb-3 flex-row items-center justify-between">
+                        <Text className="text-base font-semibold text-gray-900 dark:text-gray-50">
+                          {t('form.measurementsOnFile')}
+                        </Text>
+                        <Text className="font-sans text-xs text-gray-500 dark:text-gray-400">
+                          {measurement.garment_type}
+                        </Text>
+                      </View>
+                      <View className="mb-3 flex-row flex-wrap gap-x-4 gap-y-2">
+                        {[
+                          { label: t('detail.measurementFields.chest'), value: measurement.chest },
+                          { label: t('detail.measurementFields.waist'), value: measurement.waist },
+                          { label: t('detail.measurementFields.shoulder'), value: measurement.shoulder },
+                          { label: t('detail.measurementFields.length'), value: measurement.length },
+                          { label: t('detail.measurementFields.sleeve'), value: measurement.sleeve },
+                        ]
+                          .filter((f) => f.value != null)
+                          .map((f) => (
+                            <View key={f.label} className="min-w-[70px]">
+                              <Text className="font-sans text-xs text-gray-500 dark:text-gray-400">{f.label}</Text>
+                              <Text className="text-base font-semibold text-gray-900 dark:text-gray-50">{f.value}"</Text>
+                            </View>
+                          ))}
+                      </View>
+                      <Button
+                        title={t('form.viewEditMeasurements')}
+                        variant="secondary"
+                        onPress={() =>
+                          navigation.navigate('CustomersTab' as any, {
+                            screen: 'MeasurementForm',
+                            params: { customerId, measurementId: measurement.id },
+                          })
+                        }
+                      />
+                    </>
+                  ) : (
+                    <>
+                      <Text className="mb-2 text-base font-medium text-gray-700 dark:text-gray-300">
+                        {t('form.noMeasurementsOnFile')}
+                      </Text>
+                      <Button
+                        title={t('form.addMeasurementsNow')}
+                        variant="secondary"
+                        onPress={() =>
+                          navigation.navigate('CustomersTab' as any, {
+                            screen: 'MeasurementForm',
+                            params: { customerId },
+                          })
+                        }
+                      />
+                    </>
+                  )}
                 </View>
-              </ScrollView>
-            </View>
-          ) : null}
+              ) : null}
 
-          {garmentType === 'pant' || garmentType === 'both' ? (
-            <View className="mb-4 w-full">
-              <Text className="mb-1.5 text-sm font-medium text-gray-700 dark:text-gray-300">
-                {t('form.pantPhotosCount', { count: pantPhotoUris.length })}
-              </Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                <View className="flex-row gap-3">
-                  {pantPhotoUris.map((uri, index) => (
-                    <ImagePickerField
-                      key={index}
-                      label={t('form.piece', { number: index + 1 })}
-                      uri={uri}
-                      onChange={(newUri) =>
-                        setPantPhotoUris((prev) => {
-                          const next = [...prev];
-                          next[index] = newUri;
-                          return next;
-                        })
-                      }
-                      aspect={[3, 4]}
-                      source="camera"
-                      size={photoSlotSize}
-                      onPermissionDenied={() => showToast(t('form.cameraPermissionDenied'), 'error')}
-                    />
-                  ))}
+              <InputField
+                label={t('form.itemNotes')}
+                value={notes}
+                onChangeText={setNotes}
+                placeholder={t('form.itemNotesPlaceholder')}
+              />
+
+              {garmentType === 'shirt' || garmentType === 'both' ? (
+                <View className="mb-4 w-full">
+                  <Text className="mb-1.5 text-base font-medium text-gray-700 dark:text-gray-300">
+                    {t('form.shirtPhotosCount', { count: shirtPhotoUris.length })}
+                  </Text>
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                    <View className="flex-row gap-3">
+                      {shirtPhotoUris.map((uri, index) => (
+                        <ImagePickerField
+                          key={index}
+                          label={t('form.piece', { number: index + 1 })}
+                          uri={uri}
+                          onChange={(newUri) =>
+                            setShirtPhotoUris((prev) => {
+                              const next = [...prev];
+                              next[index] = newUri;
+                              return next;
+                            })
+                          }
+                          aspect={[3, 4]}
+                          source="camera"
+                          size={photoSlotSize}
+                          onPermissionDenied={() => showToast(t('form.cameraPermissionDenied'), 'error')}
+                        />
+                      ))}
+                    </View>
+                  </ScrollView>
                 </View>
-              </ScrollView>
-            </View>
+              ) : null}
+
+              {garmentType === 'pant' || garmentType === 'both' ? (
+                <View className="mb-4 w-full">
+                  <Text className="mb-1.5 text-base font-medium text-gray-700 dark:text-gray-300">
+                    {t('form.pantPhotosCount', { count: pantPhotoUris.length })}
+                  </Text>
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                    <View className="flex-row gap-3">
+                      {pantPhotoUris.map((uri, index) => (
+                        <ImagePickerField
+                          key={index}
+                          label={t('form.piece', { number: index + 1 })}
+                          uri={uri}
+                          onChange={(newUri) =>
+                            setPantPhotoUris((prev) => {
+                              const next = [...prev];
+                              next[index] = newUri;
+                              return next;
+                            })
+                          }
+                          aspect={[3, 4]}
+                          source="camera"
+                          size={photoSlotSize}
+                          onPermissionDenied={() => showToast(t('form.cameraPermissionDenied'), 'error')}
+                        />
+                      ))}
+                    </View>
+                  </ScrollView>
+                </View>
+              ) : null}
+            </>
           ) : null}
 
-          <DatePickerField
-            label={t('form.deliveryDate')}
-            value={deliveryDate}
-            onChange={(d) => {
-              setDeliveryDate(d);
-              setDeliveryDateTouched(true);
-            }}
-            minimumDate={new Date()}
-          />
-          {!isEditing && !deliveryDateTouched && clothCountNum > 0 ? (
-            <Text className="font-sans -mt-3 mb-4 text-xs text-gray-400 dark:text-gray-500">{t('form.deliverySuggested')}</Text>
+          {step === 2 ? (
+            <>
+              <DatePickerField
+                label={t('form.deliveryDate')}
+                value={deliveryDate}
+                onChange={(d) => {
+                  setDeliveryDate(d);
+                  setDeliveryDateTouched(true);
+                }}
+                minimumDate={new Date()}
+              />
+              {!deliveryDateTouched && clothCountNum > 0 ? (
+                <Text className="font-sans -mt-3 mb-4 text-sm text-gray-400 dark:text-gray-500">
+                  {t('form.deliverySuggested')}
+                </Text>
+              ) : null}
+
+              <View className="mb-4">
+                <Text className="mb-1.5 text-base font-medium text-gray-700 dark:text-gray-300">
+                  {t('form.urgentQuestion')}
+                </Text>
+                <RadioGroup<OrderPriority>
+                  variant="cards"
+                  value={priority}
+                  onChange={setPriority}
+                  direction="row"
+                  options={[
+                    { label: t('form.priorityNormal'), value: 'normal' },
+                    { label: t('form.priorityUrgent'), value: 'urgent' },
+                  ]}
+                />
+              </View>
+
+              <InputField
+                label={t('form.billBookNumber')}
+                value={billBookNumber}
+                onChangeText={setBillBookNumber}
+                placeholder={t('form.billBookPlaceholder')}
+              />
+            </>
           ) : null}
 
-          <View className="mb-4">
-            <Text className="mb-1.5 text-sm font-medium text-gray-700 dark:text-gray-300">{t('form.priority')}</Text>
-            <RadioGroup<OrderPriority>
-              value={priority}
-              onChange={setPriority}
-              direction="row"
-              options={[
-                { label: t('form.priorityNormal'), value: 'normal' },
-                { label: t('form.priorityUrgent'), value: 'urgent' },
-              ]}
-            />
-          </View>
-
-          <InputField
-            label={t('form.billBookNumber')}
-            value={billBookNumber}
-            onChangeText={setBillBookNumber}
-            placeholder={t('form.billBookPlaceholder')}
-          />
-
-          {isEditing ? (
-            <Text className="font-sans mb-4 text-xs text-gray-500 dark:text-gray-400">{t('form.billingNotice')}</Text>
-          ) : (
+          {step === 3 ? (
             <>
               <View className="mb-4">
-                <Text className="mb-1.5 text-sm font-medium text-gray-700 dark:text-gray-300">{t('form.paymentMode')}</Text>
+                <Text className="mb-1.5 text-base font-medium text-gray-700 dark:text-gray-300">{t('form.paymentMode')}</Text>
                 <RadioGroup<string>
+                  variant="cards"
                   value={paymentMode}
                   onChange={setPaymentMode}
                   direction="row"
@@ -499,15 +853,53 @@ export default function OrderFormScreen({ navigation, route }: AppScreenProps<'O
                 keyboardType="numeric"
               />
             </>
-          )}
+          ) : null}
 
-          <Button
-            title={isEditing ? t('form.updateOrder') : t('form.createOrder')}
-            onPress={handleSave}
-            loading={loading}
-          />
+          <View className="mt-2 flex-row gap-3">
+            {step > 0 ? (
+              <Button
+                title={t('form.back')}
+                variant="outline"
+                size="lg"
+                fullWidth={false}
+                onPress={goBack}
+                className="flex-1"
+              />
+            ) : null}
+            {step < STEP_COUNT - 1 ? (
+              <Button title={t('form.next')} size="lg" fullWidth={false} onPress={goNext} className="flex-1" />
+            ) : (
+              <Button
+                title={t('form.createOrderFinal')}
+                size="lg"
+                fullWidth={false}
+                onPress={handleSave}
+                loading={loading}
+                className="flex-1"
+              />
+            )}
+          </View>
+
+          {step === 1 || step === 3 ? (
+            <Button
+              title={step === 3 ? t('form.skipPayment') : t('form.skipStep')}
+              variant="outline"
+              onPress={() => (step === 3 ? void handleSave() : setStep((s) => s + 1))}
+              className="mt-3"
+            />
+          ) : null}
         </ScrollView>
       </KeyboardAvoidingView>
+
+      <QuickAddCustomerSheet
+        visible={quickAddVisible}
+        onClose={() => setQuickAddVisible(false)}
+        onCreated={(customer) => {
+          setQuickAddVisible(false);
+          setCustomers((prev) => [...prev, { label: customer.name, value: customer.id }].sort((a, b) => a.label.localeCompare(b.label)));
+          setCustomerId(customer.id);
+        }}
+      />
     </>
   );
 }

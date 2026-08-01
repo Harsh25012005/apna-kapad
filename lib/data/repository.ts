@@ -187,6 +187,35 @@ export const staffRepo = {
     await enqueueOp('staff', id, 'update', { id, ...patch, updated_at });
     kickSync(shopId);
   },
+
+  /**
+   * Unassigns this staff member from any orders (the orders themselves stay),
+   * best-effort removes their work-entry/completion bookkeeping (not mirrored
+   * locally — same "read straight from Supabase" pattern as measurements),
+   * then removes the staff row itself.
+   */
+  async remove(id: string, shopId: string): Promise<void> {
+    const db = await getDb();
+
+    const assignedOrders = await db.getAllAsync<{ id: string }>(
+      'select id from orders where assigned_staff_id = ?',
+      [id]
+    );
+    for (const order of assignedOrders) {
+      await ordersRepo.update(order.id, shopId, { assigned_staff_id: null });
+    }
+
+    try {
+      await supabase.from('staff_work_entries').delete().eq('staff_id', id);
+      await supabase.from('staff_orders').delete().eq('staff_id', id);
+    } catch {
+      // Non-fatal — orphaned bookkeeping rows aren't worth blocking the delete over.
+    }
+
+    await db.runAsync('delete from staff where id = ?', [id]);
+    await enqueueOp('staff', id, 'delete', { id });
+    kickSync(shopId);
+  },
 };
 
 // ---------------------------------------------------------------------------

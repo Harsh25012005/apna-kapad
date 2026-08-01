@@ -89,6 +89,7 @@ export default function ShopEditScreen({ navigation }: SettingsScreenProps<'Shop
           onChangeText={setShopName}
           placeholder={t('shopEdit.shopNamePlaceholder')}
           error={errors.shopName}
+          required
         />
 
         <InputField
@@ -97,6 +98,7 @@ export default function ShopEditScreen({ navigation }: SettingsScreenProps<'Shop
           onChangeText={setOwnerName}
           placeholder={t('shopEdit.ownerNamePlaceholder')}
           error={errors.ownerName}
+          required
         />
 
         <InputField

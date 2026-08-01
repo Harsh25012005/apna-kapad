@@ -4,8 +4,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { FontAwesome5, Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
-import { EmptyState, LoadingSpinner, useToast } from '../../components/ui';
-import { ordersRepo, customersRepo, billsRepo, paymentsRepo } from '../../lib/data/repository';
+import { Badge, Button, EmptyState, LoadingSpinner, useToast } from '../../components/ui';
+import { ordersRepo, customersRepo, billsRepo, paymentsRepo, staffRepo } from '../../lib/data/repository';
 import { formatCurrency } from '../../lib/format';
 import { haptics } from '../../lib/haptics';
 import { hasSeenProductTour, markProductTourSeen } from '../../lib/productTour';
@@ -21,19 +21,32 @@ type ClientItem = {
   phone: string | null;
 };
 
+type RecentPaymentItem = {
+  id: string;
+  customerName: string;
+  amount: number;
+  mode: string;
+  date: string;
+};
+
+type ChecklistState = {
+  hasCustomer: boolean;
+  hasOrder: boolean;
+  hasStaff: boolean;
+  hasBill: boolean;
+};
+
+const CHECKLIST_STEPS = ['addedFirstCustomer', 'createdFirstOrder', 'addedFirstStaff', 'sentFirstBill'] as const;
+
 type Stats = {
   todaysOrders: OrderListItem[];
   recentOrders: OrderListItem[];
-  dueSoonOrders: OrderListItem[];
+  overdueOrders: OrderListItem[];
   topClients: ClientItem[];
-  pendingCount: number;
-  todaysCollections: number;
-  /** Set only when todaysCollections falls back to the most recent day with
-   *  any payments, so the card can show a "as of <date>" label instead of
-   *  silently displaying a stale number as if it were today's. */
-  collectionsDate: string | null;
-  monthlySales: number;
+  recentPayments: RecentPaymentItem[];
+  checklist: ChecklistState;
   totalPendingBalance: number;
+  todaysOwed: number;
   unpaidBillsCount: number;
 };
 
@@ -58,11 +71,6 @@ function todayRange() {
   ).padStart(2, '0')}`;
 
   return { start: start.toISOString(), end: end.toISOString(), localDate };
-}
-
-function monthStart(): string {
-  const now = new Date();
-  return new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
 }
 
 export default function DashboardScreen({ navigation }: DashboardScreenProps<'Dashboard'>) {
@@ -95,38 +103,29 @@ export default function DashboardScreen({ navigation }: DashboardScreenProps<'Da
 
   const load = useCallback(async () => {
     try {
-      const { start, end, localDate } = todayRange();
-      const weekAhead = new Date();
-      weekAhead.setDate(weekAhead.getDate() + 7);
-      const weekAheadDate = weekAhead.toISOString().slice(0, 10);
-      const monthStartIso = monthStart();
+      const { localDate } = todayRange();
 
       // Everything reads from the local-first mirror (same one every
       // create/order/payment flow writes through) rather than Supabase
       // directly, so the dashboard reflects the real current data instead of
       // racing the background sync.
-      const [allOrders, customers, allBills, allPayments] = await Promise.all([
+      const [allOrders, customers, allBills, allPayments, staffList] = await Promise.all([
         ordersRepo.listWithCustomer(shop.id),
         customersRepo.list(shop.id),
         billsRepo.list(shop.id),
         paymentsRepo.listForShop(shop.id),
+        staffRepo.list(shop.id),
       ]);
       const customerById = new Map(customers.map((c) => [c.id, c]));
+      const billById = new Map(allBills.map((b) => [b.id, b]));
 
       const todaysOrders = allOrders.filter((o) => o.order_date === localDate);
       const recentOrders = [...allOrders]
         .sort((a, b) => (a.created_at < b.created_at ? 1 : -1))
         .slice(0, 6);
-      const dueSoonOrders = allOrders
-        .filter(
-          (o) =>
-            o.delivery_date != null &&
-            o.delivery_date <= weekAheadDate &&
-            o.status !== 'delivered'
-        )
-        .sort((a, b) => (a.delivery_date! < b.delivery_date! ? -1 : 1))
-        .slice(0, 6);
-      const pendingCount = allOrders.filter((o) => o.status !== 'delivered').length;
+      const overdueOrders = allOrders.filter(
+        (o) => o.delivery_date != null && o.delivery_date < localDate && o.status !== 'delivered'
+      );
 
       // "Top clients" = best customers, ranked by how many orders they've
       // placed (ties broken by total value billed to them). Customers with no
@@ -156,36 +155,52 @@ export default function DashboardScreen({ navigation }: DashboardScreenProps<'Da
         return sum + Math.max(Number(bill.total_amount ?? 0) - paid, 0);
       }, 0);
       const unpaidBillsCount = allBills.filter((b) => b.payment_status !== 'paid').length;
-      const monthlySales = allBills
-        .filter((b) => b.created_at >= monthStartIso)
-        .reduce((s, b) => s + Number(b.total_amount ?? 0), 0);
 
-      let todaysCollections = allPayments
-        .filter((p) => p.payment_date >= start && p.payment_date <= end)
-        .reduce((s, p) => s + Number(p.amount_paid), 0);
-      let collectionsDate: string | null = null;
+      // Balance still pending specifically on bills tied to today's orders —
+      // a same-day figure to sit next to "Due Today", instead of the
+      // all-time outstanding total (which doesn't answer "what's owed today").
+      const todaysOrderIds = new Set(todaysOrders.map((o) => o.id));
+      const todaysOwed = allBills
+        .filter((b) => b.order_id && todaysOrderIds.has(b.order_id))
+        .reduce((sum, bill) => {
+          const paid = paymentsByBill.get(bill.id) ?? 0;
+          return sum + Math.max(Number(bill.total_amount ?? 0) - paid, 0);
+        }, 0);
 
-      // No payments today — fall back to the most recent day that had any,
-      // rather than showing a flat ₹0 on the main hero card every morning.
-      if (todaysCollections === 0 && allPayments.length > 0) {
-        const lastPayment = [...allPayments].sort((a, b) => (a.payment_date < b.payment_date ? 1 : -1))[0];
-        const lastDate = lastPayment.payment_date.slice(0, 10);
-        todaysCollections = allPayments
-          .filter((p) => p.payment_date.slice(0, 10) === lastDate)
-          .reduce((s, p) => s + Number(p.amount_paid), 0);
-        collectionsDate = lastDate;
-      }
+      // Latest payments received, regardless of which bill/order they're
+      // tied to — a fast "money coming in" pulse distinct from Transaction
+      // History below (which is orders, not payments).
+      const recentPayments: RecentPaymentItem[] = [...allPayments]
+        .sort((a, b) => (a.payment_date < b.payment_date ? 1 : -1))
+        .slice(0, 5)
+        .map((p) => {
+          const bill = billById.get(p.bill_id);
+          const customer = bill?.customer_id ? customerById.get(bill.customer_id) : null;
+          return {
+            id: p.id,
+            customerName: customer?.name ?? t('customer'),
+            amount: Number(p.amount_paid ?? 0),
+            mode: p.payment_mode ?? '',
+            date: p.payment_date,
+          };
+        });
+
+      const checklist: ChecklistState = {
+        hasCustomer: customers.length > 0,
+        hasOrder: allOrders.length > 0,
+        hasStaff: staffList.length > 0,
+        hasBill: allBills.length > 0,
+      };
 
       setStats({
         todaysOrders,
         recentOrders,
-        dueSoonOrders,
+        overdueOrders,
         topClients,
-        pendingCount,
-        todaysCollections,
-        collectionsDate,
-        monthlySales,
+        recentPayments,
+        checklist,
         totalPendingBalance,
+        todaysOwed,
         unpaidBillsCount,
       });
     } catch (err) {
@@ -216,101 +231,160 @@ export default function DashboardScreen({ navigation }: DashboardScreenProps<'Da
         <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor="#1D4ED8" />
       }
     >
-      {/* Topbar Header */}
+      {/* Topbar Header — every icon carries a visible text label, not just a
+          glyph, since a lone bell/calendar icon isn't self-explanatory. */}
       <View className="flex-row items-center justify-between px-5 py-3">
         <Text className="text-[18px] font-semibold text-[#101828] dark:text-gray-50">
           {t('greeting', { name: shop.shop_name || t('defaultUser') })}
         </Text>
-        <View className="flex-row items-center">
+        <View className="flex-row items-center gap-1">
           <Pressable
             onPress={() => navigation.navigate('Calendar')}
-            className="h-10 w-10 items-center justify-center rounded-full active:bg-gray-100 dark:active:bg-gray-800"
+            className="min-h-[48px] flex-row items-center gap-1.5 rounded-full px-2.5 active:bg-gray-100 dark:active:bg-gray-800"
           >
-            <Ionicons name="calendar-outline" size={22} color={scheme === 'dark' ? '#F3F4F6' : '#101828'} />
+            <Ionicons name="calendar-outline" size={20} color={scheme === 'dark' ? '#F3F4F6' : '#101828'} />
+            <Text className="font-sans text-sm font-medium text-[#101828] dark:text-gray-50">{t('calendar')}</Text>
           </Pressable>
           <Pressable
             onPress={() => navigation.navigate('Notifications')}
-            className="h-10 w-10 items-center justify-center rounded-full active:bg-gray-100 dark:active:bg-gray-800"
+            className="min-h-[48px] flex-row items-center gap-1.5 rounded-full px-2.5 active:bg-gray-100 dark:active:bg-gray-800"
           >
-            <Ionicons name="notifications-outline" size={22} color={scheme === 'dark' ? '#F3F4F6' : '#101828'} />
+            <Ionicons name="notifications-outline" size={20} color={scheme === 'dark' ? '#F3F4F6' : '#101828'} />
+            <Text className="font-sans text-sm font-medium text-[#101828] dark:text-gray-50">{t('alerts')}</Text>
           </Pressable>
         </View>
       </View>
 
-      {/* Balance Hero Card */}
-      <View className="mx-5 mb-4 rounded-lg bg-[#101828] p-4 shadow-md dark:border dark:border-gray-700">
-        <View className="flex-row items-start justify-between">
-          <View className="gap-1">
-            <Text className="font-sans text-[14px] font-medium text-[#98A2B3]">
-              {stats.collectionsDate
-                ? t('collectionsAsOf', {
-                    date: new Date(stats.collectionsDate).toLocaleDateString('en-IN', {
-                      day: '2-digit',
-                      month: 'short',
-                    }),
-                  })
-                : t('todaysCollections')}
-            </Text>
-            <Text className="text-[36px] font-medium text-white tracking-tight">
-              {formatCurrency(stats.todaysCollections)}
-            </Text>
-          </View>
-          <View className="h-12 w-12 items-center justify-center rounded-lg bg-[#1D4ED8]/20">
-            <FontAwesome5 name="rupee-sign" size={20} color="#1D4ED8" />
-          </View>
-        </View>
-
-        {/* Action Buttons */}
-        <View className="mt-4 flex-row gap-3">
-          <Pressable
-            onPress={() => {
-              haptics.tap();
-              navigation.navigate('OrderForm', {});
-            }}
-            className="flex-1 flex-row items-center justify-center gap-1.5 rounded-md bg-[#1D4ED8] py-3 active:bg-blue-700"
-          >
-            <Ionicons name="add" size={20} color="#FFFFFF" />
-            <Text className="font-sans text-[16px] font-medium text-white">{t('order')}</Text>
-          </Pressable>
-
-          <Pressable
-            onPress={() => {
-              haptics.tap();
-              navigation.navigate('CustomersTab' as any, { screen: 'CustomerForm' });
-            }}
-            className="flex-1 flex-row items-center justify-center gap-1.5 rounded-md bg-[#1D2939] py-3 active:bg-gray-800 border border-white/15"
-          >
-            <Ionicons name="add" size={20} color="#FFFFFF" />
-            <Text className="font-sans text-[16px] font-medium text-white">{t('client')}</Text>
-          </Pressable>
-        </View>
-      </View>
-
-      {/* Pending Payments */}
-      {stats.unpaidBillsCount > 0 ? (
+      {/* Tappable search field — opens the dedicated Search screen rather
+          than filtering in place, so it works the same way from anywhere
+          in the app the pattern gets reused. */}
+      <View className="mb-4 px-5">
         <Pressable
-          onPress={() => navigation.navigate('SettingsTab' as any, { screen: 'Billing' })}
-          className="mx-5 mb-4 flex-row items-center justify-between rounded-lg border border-amber-300 bg-amber-50 p-4 active:bg-amber-100 shadow-sm dark:border-amber-800 dark:bg-amber-950 dark:active:bg-amber-900"
+          onPress={() => navigation.navigate('Search')}
+          className="h-[48px] flex-row items-center gap-3 rounded-md border border-gray-200 bg-gray-50 px-4 dark:border-gray-700 dark:bg-gray-800"
         >
-          <View className="flex-1 flex-row items-center gap-3">
-            <View className="h-11 w-11 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900">
-              <FontAwesome5 name="exclamation-circle" size={16} color={amberIconColor} />
-            </View>
-            <View className="flex-1">
-              <Text className="text-[14px] font-semibold text-[#101828] dark:text-gray-50">{t('pendingPayments.title')}</Text>
-              <Text className="font-sans text-[12px] font-medium text-[#B45309] dark:text-amber-300">
-                {t('pendingPayments.subtitle', { count: stats.unpaidBillsCount })}
+          <Ionicons name="search-outline" size={18} color={scheme === 'dark' ? '#9CA3AF' : '#6B7280'} />
+          <Text className="font-sans text-[15px] text-gray-400 dark:text-gray-500">{t('searchPlaceholder')}</Text>
+        </Pressable>
+      </View>
+
+      {/* Get Started checklist — only shown until the shop has done all
+          four things at least once; disappears permanently after that
+          instead of taking up permanent space for an experienced user. */}
+      {(() => {
+        const doneFlags = [
+          stats.checklist.hasCustomer,
+          stats.checklist.hasOrder,
+          stats.checklist.hasStaff,
+          stats.checklist.hasBill,
+        ];
+        const doneCount = doneFlags.filter(Boolean).length;
+        if (doneCount === CHECKLIST_STEPS.length) return null;
+        const nextStepIndex = doneFlags.findIndex((done) => !done);
+        const nextStepKey = CHECKLIST_STEPS[nextStepIndex];
+        const nextStepAction = () => {
+          switch (nextStepKey) {
+            case 'addedFirstCustomer':
+              navigation.navigate('CustomersTab' as any, { screen: 'CustomerForm' });
+              break;
+            case 'createdFirstOrder':
+              navigation.navigate('OrderForm', {});
+              break;
+            case 'addedFirstStaff':
+              navigation.navigate('SettingsTab' as any, { screen: 'StaffForm' });
+              break;
+            case 'sentFirstBill':
+              navigation.navigate('BillForm', {});
+              break;
+          }
+        };
+        return (
+          <View className="mx-5 mb-4 rounded-lg border border-primary-200 bg-primary-50 p-4 dark:border-primary-800 dark:bg-primary-950">
+            <View className="mb-1 flex-row items-center justify-between">
+              <Text className="text-base font-semibold text-[#101828] dark:text-gray-50">{t('checklist.title')}</Text>
+              <Text className="font-sans text-xs font-medium text-primary-700 dark:text-primary-300">
+                {t('checklist.progress', { done: doneCount, total: CHECKLIST_STEPS.length })}
               </Text>
             </View>
-          </View>
-          <View className="items-end">
-            <Text className="text-[16px] font-semibold text-[#B45309] dark:text-amber-300">
-              {formatCurrency(stats.totalPendingBalance)}
+            <View className="mb-3 h-1.5 flex-row gap-1">
+              {CHECKLIST_STEPS.map((step, i) => (
+                <View
+                  key={step}
+                  className={`h-full flex-1 rounded-full ${
+                    i < doneCount ? 'bg-primary-600' : 'bg-primary-100 dark:bg-primary-900'
+                  }`}
+                />
+              ))}
+            </View>
+            <Text className="font-sans mb-3 text-sm text-gray-600 dark:text-gray-300">
+              {t(`checklist.steps.${nextStepKey}`)}
             </Text>
-            <Ionicons name="chevron-forward" size={16} color={amberIconColor} />
+            <Button title={t('checklist.addNow')} size="sm" fullWidth={false} onPress={nextStepAction} />
           </View>
+        );
+      })()}
+
+      {/* The "3 questions, no scrolling" zone: what's due today, who owes me,
+          what needs attention — answered as two big glanceable tiles plus an
+          alert strip, each tappable straight into the filtered list. */}
+      <View className="mb-4 flex-row gap-3 px-5">
+        <Pressable
+          onPress={() => navigation.navigate('OrdersTab' as any)}
+          className="flex-1 rounded-lg border border-gray-200 bg-white p-4 active:bg-gray-50 dark:border-gray-700 dark:bg-gray-900 dark:active:bg-gray-800"
+        >
+          <View className="mb-2 h-10 w-10 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-950">
+            <FontAwesome5 name="box-open" size={16} color="#1D4ED8" />
+          </View>
+          <Text className="font-sans text-sm font-medium text-gray-500 dark:text-gray-400">{t('dueToday.title')}</Text>
+          <Text className="mt-0.5 text-[22px] font-bold text-[#101828] dark:text-gray-50">
+            {t('dueToday.count', { count: stats.todaysOrders.length })}
+          </Text>
+        </Pressable>
+
+        <Pressable
+          onPress={() => navigation.navigate('SettingsTab' as any, { screen: 'Billing' })}
+          className="flex-1 rounded-lg border border-gray-200 bg-white p-4 active:bg-gray-50 dark:border-gray-700 dark:bg-gray-900 dark:active:bg-gray-800"
+        >
+          <View className="mb-2 h-10 w-10 items-center justify-center rounded-full bg-amber-50 dark:bg-amber-950">
+            <FontAwesome5 name="rupee-sign" size={16} color={amberIconColor} />
+          </View>
+          <Text className="font-sans text-sm font-medium text-gray-500 dark:text-gray-400">{t('owedToday.title')}</Text>
+          <Text className="mt-0.5 text-[22px] font-bold text-[#101828] dark:text-gray-50">
+            {formatCurrency(stats.todaysOwed)}
+          </Text>
+        </Pressable>
+      </View>
+
+      {/* What needs attention — only shown when there's actually something
+          overdue, so it never competes for space on a good day. */}
+      {stats.overdueOrders.length > 0 ? (
+        <Pressable
+          onPress={() => navigation.navigate('OrdersTab' as any)}
+          className="mx-5 mb-4 flex-row items-center gap-3 rounded-lg border border-red-200 bg-red-50 p-4 active:bg-red-100 dark:border-red-900 dark:bg-red-950 dark:active:bg-red-900"
+        >
+          <FontAwesome5 name="exclamation-triangle" size={16} color="#DC2626" />
+          <Text className="flex-1 text-base font-semibold text-danger">
+            {t('overdueAlert', { count: stats.overdueOrders.length })}
+          </Text>
+          <Ionicons name="chevron-forward" size={18} color="#DC2626" />
         </Pressable>
       ) : null}
+
+      {/* One primary action, unambiguous but no longer the oversized 56px
+          hero button — medium size reads as "the main action" without
+          dominating the whole screen. Adding a client/bill/staff member
+          still lives one tap away in the Quick-Add FAB. */}
+      <View className="mb-6 px-5">
+        <Button
+          title={t('newOrder')}
+          icon={<Ionicons name="add" size={20} color="#FFFFFF" />}
+          size="md"
+          onPress={() => {
+            haptics.tap();
+            navigation.navigate('OrderForm', {});
+          }}
+        />
+      </View>
 
       {/* Quick Send & Transactions Sheet Container */}
       <View className="flex-1 bg-white dark:bg-gray-950">
@@ -358,52 +432,75 @@ export default function DashboardScreen({ navigation }: DashboardScreenProps<'Da
           )}
         </View>
 
-        {/* Orders Due Soon — capped at 3 here, the rest live in the Orders tab */}
-        <View className="mb-6 px-5">
-          <View className="mb-3 flex-row items-center justify-between">
-            <Text className="text-[14px] font-semibold text-[#101828] dark:text-gray-50">{t('dueSoon.title')}</Text>
-            {stats.dueSoonOrders.length > 0 ? (
+        {/* Overdue Orders — the actual list behind the alert strip at the
+            top, which only ever showed a count. Red-coded, one tap into
+            the order. */}
+        {stats.overdueOrders.length > 0 ? (
+          <View className="mb-6 px-5">
+            <View className="mb-3 flex-row items-center justify-between">
+              <Text className="text-[14px] font-semibold text-[#101828] dark:text-gray-50">{t('overdue.title')}</Text>
               <Pressable onPress={() => navigation.navigate('OrdersTab' as any)}>
                 <Text className="text-[12px] font-medium text-[#1D4ED8] underline">{t('viewAll')}</Text>
               </Pressable>
-            ) : null}
+            </View>
+            <View className="gap-2.5">
+              {stats.overdueOrders.slice(0, 4).map((o) => (
+                <Pressable
+                  key={o.id}
+                  onPress={() => navigation.navigate('OrderDetail', { orderId: o.id })}
+                  className="flex-row items-center justify-between rounded-md border border-red-200 bg-red-50 px-4 py-3.5 dark:border-red-900 dark:bg-red-950"
+                >
+                  <View className="flex-1 pr-2">
+                    <Text className="text-base font-semibold text-[#101828] dark:text-gray-50" numberOfLines={1}>
+                      #{o.order_number} · {o.customers?.name || t('customer')}
+                    </Text>
+                    <Text className="font-sans text-xs text-danger">
+                      {t('overdue.dueOn', {
+                        date: o.delivery_date
+                          ? new Date(o.delivery_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+                          : '',
+                      })}
+                    </Text>
+                  </View>
+                  <Badge type="order_status" value={o.status} />
+                </Pressable>
+              ))}
+            </View>
           </View>
-          {stats.dueSoonOrders.length === 0 ? (
+        ) : null}
+
+        {/* Recent Payments — a fast "money coming in" pulse, distinct from
+            Transaction History below (which lists orders, not payments). */}
+        <View className="mb-6 px-5">
+          <Text className="mb-3 text-[14px] font-semibold text-[#101828] dark:text-gray-50">
+            {t('recentPayments.title')}
+          </Text>
+          {stats.recentPayments.length === 0 ? (
             <EmptyState
               variant="compact"
-              icon="calendar-check"
-              title={t('dueSoon.emptyTitle')}
-              description={t('dueSoon.emptyDescription')}
+              icon="rupee-sign"
+              title={t('recentPayments.emptyTitle')}
+              description={t('recentPayments.emptyDescription')}
             />
           ) : (
             <View className="gap-2.5">
-              {stats.dueSoonOrders.slice(0, 3).map((o) => {
-                const dateStr = o.delivery_date
-                  ? new Date(o.delivery_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-                  : '';
-                return (
-                  <Pressable
-                    key={o.id}
-                    onPress={() => navigation.navigate('OrderDetail', { orderId: o.id })}
-                    className="flex-row items-center justify-between rounded-md border border-gray-200 bg-[#F9FAFB] px-4 py-3.5 dark:border-gray-700 dark:bg-gray-800"
-                  >
-                    <View className="flex-1">
-                      <Text className="text-[14px] font-semibold text-[#101828] dark:text-gray-50" numberOfLines={1}>
-                        #{o.order_number} · {o.customers?.name || t('customer')}
-                      </Text>
-                      <Text className="font-sans text-[12px] font-medium text-[#667085] dark:text-gray-400">
-                        {o.cloth_type || t('garmentOrder')}
-                      </Text>
-                    </View>
-                    <View className="items-end">
-                      <Text className="text-[12px] font-semibold text-[#1D4ED8]">{dateStr}</Text>
-                      <Text className="font-sans text-[11px] font-medium text-[#667085] dark:text-gray-400">
-                        {o.status.replace('_', ' ')}
-                      </Text>
-                    </View>
-                  </Pressable>
-                );
-              })}
+              {stats.recentPayments.map((payment) => (
+                <View
+                  key={payment.id}
+                  className="flex-row items-center justify-between rounded-md border border-gray-200 bg-[#F9FAFB] px-4 py-3.5 dark:border-gray-700 dark:bg-gray-800"
+                >
+                  <View className="flex-1 pr-2">
+                    <Text className="text-base font-semibold text-[#101828] dark:text-gray-50" numberOfLines={1}>
+                      {payment.customerName}
+                    </Text>
+                    <Text className="font-sans text-xs text-gray-500 dark:text-gray-400">
+                      {new Date(payment.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                      {payment.mode ? ` · ${payment.mode}` : ''}
+                    </Text>
+                  </View>
+                  <Text className="text-base font-bold text-green-600">{formatCurrency(payment.amount)}</Text>
+                </View>
+              ))}
             </View>
           )}
         </View>

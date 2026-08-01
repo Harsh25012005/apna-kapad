@@ -16,3 +16,6 @@ export { LoadingSpinner, type LoadingSpinnerProps } from './LoadingSpinner';
 export { ToastProvider, useToast, type ToastType } from './Toast';
 export { GoogleIcon } from './GoogleIcon';
 export { SearchBar, type SearchBarProps } from './SearchBar';
+export { OrderProgressStepper, type OrderProgressStepperProps } from './OrderProgressStepper';
+export { QuickAddCustomerSheet, type QuickAddCustomerSheetProps } from './QuickAddCustomerSheet';
+export { VoiceListeningOverlay, type VoiceListeningOverlayProps } from './VoiceListeningOverlay';

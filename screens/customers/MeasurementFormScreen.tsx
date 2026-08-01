@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, Text, View, Pressable } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { FontAwesome5 } from '@expo/vector-icons';
-import { Button, Dropdown, Header, InputField, LoadingSpinner, useToast } from '../../components/ui';
+import { Button, Card, Dropdown, Header, InputField, LoadingSpinner, useToast } from '../../components/ui';
 import type { DropdownOption } from '../../components/ui';
 import { supabase } from '../../lib/supabase';
 import { useShop } from '../../context/AuthContext';
@@ -279,25 +279,21 @@ export default function MeasurementFormScreen({
         />
 
         {groups.shirt.length > 0 ? (
-          <View className="mb-1">
-            {garmentType === 'Shirt+Pant' ? (
-              <Text className="mb-2 text-sm font-semibold text-gray-900 dark:text-gray-50">
-                {t('measurementForm.shirtSection')}
-              </Text>
-            ) : null}
+          <Card className="mb-4">
+            <Text className="mb-3 text-sm font-semibold text-gray-900 dark:text-gray-50">
+              {t('measurementForm.shirtSection')}
+            </Text>
             {renderGroup(groups.shirt)}
-          </View>
+          </Card>
         ) : null}
 
         {groups.pant.length > 0 ? (
-          <View className="mb-1">
-            {garmentType === 'Shirt+Pant' ? (
-              <Text className="mb-2 mt-2 text-sm font-semibold text-gray-900 dark:text-gray-50">
-                {t('measurementForm.pantSection')}
-              </Text>
-            ) : null}
+          <Card className="mb-4">
+            <Text className="mb-3 text-sm font-semibold text-gray-900 dark:text-gray-50">
+              {t('measurementForm.pantSection')}
+            </Text>
             {renderGroup(groups.pant)}
-          </View>
+          </Card>
         ) : null}
 
         <InputField

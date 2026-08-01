@@ -5,7 +5,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { FontAwesome5, Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { Badge, Button, EmptyState, LoadingSpinner, useToast } from '../../components/ui';
-import { ordersRepo, customersRepo, billsRepo, paymentsRepo, staffRepo } from '../../lib/data/repository';
+import { ordersRepo, customersRepo, billsRepo, paymentsRepo } from '../../lib/data/repository';
 import { formatCurrency } from '../../lib/format';
 import { haptics } from '../../lib/haptics';
 import { hasSeenProductTour, markProductTourSeen } from '../../lib/productTour';
@@ -29,24 +29,13 @@ type RecentPaymentItem = {
   date: string;
 };
 
-type ChecklistState = {
-  hasCustomer: boolean;
-  hasOrder: boolean;
-  hasStaff: boolean;
-  hasBill: boolean;
-};
-
-const CHECKLIST_STEPS = ['addedFirstCustomer', 'createdFirstOrder', 'addedFirstStaff', 'sentFirstBill'] as const;
-
 type Stats = {
   todaysOrders: OrderListItem[];
   recentOrders: OrderListItem[];
   overdueOrders: OrderListItem[];
   topClients: ClientItem[];
   recentPayments: RecentPaymentItem[];
-  checklist: ChecklistState;
   totalPendingBalance: number;
-  todaysOwed: number;
   unpaidBillsCount: number;
 };
 
@@ -109,12 +98,11 @@ export default function DashboardScreen({ navigation }: DashboardScreenProps<'Da
       // create/order/payment flow writes through) rather than Supabase
       // directly, so the dashboard reflects the real current data instead of
       // racing the background sync.
-      const [allOrders, customers, allBills, allPayments, staffList] = await Promise.all([
+      const [allOrders, customers, allBills, allPayments] = await Promise.all([
         ordersRepo.listWithCustomer(shop.id),
         customersRepo.list(shop.id),
         billsRepo.list(shop.id),
         paymentsRepo.listForShop(shop.id),
-        staffRepo.list(shop.id),
       ]);
       const customerById = new Map(customers.map((c) => [c.id, c]));
       const billById = new Map(allBills.map((b) => [b.id, b]));
@@ -156,17 +144,6 @@ export default function DashboardScreen({ navigation }: DashboardScreenProps<'Da
       }, 0);
       const unpaidBillsCount = allBills.filter((b) => b.payment_status !== 'paid').length;
 
-      // Balance still pending specifically on bills tied to today's orders —
-      // a same-day figure to sit next to "Due Today", instead of the
-      // all-time outstanding total (which doesn't answer "what's owed today").
-      const todaysOrderIds = new Set(todaysOrders.map((o) => o.id));
-      const todaysOwed = allBills
-        .filter((b) => b.order_id && todaysOrderIds.has(b.order_id))
-        .reduce((sum, bill) => {
-          const paid = paymentsByBill.get(bill.id) ?? 0;
-          return sum + Math.max(Number(bill.total_amount ?? 0) - paid, 0);
-        }, 0);
-
       // Latest payments received, regardless of which bill/order they're
       // tied to — a fast "money coming in" pulse distinct from Transaction
       // History below (which is orders, not payments).
@@ -185,22 +162,13 @@ export default function DashboardScreen({ navigation }: DashboardScreenProps<'Da
           };
         });
 
-      const checklist: ChecklistState = {
-        hasCustomer: customers.length > 0,
-        hasOrder: allOrders.length > 0,
-        hasStaff: staffList.length > 0,
-        hasBill: allBills.length > 0,
-      };
-
       setStats({
         todaysOrders,
         recentOrders,
         overdueOrders,
         topClients,
         recentPayments,
-        checklist,
         totalPendingBalance,
-        todaysOwed,
         unpaidBillsCount,
       });
     } catch (err) {
@@ -226,7 +194,7 @@ export default function DashboardScreen({ navigation }: DashboardScreenProps<'Da
   return (
     <ScrollView
       className="flex-1 bg-white dark:bg-gray-950"
-      contentContainerStyle={{ paddingTop: insets.top + 8, paddingBottom: 160 }}
+      contentContainerStyle={{ paddingTop: insets.top + 8, paddingBottom: 130 }}
       refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor="#1D4ED8" />
       }
@@ -243,7 +211,7 @@ export default function DashboardScreen({ navigation }: DashboardScreenProps<'Da
             className="min-h-[48px] flex-row items-center gap-1.5 rounded-full px-2.5 active:bg-gray-100 dark:active:bg-gray-800"
           >
             <Ionicons name="calendar-outline" size={20} color={scheme === 'dark' ? '#F3F4F6' : '#101828'} />
-            <Text className="font-sans text-sm font-medium text-[#101828] dark:text-gray-50">{t('calendar')}</Text>
+            <Text className="font-sans text-sm font-medium text-[#101828] dark:text-gray-50">{t('calendarNavLabel')}</Text>
           </Pressable>
           <Pressable
             onPress={() => navigation.navigate('Notifications')}
@@ -267,62 +235,6 @@ export default function DashboardScreen({ navigation }: DashboardScreenProps<'Da
           <Text className="font-sans text-[15px] text-gray-400 dark:text-gray-500">{t('searchPlaceholder')}</Text>
         </Pressable>
       </View>
-
-      {/* Get Started checklist — only shown until the shop has done all
-          four things at least once; disappears permanently after that
-          instead of taking up permanent space for an experienced user. */}
-      {(() => {
-        const doneFlags = [
-          stats.checklist.hasCustomer,
-          stats.checklist.hasOrder,
-          stats.checklist.hasStaff,
-          stats.checklist.hasBill,
-        ];
-        const doneCount = doneFlags.filter(Boolean).length;
-        if (doneCount === CHECKLIST_STEPS.length) return null;
-        const nextStepIndex = doneFlags.findIndex((done) => !done);
-        const nextStepKey = CHECKLIST_STEPS[nextStepIndex];
-        const nextStepAction = () => {
-          switch (nextStepKey) {
-            case 'addedFirstCustomer':
-              navigation.navigate('CustomersTab' as any, { screen: 'CustomerForm' });
-              break;
-            case 'createdFirstOrder':
-              navigation.navigate('OrderForm', {});
-              break;
-            case 'addedFirstStaff':
-              navigation.navigate('SettingsTab' as any, { screen: 'StaffForm' });
-              break;
-            case 'sentFirstBill':
-              navigation.navigate('BillForm', {});
-              break;
-          }
-        };
-        return (
-          <View className="mx-5 mb-4 rounded-lg border border-primary-200 bg-primary-50 p-4 dark:border-primary-800 dark:bg-primary-950">
-            <View className="mb-1 flex-row items-center justify-between">
-              <Text className="text-base font-semibold text-[#101828] dark:text-gray-50">{t('checklist.title')}</Text>
-              <Text className="font-sans text-xs font-medium text-primary-700 dark:text-primary-300">
-                {t('checklist.progress', { done: doneCount, total: CHECKLIST_STEPS.length })}
-              </Text>
-            </View>
-            <View className="mb-3 h-1.5 flex-row gap-1">
-              {CHECKLIST_STEPS.map((step, i) => (
-                <View
-                  key={step}
-                  className={`h-full flex-1 rounded-full ${
-                    i < doneCount ? 'bg-primary-600' : 'bg-primary-100 dark:bg-primary-900'
-                  }`}
-                />
-              ))}
-            </View>
-            <Text className="font-sans mb-3 text-sm text-gray-600 dark:text-gray-300">
-              {t(`checklist.steps.${nextStepKey}`)}
-            </Text>
-            <Button title={t('checklist.addNow')} size="sm" fullWidth={false} onPress={nextStepAction} />
-          </View>
-        );
-      })()}
 
       {/* The "3 questions, no scrolling" zone: what's due today, who owes me,
           what needs attention — answered as two big glanceable tiles plus an
@@ -350,7 +262,7 @@ export default function DashboardScreen({ navigation }: DashboardScreenProps<'Da
           </View>
           <Text className="font-sans text-sm font-medium text-gray-500 dark:text-gray-400">{t('owedToday.title')}</Text>
           <Text className="mt-0.5 text-[22px] font-bold text-[#101828] dark:text-gray-50">
-            {formatCurrency(stats.todaysOwed)}
+            {formatCurrency(stats.totalPendingBalance)}
           </Text>
         </Pressable>
       </View>

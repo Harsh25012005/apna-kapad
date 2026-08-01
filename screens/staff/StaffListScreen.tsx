@@ -144,7 +144,7 @@ export default function StaffListScreen({ navigation }: SettingsScreenProps<'Sta
         data={filteredStaff}
         keyExtractor={(item) => item.id}
         className="px-5"
-        contentContainerStyle={filteredStaff.length === 0 ? { flexGrow: 1, paddingTop: 12 } : { paddingTop: 12, paddingBottom: 160, gap: 10 }}
+        contentContainerStyle={filteredStaff.length === 0 ? { flexGrow: 1, paddingTop: 12 } : { paddingTop: 12, paddingBottom: 130, gap: 10 }}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor="#1D4ED8" />
         }

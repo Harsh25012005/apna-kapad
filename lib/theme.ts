@@ -57,12 +57,12 @@ export async function initTheme(): Promise<ThemeMode> {
   try {
     const stored = await AsyncStorage.getItem(THEME_STORAGE_KEY);
     const mode: ThemeMode =
-      stored && (THEME_MODES as readonly string[]).includes(stored) ? (stored as ThemeMode) : 'system';
+      stored && (THEME_MODES as readonly string[]).includes(stored) ? (stored as ThemeMode) : 'light';
     colorScheme.set(mode);
     return mode;
   } catch {
-    colorScheme.set('system');
-    return 'system';
+    colorScheme.set('light');
+    return 'light';
   }
 }
 

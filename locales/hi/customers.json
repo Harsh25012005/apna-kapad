@@ -20,6 +20,7 @@
     "loading": "ग्राहक लोड हो रहा है...",
     "noPhone": "फोन नहीं",
     "outstandingBalance": "बकाया राशि",
+    "bookNumberPrefix": "ग्राहक नं.",
     "sendPaymentReminder": "भुगतान रिमाइंडर भेजें",
     "measurements": "माप",
     "addShort": "+ जोड़ें",
@@ -50,6 +51,10 @@
     "cancel": "रद्द करें",
     "delete": "हटाएं"
   },
+  "quickAdd": {
+    "title": "ग्राहक जोड़ें",
+    "save": "जोड़ें और जारी रखें"
+  },
   "form": {
     "title": "नया ग्राहक",
     "nameLabel": "नाम",
@@ -57,8 +62,15 @@
     "nameRequired": "नाम आवश्यक है",
     "phoneLabel": "फोन",
     "phonePlaceholder": "10-अंकों का फोन नंबर",
+    "phoneRequired": "फोन नंबर आवश्यक है",
+    "phoneInvalid": "मान्य 10-अंकों का फोन नंबर दर्ज करें",
+    "phoneValid": "✓ सही है",
     "addressLabel": "पता",
     "addressPlaceholder": "पता",
+    "bookNumberLabel": "ग्राहक नं.",
+    "bookNumberPlaceholder": "जैसे C-104",
+    "bookNumberHelper": "आपकी ऑर्डर बुक का नंबर, अगर आप एक रखते हैं। खाली छोड़ सकते हैं।",
+    "bookNumberRequired": "ग्राहक नंबर आवश्यक है",
     "saveCustomer": "ग्राहक सेव करें",
     "saveSuccess": "ग्राहक जोड़ा गया",
     "saveError": "ग्राहक सेव नहीं हो सका",
@@ -66,7 +78,11 @@
     "updateCustomer": "ग्राहक अपडेट करें",
     "updateSuccess": "ग्राहक अपडेट हो गया",
     "loading": "ग्राहक लोड हो रहा है...",
-    "loadError": "ग्राहक लोड नहीं हो सका"
+    "loadError": "ग्राहक लोड नहीं हो सका",
+    "addMeasurementsPromptTitle": "अभी माप जोड़ें?",
+    "addMeasurementsPromptMessage": "आप अभी इस ग्राहक का माप ले सकते हैं, या बाद में ग्राहक की प्रोफ़ाइल से जोड़ सकते हैं।",
+    "addMeasurementsPromptYes": "माप जोड़ें",
+    "addMeasurementsPromptNo": "अभी नहीं"
   },
   "measurementForm": {
     "title": "नया माप",

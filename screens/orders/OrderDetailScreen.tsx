@@ -236,7 +236,7 @@ export default function OrderDetailScreen({ navigation, route }: AppScreenProps<
           </View>
         }
       />
-      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 160, gap: 14 }}>
+      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 130, gap: 14 }}>
         {/* Header card: order number, status, priority */}
         <Card>
           <View className="flex-row items-center justify-between">
@@ -392,6 +392,30 @@ export default function OrderDetailScreen({ navigation, route }: AppScreenProps<
                 {t('detail.whatsapp.sendCompletion')}
               </Text>
             </Pressable>
+
+            {hasBilling && balanceDue > 0 ? (
+              <Pressable
+                disabled={!hasPhone}
+                onPress={() =>
+                  sendMessage(
+                    t('detail.whatsapp.reminderPaymentBody', {
+                      customerName,
+                      amount: formatCurrency(balanceDue),
+                      orderNumber: order.order_number,
+                      shopName: shop.shop_name,
+                    })
+                  )
+                }
+                className={`flex-row items-center justify-center gap-2 rounded-md border border-amber-300 bg-amber-50 py-3 active:opacity-80 dark:border-amber-800 dark:bg-amber-950 ${
+                  hasPhone ? '' : 'opacity-40'
+                }`}
+              >
+                <FontAwesome5 name="bell" size={15} color="#B45309" />
+                <Text className="text-sm font-semibold text-amber-800 dark:text-amber-300">
+                  {t('detail.whatsapp.sendReminder')}
+                </Text>
+              </Pressable>
+            ) : null}
           </View>
         </Card>
 

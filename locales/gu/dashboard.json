@@ -24,9 +24,20 @@
   "loading": "ડેશબોર્ડ લોડ થઈ રહ્યું છે...",
   "greeting": "નમસ્તે, {{name}}",
   "defaultUser": "યુઝર",
+  "alerts": "સૂચનાઓ",
+  "calendarNavLabel": "કેલેન્ડર",
+  "searchPlaceholder": "નામ અથવા ફોનથી ગ્રાહક શોધો",
+  "dueToday": {
+    "title": "આજે દેય",
+    "count_one": "{{count}} ઓર્ડર",
+    "count_other": "{{count}} ઓર્ડર"
+  },
   "owedToday": {
     "title": "આજે બાકી"
   },
+  "overdueAlert_one": "{{count}} ઓર્ડરની ડિલિવરી ચૂકાઈ ગઈ — જોવા માટે ટૅપ કરો",
+  "overdueAlert_other": "{{count}} ઓર્ડરની ડિલિવરી ચૂકાઈ ગઈ — જોવા માટે ટૅપ કરો",
+  "newOrder": "નવો ઓર્ડર",
   "order": "ઓર્ડર",
   "client": "ગ્રાહક",
   "topClients": "મુખ્ય ગ્રાહકો",
@@ -39,6 +50,44 @@
   "garmentOrder": "કપડાં ઓર્ડર",
   "paid": "ચૂકવેલ",
   "errorLoad": "ડેશબોર્ડ લોડ કરી શકાયું નહીં",
+  "emptyTopClients": {
+    "title": "હજુ સુધી કોઈ ગ્રાહક નથી",
+    "description": "ઓર્ડર ઉમેરવાનું શરૂ કરો એટલે તમારા સૌથી નિયમિત ગ્રાહકો અહીં દેખાશે."
+  },
+  "overdue": {
+    "title": "મોડા પડેલા ઓર્ડર",
+    "dueOn": "{{date}} ના રોજ દેય હતું"
+  },
+  "recentPayments": {
+    "title": "તાજેતરની ચુકવણીઓ",
+    "emptyTitle": "હજુ સુધી કોઈ ચુકવણી નથી",
+    "emptyDescription": "બિલો પર નોંધાયેલી ચુકવણીઓ અહીં દેખાશે."
+  },
+  "transactions": {
+    "title": "વ્યવહાર ઇતિહાસ",
+    "loading": "વ્યવહાર લોડ થઈ રહ્યા છે...",
+    "loadError": "વ્યવહાર લોડ કરી શકાયા નહીં",
+    "emptyTitle": "હજુ સુધી કોઈ વ્યવહાર નથી",
+    "emptyDescription": "બિલો પર નોંધાયેલી ચુકવણીઓ અહીં દેખાશે",
+    "unknownCustomer": "અજાણ્યો ગ્રાહક",
+    "searchPlaceholder": "ગ્રાહકના નામથી શોધો"
+  },
+  "search": {
+    "title": "શોધો",
+    "placeholder": "ગ્રાહકના નામ અથવા ફોનથી શોધો",
+    "emptyPromptTitle": "એક ગ્રાહક શોધો",
+    "emptyPromptDescription": "નામ અથવા ફોન નંબર ટાઇપ કરો, અથવા અવાજથી શોધવા માટે માઇક પર ટૅપ કરો.",
+    "noResultsTitle": "કોઈ ગ્રાહક મળ્યો નથી",
+    "noResultsDescription": "ચાલુ રાખવા માટે તેમને નવા ગ્રાહક તરીકે ઉમેરો.",
+    "addClient": "ગ્રાહક ઉમેરો",
+    "noPhone": "ફોન નથી",
+    "createOrder": "ઓર્ડર બનાવો",
+    "viewProfile": "પ્રોફાઇલ જુઓ",
+    "dictationFailed": "સંભળાયું નહીં — ફરી પ્રયત્ન કરો",
+    "microphonePermissionDenied": "અવાજથી શોધવા માટે માઇક્રોફોન પરવાનગી જરૂરી છે",
+    "listening": "સાંભળી રહ્યા છીએ…",
+    "listeningHint": "ગ્રાહકનું નામ બોલો, અથવા રોકવા માટે ગમે ત્યાં ટૅપ કરો"
+  },
   "dueSoon": {
     "title": "ટૂંક સમયમાં ડિલિવરી થનારા ઓર્ડર"
   },

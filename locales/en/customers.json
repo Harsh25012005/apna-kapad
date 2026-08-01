@@ -77,7 +77,11 @@
     "updateCustomer": "Update Client",
     "updateSuccess": "Client updated",
     "loading": "Loading client...",
-    "loadError": "Could not load client"
+    "loadError": "Could not load client",
+    "addMeasurementsPromptTitle": "Add measurements now?",
+    "addMeasurementsPromptMessage": "You can take this client's measurements now, or add them later from the client's profile.",
+    "addMeasurementsPromptYes": "Add Measurements",
+    "addMeasurementsPromptNo": "Not Now"
   },
   "measurementForm": {
     "title": "New Measurement",

@@ -69,7 +69,7 @@ export default function TransactionsScreen({ navigation }: DashboardScreenProps<
         keyExtractor={(item) => item.id}
         className="px-5"
         contentContainerStyle={
-          filtered.length === 0 ? { flexGrow: 1, paddingTop: 12 } : { paddingTop: 12, paddingBottom: 160, gap: 10 }
+          filtered.length === 0 ? { flexGrow: 1, paddingTop: 12 } : { paddingTop: 12, paddingBottom: 130, gap: 10 }
         }
         ListEmptyComponent={
           <EmptyState

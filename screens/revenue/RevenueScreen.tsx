@@ -162,7 +162,7 @@ export default function RevenueScreen({ navigation }: SettingsScreenProps<'Reven
   return (
     <View className="flex-1 bg-gray-50 dark:bg-gray-950">
       <Header title={t('title')} onBack={() => navigation.goBack()} />
-      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 160, gap: 16 }}>
+      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 130, gap: 16 }}>
         {/* Total revenue hero */}
         <View className="rounded-md bg-[#101828] p-4 dark:border dark:border-gray-700">
           <View className="flex-row items-start justify-between">

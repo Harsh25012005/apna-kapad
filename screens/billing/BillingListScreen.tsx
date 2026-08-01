@@ -146,7 +146,7 @@ export default function BillingListScreen({ navigation }: BillingScreenProps<'Bi
         keyExtractor={(item) => item.id}
         className="px-5"
         contentContainerStyle={
-          filteredBills.length === 0 ? { flexGrow: 1, paddingTop: 12 } : { paddingTop: 12, paddingBottom: 160, gap: 12 }
+          filteredBills.length === 0 ? { flexGrow: 1, paddingTop: 12 } : { paddingTop: 12, paddingBottom: 130, gap: 12 }
         }
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor="#1D4ED8" />

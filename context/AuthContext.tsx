@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
 import Constants, { ExecutionEnvironment } from 'expo-constants';
 import * as Linking from 'expo-linking';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { EmailOtpType, Session, User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import { startAutoSync, stopAutoSync } from '../lib/data/sync';
@@ -9,6 +10,18 @@ import type { Shop } from '../types';
 
 /** Where Supabase sends the user back to after they tap the email link. */
 export const EMAIL_CONFIRM_REDIRECT = 'measuresone://confirm-email';
+
+/**
+ * Set right before requesting a password-reset email, cleared once the
+ * resulting deep link is consumed. Needed because Supabase's PKCE
+ * code-exchange redirect (the shape `exchangeCodeForSession` handles below)
+ * drops the `type=recovery` query param that the implicit/token_hash shapes
+ * carry — so the URL alone can't always tell a recovery link apart from a
+ * plain sign-in link. This flag is the fallback signal, persisted (not just
+ * in-memory) since the app may be killed between sending the email and the
+ * user tapping the link.
+ */
+const PENDING_PASSWORD_RECOVERY_KEY = 'measuresone:pendingPasswordRecovery';
 
 /**
  * Turns the deep link Supabase opens the app with into a real session.
@@ -202,8 +215,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const handle = (url: string) => {
       void completeSessionFromUrl(url)
-        .then(({ isRecovery }) => {
-          if (isRecovery) setPasswordRecovery(true);
+        .then(async ({ handled, isRecovery }) => {
+          if (!handled) return;
+          const pending = await AsyncStorage.getItem(PENDING_PASSWORD_RECOVERY_KEY);
+          if (pending) await AsyncStorage.removeItem(PENDING_PASSWORD_RECOVERY_KEY);
+          if (isRecovery || pending) setPasswordRecovery(true);
         })
         .catch((err) => {
           console.warn('[auth] could not complete confirmation from link:', err?.message ?? err);
@@ -292,10 +308,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const resetPassword = async (email: string) => {
+    await AsyncStorage.setItem(PENDING_PASSWORD_RECOVERY_KEY, '1');
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: 'measuresone://reset-password',
     });
-    if (error) throw error;
+    if (error) {
+      await AsyncStorage.removeItem(PENDING_PASSWORD_RECOVERY_KEY);
+      throw error;
+    }
   };
 
   const completePasswordReset = async (newPassword: string) => {

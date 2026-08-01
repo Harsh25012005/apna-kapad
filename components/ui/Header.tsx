@@ -58,6 +58,8 @@ export function Header({
               showBack ? 'text-center text-[18px]' : 'text-[22px] font-bold'
             }`}
             numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.8}
           >
             {title}
           </Text>

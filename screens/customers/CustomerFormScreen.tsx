@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import { Alert, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { Button, Header, InputField, LoadingSpinner, useToast } from '../../components/ui';
 import { customersRepo } from '../../lib/data/repository';
@@ -80,12 +80,19 @@ export default function CustomerFormScreen({ navigation, route }: CustomersScree
 
       if (isEditing) {
         await customersRepo.update(customerId!, shop.id, payload);
+        showToast(t('form.updateSuccess'), 'success');
+        navigation.goBack();
       } else {
-        await customersRepo.create({ shop_id: shop.id, ...payload });
+        const created = await customersRepo.create({ shop_id: shop.id, ...payload });
+        showToast(t('form.saveSuccess'), 'success');
+        Alert.alert(t('form.addMeasurementsPromptTitle'), t('form.addMeasurementsPromptMessage'), [
+          { text: t('form.addMeasurementsPromptNo'), style: 'cancel', onPress: () => navigation.goBack() },
+          {
+            text: t('form.addMeasurementsPromptYes'),
+            onPress: () => navigation.replace('MeasurementForm', { customerId: created.id }),
+          },
+        ]);
       }
-
-      showToast(t(isEditing ? 'form.updateSuccess' : 'form.saveSuccess'), 'success');
-      navigation.goBack();
     } catch (err) {
       showToast(err instanceof Error ? err.message : t('form.saveError'), 'error');
     } finally {
@@ -108,7 +115,7 @@ export default function CustomerFormScreen({ navigation, route }: CustomersScree
       >
         <ScrollView
           className="flex-1 bg-white dark:bg-gray-950"
-          contentContainerStyle={{ padding: 20, paddingBottom: 160 }}
+          contentContainerStyle={{ padding: 20, paddingBottom: 130 }}
           keyboardShouldPersistTaps="handled"
         >
           <InputField

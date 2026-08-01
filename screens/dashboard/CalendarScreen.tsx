@@ -131,7 +131,7 @@ export default function CalendarScreen({ navigation }: DashboardScreenProps<'Cal
         data={dayItems}
         keyExtractor={(item) => item.id}
         className="px-5"
-        contentContainerStyle={dayItems.length === 0 ? { flexGrow: 1, paddingTop: 12 } : { paddingTop: 12, paddingBottom: 160, gap: 8 }}
+        contentContainerStyle={dayItems.length === 0 ? { flexGrow: 1, paddingTop: 12 } : { paddingTop: 12, paddingBottom: 130, gap: 8 }}
         ListEmptyComponent={<EmptyState icon="calendar-alt" title={t('calendar.emptyTitle')} description={t('calendar.emptyDescription')} />}
         renderItem={({ item }) => (
           <Card>

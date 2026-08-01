@@ -162,7 +162,7 @@ export default function StaffDetailScreen({ navigation, route }: SettingsScreenP
           </View>
         }
       />
-      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 160, gap: 16 }}>
+      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 130, gap: 16 }}>
         <Card>
           <View className="flex-row items-center">
             <Avatar name={staff.name} size="lg" />
@@ -181,36 +181,13 @@ export default function StaffDetailScreen({ navigation, route }: SettingsScreenP
           </View>
 
           <View className="mt-4 gap-2">
-            {staff.wage_type === 'per_piece' ? (
-              <>
-                <View className="flex-row items-center justify-between rounded-md bg-gray-50 p-3 dark:bg-gray-800">
-                  <Text className="font-sans text-sm text-gray-600 dark:text-gray-300">{t('detail.amountPerPant')}</Text>
-                  <Text className="text-base font-bold text-[#101828] dark:text-gray-50">
-                    {formatCurrency(staff.wage_amount_pant ?? 0)}
-                  </Text>
-                </View>
-                <View className="flex-row items-center justify-between rounded-md bg-gray-50 p-3 dark:bg-gray-800">
-                  <Text className="font-sans text-sm text-gray-600 dark:text-gray-300">{t('detail.amountPerShirt')}</Text>
-                  <Text className="text-base font-bold text-[#101828] dark:text-gray-50">
-                    {formatCurrency(staff.wage_amount_shirt ?? 0)}
-                  </Text>
-                </View>
-                <View className="flex-row items-center justify-between rounded-md bg-gray-50 p-3 dark:bg-gray-800">
-                  <Text className="font-sans text-sm text-gray-600 dark:text-gray-300">{t('detail.amountPerPair')}</Text>
-                  <Text className="text-base font-bold text-[#101828] dark:text-gray-50">
-                    {formatCurrency(staff.wage_amount_pair ?? 0)}
-                  </Text>
-                </View>
-              </>
-            ) : (
-              <View className="flex-row items-center justify-between rounded-md bg-gray-50 p-3 dark:bg-gray-800">
-                <Text className="font-sans text-sm text-gray-600 dark:text-gray-300">{t('detail.wageAmount')}</Text>
-                <Text className="text-base font-bold text-[#101828] dark:text-gray-50">
-                  {formatCurrency(staff.wage_amount)}
-                  <Text className="font-sans text-xs text-gray-500 dark:text-gray-400">/{WAGE_LABELS[staff.wage_type]}</Text>
-                </Text>
-              </View>
-            )}
+            <View className="flex-row items-center justify-between rounded-md bg-gray-50 p-3 dark:bg-gray-800">
+              <Text className="font-sans text-sm text-gray-600 dark:text-gray-300">{t('detail.wageAmount')}</Text>
+              <Text className="text-base font-bold text-[#101828] dark:text-gray-50">
+                {formatCurrency(staff.wage_amount)}
+                <Text className="font-sans text-xs text-gray-500 dark:text-gray-400">/{WAGE_LABELS[staff.wage_type]}</Text>
+              </Text>
+            </View>
           </View>
         </Card>
 
@@ -248,65 +225,70 @@ export default function StaffDetailScreen({ navigation, route }: SettingsScreenP
           />
         </Card>
 
-        {workEntries.length > 0 ? (
-          <View>
-            <View className="mb-2 flex-row items-center justify-between">
-              <View className="flex-row items-center">
-                <FontAwesome5 name="clipboard-list" size={13} color="#6B7280" />
-                <Text className="ml-2 text-base font-semibold text-[#101828] dark:text-gray-50">{t('detail.workEntries')}</Text>
+        {/* Work entries only make sense for per-piece staff — monthly/daily
+            staff are paid a fixed wage regardless of how much they stitch,
+            so there's nothing to log. */}
+        {staff.wage_type === 'per_piece' ? (
+          workEntries.length > 0 ? (
+            <View>
+              <View className="mb-2 flex-row items-center justify-between">
+                <View className="flex-row items-center">
+                  <FontAwesome5 name="clipboard-list" size={13} color="#6B7280" />
+                  <Text className="ml-2 text-base font-semibold text-[#101828] dark:text-gray-50">{t('detail.workEntries')}</Text>
+                </View>
+                <Pressable onPress={() => navigation.navigate('StaffWorkEntryForm', { staffId: staff.id })}>
+                  <Text className="text-sm font-semibold text-primary-600 dark:text-primary-400">{t('detail.addWorkEntry')}</Text>
+                </Pressable>
               </View>
-              <Pressable onPress={() => navigation.navigate('StaffWorkEntryForm', { staffId: staff.id })}>
-                <Text className="text-sm font-semibold text-primary-600 dark:text-primary-400">{t('detail.addWorkEntry')}</Text>
-              </Pressable>
+
+              <Card>
+                <View className="mb-3 flex-row items-center justify-between rounded-md bg-emerald-50 p-3 dark:bg-emerald-950">
+                  <Text className="font-sans text-sm font-medium text-emerald-800 dark:text-emerald-300">
+                    {t('detail.workTotal')}
+                  </Text>
+                  <Text className="text-base font-bold text-emerald-800 dark:text-emerald-300">
+                    {formatCurrency(
+                      workEntries.reduce((s, w) => s + Number(w.quantity) * Number(w.rate_applied), 0)
+                    )}
+                  </Text>
+                </View>
+
+                <View className="gap-3">
+                  {workEntries.map((w, index) => (
+                    <View
+                      key={w.id}
+                      className={`flex-row items-center ${
+                        index < workEntries.length - 1 ? 'border-b border-gray-100 pb-3 dark:border-gray-800' : ''
+                      }`}
+                    >
+                      <View className="h-10 w-10 items-center justify-center rounded-full bg-primary-50 dark:bg-primary-950">
+                        <FontAwesome5 name="tshirt" size={14} color="#1D4ED8" />
+                      </View>
+                      <View className="ml-3 flex-1">
+                        <Text className="text-sm font-semibold text-[#101828] dark:text-gray-50">
+                          {WORK_TYPE_LABELS[w.work_type]} × {w.quantity}
+                        </Text>
+                        <Text className="font-sans mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+                          {formatDate(w.work_date)} · {formatCurrency(w.rate_applied)}
+                          {t('detail.perPieceSuffix')}
+                        </Text>
+                      </View>
+                      <Text className="text-sm font-bold text-[#101828] dark:text-gray-50">
+                        {formatCurrency(Number(w.quantity) * Number(w.rate_applied))}
+                      </Text>
+                    </View>
+                  ))}
+                </View>
+              </Card>
             </View>
-
-            <Card>
-              <View className="mb-3 flex-row items-center justify-between rounded-md bg-emerald-50 p-3 dark:bg-emerald-950">
-                <Text className="font-sans text-sm font-medium text-emerald-800 dark:text-emerald-300">
-                  {t('detail.workTotal')}
-                </Text>
-                <Text className="text-base font-bold text-emerald-800 dark:text-emerald-300">
-                  {formatCurrency(
-                    workEntries.reduce((s, w) => s + Number(w.quantity) * Number(w.rate_applied), 0)
-                  )}
-                </Text>
-              </View>
-
-              <View className="gap-3">
-                {workEntries.map((w, index) => (
-                  <View
-                    key={w.id}
-                    className={`flex-row items-center ${
-                      index < workEntries.length - 1 ? 'border-b border-gray-100 pb-3 dark:border-gray-800' : ''
-                    }`}
-                  >
-                    <View className="h-10 w-10 items-center justify-center rounded-full bg-primary-50 dark:bg-primary-950">
-                      <FontAwesome5 name="tshirt" size={14} color="#1D4ED8" />
-                    </View>
-                    <View className="ml-3 flex-1">
-                      <Text className="text-sm font-semibold text-[#101828] dark:text-gray-50">
-                        {WORK_TYPE_LABELS[w.work_type]} × {w.quantity}
-                      </Text>
-                      <Text className="font-sans mt-0.5 text-xs text-gray-500 dark:text-gray-400">
-                        {formatDate(w.work_date)} · {formatCurrency(w.rate_applied)}
-                        {t('detail.perPieceSuffix')}
-                      </Text>
-                    </View>
-                    <Text className="text-sm font-bold text-[#101828] dark:text-gray-50">
-                      {formatCurrency(Number(w.quantity) * Number(w.rate_applied))}
-                    </Text>
-                  </View>
-                ))}
-              </View>
-            </Card>
-          </View>
-        ) : (
-          <Button
-            title={t('detail.addWorkEntry')}
-            onPress={() => navigation.navigate('StaffWorkEntryForm', { staffId: staff.id })}
-            variant="secondary"
-          />
-        )}
+          ) : (
+            <Button
+              title={t('detail.addWorkEntry')}
+              onPress={() => navigation.navigate('StaffWorkEntryForm', { staffId: staff.id })}
+              variant="secondary"
+            />
+          )
+        ) : null}
       </ScrollView>
     </View>
   );

@@ -188,7 +188,7 @@ export default function BillDetailScreen({ navigation, route }: BillingScreenPro
           </Pressable>
         }
       />
-      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: insets.bottom + 160, gap: 16 }}>
+      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: insets.bottom + 100, gap: 16 }}>
         {/* Hero card: total / paid / balance due */}
         <View className="rounded-xl bg-[#101828] p-5 dark:border dark:border-gray-700">
           <View className="mb-4 flex-row items-center justify-between">

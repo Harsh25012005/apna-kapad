@@ -47,14 +47,7 @@ export default function StaffWorkEntryFormScreen({
     })();
   }, [staffId]);
 
-  const rateFor = (type: WorkType): number => {
-    if (!staff) return 0;
-    if (type === 'pant') return Number(staff.wage_amount_pant ?? 0);
-    if (type === 'shirt') return Number(staff.wage_amount_shirt ?? 0);
-    return Number(staff.wage_amount_pair ?? 0);
-  };
-
-  const rate = rateFor(workType);
+  const rate = staff ? Number(staff.wage_amount ?? 0) : 0;
   const parsedQty = Number(quantity.trim());
   const previewQty = Number.isFinite(parsedQty) && parsedQty > 0 ? Math.floor(parsedQty) : 0;
 

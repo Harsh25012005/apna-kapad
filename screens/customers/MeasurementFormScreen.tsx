@@ -107,7 +107,7 @@ export default function MeasurementFormScreen({
   const [customFields, setCustomFields] = useState<CustomField[]>([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [loadingRecord, setLoadingRecord] = useState(isEditing);
+  const [loadingRecord, setLoadingRecord] = useState(true);
 
   const groups = useMemo(() => {
     const match = GARMENT_TYPE_VALUES.find((v) => v === garmentType);
@@ -117,44 +117,85 @@ export default function MeasurementFormScreen({
   const setValue = (id: string, value: string) =>
     setValues((prev) => ({ ...prev, [id]: value }));
 
-  const load = useCallback(async () => {
-    if (!measurementId) return;
-    setLoadingRecord(true);
+  /**
+   * Custom field labels aren't their own table — they live inline on every
+   * measurement's `custom_fields` JSON. So "reuse across all clients" means
+   * scanning every measurement this shop has ever saved and collecting the
+   * distinct labels, then pre-seeding this form with them (blank, ready to
+   * fill in) so a field added once for one client shows up for every client
+   * afterwards instead of having to be retyped each time.
+   */
+  const fetchKnownCustomLabels = useCallback(async (): Promise<string[]> => {
     try {
       const { data, error: fetchError } = await supabase
         .from('measurements')
-        .select('*')
-        .eq('id', measurementId)
-        .single();
+        .select('custom_fields')
+        .eq('shop_id', shop.id);
       if (fetchError) throw fetchError;
-      if (data) {
-        const type = data.garment_type ?? '';
-        setGarmentType(type);
-
-        const match = GARMENT_TYPE_VALUES.find((v) => v === type);
-        const fields = match ? [...GROUPS[match].shirt, ...GROUPS[match].pant] : [];
-        const stored = Array.isArray(data.custom_fields)
-          ? (data.custom_fields as unknown as CustomField[])
+      const labels = new Set<string>();
+      for (const row of data ?? []) {
+        const fields = Array.isArray(row.custom_fields)
+          ? (row.custom_fields as unknown as CustomField[])
           : [];
-
-        const next: Record<string, string> = {};
-        for (const field of fields) {
-          if (field.kind === 'column') {
-            next[field.id] = data[field.column]?.toString() ?? '';
-          } else {
-            next[field.id] = stored.find((f) => f?.label === field.label)?.value ?? '';
-          }
+        for (const f of fields) {
+          const label = f?.label?.trim();
+          if (label && !RESERVED_CUSTOM_LABELS.has(label)) labels.add(label);
         }
-        setValues(next);
-        setCustomFields(stored.filter((f) => f && !RESERVED_CUSTOM_LABELS.has(f.label)));
-        setNotes(data.notes ?? '');
       }
+      return [...labels].sort((a, b) => a.localeCompare(b));
+    } catch {
+      return [];
+    }
+  }, [shop.id]);
+
+  const load = useCallback(async () => {
+    setLoadingRecord(true);
+    try {
+      let recordCustomFields: CustomField[] = [];
+
+      if (measurementId) {
+        const { data, error: fetchError } = await supabase
+          .from('measurements')
+          .select('*')
+          .eq('id', measurementId)
+          .single();
+        if (fetchError) throw fetchError;
+        if (data) {
+          const type = data.garment_type ?? '';
+          setGarmentType(type);
+
+          const match = GARMENT_TYPE_VALUES.find((v) => v === type);
+          const fields = match ? [...GROUPS[match].shirt, ...GROUPS[match].pant] : [];
+          const stored = Array.isArray(data.custom_fields)
+            ? (data.custom_fields as unknown as CustomField[])
+            : [];
+
+          const next: Record<string, string> = {};
+          for (const field of fields) {
+            if (field.kind === 'column') {
+              next[field.id] = data[field.column]?.toString() ?? '';
+            } else {
+              next[field.id] = stored.find((f) => f?.label === field.label)?.value ?? '';
+            }
+          }
+          setValues(next);
+          setNotes(data.notes ?? '');
+          recordCustomFields = stored.filter((f) => f && !RESERVED_CUSTOM_LABELS.has(f.label));
+        }
+      }
+
+      const knownLabels = await fetchKnownCustomLabels();
+      const recordLabels = new Set(recordCustomFields.map((f) => f.label));
+      setCustomFields([
+        ...recordCustomFields,
+        ...knownLabels.filter((label) => !recordLabels.has(label)).map((label) => ({ label, value: '' })),
+      ]);
     } catch (err) {
       showToast(err instanceof Error ? err.message : t('measurementForm.loadError'), 'error');
     } finally {
       setLoadingRecord(false);
     }
-  }, [measurementId, showToast, t]);
+  }, [measurementId, fetchKnownCustomLabels, showToast, t]);
 
   useEffect(() => {
     void load();
@@ -265,7 +306,7 @@ export default function MeasurementFormScreen({
       >
       <ScrollView
         className="flex-1 bg-white dark:bg-gray-950"
-        contentContainerStyle={{ padding: 20, paddingBottom: 160 }}
+        contentContainerStyle={{ padding: 20, paddingBottom: 130 }}
         keyboardShouldPersistTaps="handled"
       >
         <Dropdown

@@ -170,7 +170,7 @@ export default function CustomerDetailScreen({
           </View>
         }
       />
-      <ScrollView contentContainerStyle={{ padding: 16, gap: 16, paddingBottom: 160 }}>
+      <ScrollView contentContainerStyle={{ padding: 16, gap: 16, paddingBottom: 130 }}>
         <Card>
           <View className="flex-row items-center">
             <Avatar name={customer.name} size="lg" />

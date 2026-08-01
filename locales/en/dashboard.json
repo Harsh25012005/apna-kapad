@@ -25,7 +25,7 @@
   "greeting": "Hi, {{name}}",
   "defaultUser": "User",
   "alerts": "Alerts",
-  "calendar": "Calendar",
+  "calendarNavLabel": "Calendar",
   "searchPlaceholder": "Search clients by name or phone",
   "dueToday": {
     "title": "Due Today",

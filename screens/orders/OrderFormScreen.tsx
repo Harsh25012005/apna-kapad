@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Alert, KeyboardAvoidingView, Platform, ScrollView, Text, useWindowDimensions, View } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
+import { FontAwesome5 } from '@expo/vector-icons';
 import {
   Button,
   DatePickerField,
@@ -77,6 +78,8 @@ export default function OrderFormScreen({ navigation, route }: AppScreenProps<'O
   const [customerId, setCustomerId] = useState<string>(presetCustomerId ?? '');
   const [garmentType, setGarmentType] = useState<GarmentType | ''>('');
   const [clothCount, setClothCount] = useState('');
+  const [shirtCount, setShirtCount] = useState('');
+  const [pantCount, setPantCount] = useState('');
   const [notes, setNotes] = useState('');
   const [shirtPhotoUris, setShirtPhotoUris] = useState<(string | null)[]>([null]);
   const [pantPhotoUris, setPantPhotoUris] = useState<(string | null)[]>([null]);
@@ -101,7 +104,15 @@ export default function OrderFormScreen({ navigation, route }: AppScreenProps<'O
   const [customersLoaded, setCustomersLoaded] = useState(false);
   const [quickAddVisible, setQuickAddVisible] = useState(false);
 
-  const clothCountNum = Math.max(0, Math.floor(Number(clothCount) || 0));
+  const shirtCountNum = Math.max(0, Math.floor(Number(shirtCount) || 0));
+  const pantCountNum = Math.max(0, Math.floor(Number(pantCount) || 0));
+  // Editing an existing order only ever has one combined count on record
+  // (orders are saved as a single item), so the shirt/pant split only
+  // applies to the new-order wizard, where it's entered directly.
+  const clothCountNum =
+    !isEditing && garmentType === 'both'
+      ? shirtCountNum + pantCountNum
+      : Math.max(0, Math.floor(Number(clothCount) || 0));
   const totalAmountNum = Math.max(0, Number(totalAmount) || 0);
   const selectedCustomerName = customers.find((c) => c.value === customerId)?.label ?? '';
 
@@ -120,12 +131,19 @@ export default function OrderFormScreen({ navigation, route }: AppScreenProps<'O
   }, [isEditing, deliveryDateTouched, clothCountNum, shop.id]);
 
   // Keeps the number of photo slots in sync with the entered cloth count,
-  // preserving already-picked images when the count grows or shrinks.
+  // preserving already-picked images when the count grows or shrinks. In the
+  // new-order wizard with both garments selected, shirt and pant each get
+  // their own slot count from their own quantity field.
   useEffect(() => {
+    if (!isEditing && garmentType === 'both') {
+      setShirtPhotoUris((prev) => resizePhotoSlots(prev, Math.max(1, shirtCountNum)));
+      setPantPhotoUris((prev) => resizePhotoSlots(prev, Math.max(1, pantCountNum)));
+      return;
+    }
     const slots = Math.max(1, clothCountNum);
     setShirtPhotoUris((prev) => resizePhotoSlots(prev, slots));
     setPantPhotoUris((prev) => resizePhotoSlots(prev, slots));
-  }, [clothCountNum]);
+  }, [clothCountNum, shirtCountNum, pantCountNum, garmentType, isEditing]);
 
   useFocusEffect(
     useCallback(() => {
@@ -424,7 +442,7 @@ export default function OrderFormScreen({ navigation, route }: AppScreenProps<'O
         >
           <ScrollView
             className="flex-1 bg-white dark:bg-gray-950"
-            contentContainerStyle={{ padding: 20, paddingBottom: 160 }}
+            contentContainerStyle={{ padding: 20, paddingBottom: 130 }}
             keyboardShouldPersistTaps="handled"
           >
             <Dropdown
@@ -604,7 +622,7 @@ export default function OrderFormScreen({ navigation, route }: AppScreenProps<'O
       >
         <ScrollView
           className="flex-1 bg-white dark:bg-gray-950"
-          contentContainerStyle={{ padding: 20, paddingBottom: 160 }}
+          contentContainerStyle={{ padding: 20, paddingBottom: 130 }}
           keyboardShouldPersistTaps="handled"
         >
           {step === 0 ? (
@@ -641,13 +659,36 @@ export default function OrderFormScreen({ navigation, route }: AppScreenProps<'O
                   required
                 />
 
-                <InputField
-                  label={t('form.clothCount')}
-                  value={clothCount}
-                  onChangeText={setClothCount}
-                  placeholder={t('form.clothCountPlaceholder')}
-                  keyboardType="numeric"
-                />
+                {garmentType === 'both' ? (
+                  <View className="flex-row gap-3">
+                    <View className="flex-1">
+                      <InputField
+                        label={t('form.shirtQuantity')}
+                        value={shirtCount}
+                        onChangeText={setShirtCount}
+                        placeholder={t('form.clothCountPlaceholder')}
+                        keyboardType="numeric"
+                      />
+                    </View>
+                    <View className="flex-1">
+                      <InputField
+                        label={t('form.pantQuantity')}
+                        value={pantCount}
+                        onChangeText={setPantCount}
+                        placeholder={t('form.clothCountPlaceholder')}
+                        keyboardType="numeric"
+                      />
+                    </View>
+                  </View>
+                ) : (
+                  <InputField
+                    label={t('form.clothCount')}
+                    value={clothCount}
+                    onChangeText={setClothCount}
+                    placeholder={t('form.clothCountPlaceholder')}
+                    keyboardType="numeric"
+                  />
+                )}
               </>
             )
           ) : null}
@@ -655,18 +696,23 @@ export default function OrderFormScreen({ navigation, route }: AppScreenProps<'O
           {step === 1 ? (
             <>
               {customerId ? (
-                <View className="mb-5 rounded-md border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800">
-                  {measurement ? (
-                    <>
-                      <View className="mb-3 flex-row items-center justify-between">
-                        <Text className="text-base font-semibold text-gray-900 dark:text-gray-50">
+                measurement ? (
+                  <View className="mb-5 overflow-hidden rounded-lg border border-primary-200 dark:border-primary-800">
+                    <View className="flex-row items-center justify-between bg-primary-50 px-4 py-3 dark:bg-primary-950">
+                      <View className="flex-row items-center">
+                        <FontAwesome5 name="ruler-combined" size={13} color="#1D4ED8" />
+                        <Text className="ml-2 text-base font-semibold text-gray-900 dark:text-gray-50">
                           {t('form.measurementsOnFile')}
                         </Text>
-                        <Text className="font-sans text-xs text-gray-500 dark:text-gray-400">
+                      </View>
+                      <View className="rounded-full bg-primary-100 px-2.5 py-1 dark:bg-primary-900">
+                        <Text className="font-sans text-xs font-medium text-primary-700 dark:text-primary-300">
                           {measurement.garment_type}
                         </Text>
                       </View>
-                      <View className="mb-3 flex-row flex-wrap gap-x-4 gap-y-2">
+                    </View>
+                    <View className="bg-white p-4 dark:bg-gray-900">
+                      <View className="mb-4 flex-row flex-wrap gap-2">
                         {[
                           { label: t('detail.measurementFields.chest'), value: measurement.chest },
                           { label: t('detail.measurementFields.waist'), value: measurement.waist },
@@ -676,9 +722,14 @@ export default function OrderFormScreen({ navigation, route }: AppScreenProps<'O
                         ]
                           .filter((f) => f.value != null)
                           .map((f) => (
-                            <View key={f.label} className="min-w-[70px]">
+                            <View
+                              key={f.label}
+                              className="min-w-[80px] flex-1 rounded-md bg-gray-50 px-3 py-2 dark:bg-gray-800"
+                            >
                               <Text className="font-sans text-xs text-gray-500 dark:text-gray-400">{f.label}</Text>
-                              <Text className="text-base font-semibold text-gray-900 dark:text-gray-50">{f.value}"</Text>
+                              <Text className="mt-0.5 text-base font-bold text-gray-900 dark:text-gray-50">
+                                {f.value}"
+                              </Text>
                             </View>
                           ))}
                       </View>
@@ -692,15 +743,24 @@ export default function OrderFormScreen({ navigation, route }: AppScreenProps<'O
                           })
                         }
                       />
-                    </>
-                  ) : (
-                    <>
-                      <Text className="mb-2 text-base font-medium text-gray-700 dark:text-gray-300">
+                    </View>
+                  </View>
+                ) : (
+                  <View className="mb-5 flex-row items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-900 dark:bg-amber-950">
+                    <View className="mt-0.5 h-8 w-8 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900">
+                      <FontAwesome5 name="ruler-combined" size={13} color="#B45309" />
+                    </View>
+                    <View className="flex-1">
+                      <Text className="mb-0.5 text-base font-semibold text-gray-900 dark:text-gray-50">
                         {t('form.noMeasurementsOnFile')}
+                      </Text>
+                      <Text className="font-sans mb-3 text-sm text-gray-600 dark:text-gray-300">
+                        {t('form.noMeasurementsHint')}
                       </Text>
                       <Button
                         title={t('form.addMeasurementsNow')}
                         variant="secondary"
+                        fullWidth={false}
                         onPress={() =>
                           navigation.navigate('CustomersTab' as any, {
                             screen: 'MeasurementForm',
@@ -708,9 +768,9 @@ export default function OrderFormScreen({ navigation, route }: AppScreenProps<'O
                           })
                         }
                       />
-                    </>
-                  )}
-                </View>
+                    </View>
+                  </View>
+                )
               ) : null}
 
               <InputField
@@ -860,18 +920,18 @@ export default function OrderFormScreen({ navigation, route }: AppScreenProps<'O
               <Button
                 title={t('form.back')}
                 variant="outline"
-                size="lg"
+                size="md"
                 fullWidth={false}
                 onPress={goBack}
                 className="flex-1"
               />
             ) : null}
             {step < STEP_COUNT - 1 ? (
-              <Button title={t('form.next')} size="lg" fullWidth={false} onPress={goNext} className="flex-1" />
+              <Button title={t('form.next')} size="md" fullWidth={false} onPress={goNext} className="flex-1" />
             ) : (
               <Button
                 title={t('form.createOrderFinal')}
-                size="lg"
+                size="md"
                 fullWidth={false}
                 onPress={handleSave}
                 loading={loading}
@@ -879,15 +939,6 @@ export default function OrderFormScreen({ navigation, route }: AppScreenProps<'O
               />
             )}
           </View>
-
-          {step === 1 || step === 3 ? (
-            <Button
-              title={step === 3 ? t('form.skipPayment') : t('form.skipStep')}
-              variant="outline"
-              onPress={() => (step === 3 ? void handleSave() : setStep((s) => s + 1))}
-              className="mt-3"
-            />
-          ) : null}
         </ScrollView>
       </KeyboardAvoidingView>
 

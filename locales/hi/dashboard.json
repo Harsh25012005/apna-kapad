@@ -24,9 +24,20 @@
   "loading": "डैशबोर्ड लोड हो रहा है...",
   "greeting": "नमस्ते, {{name}}",
   "defaultUser": "यूज़र",
+  "alerts": "सूचनाएं",
+  "calendarNavLabel": "कैलेंडर",
+  "searchPlaceholder": "नाम या फोन से ग्राहक खोजें",
+  "dueToday": {
+    "title": "आज देय",
+    "count_one": "{{count}} ऑर्डर",
+    "count_other": "{{count}} ऑर्डर"
+  },
   "owedToday": {
     "title": "आज बकाया"
   },
+  "overdueAlert_one": "{{count}} ऑर्डर की डिलीवरी छूट गई — देखने के लिए टैप करें",
+  "overdueAlert_other": "{{count}} ऑर्डर की डिलीवरी छूट गई — देखने के लिए टैप करें",
+  "newOrder": "नया ऑर्डर",
   "order": "ऑर्डर",
   "client": "ग्राहक",
   "topClients": "प्रमुख ग्राहक",
@@ -39,6 +50,44 @@
   "garmentOrder": "गारमेंट ऑर्डर",
   "paid": "भुगतान किया गया",
   "errorLoad": "डैशबोर्ड लोड नहीं हो सका",
+  "emptyTopClients": {
+    "title": "अभी तक कोई ग्राहक नहीं",
+    "description": "ऑर्डर जोड़ना शुरू करते ही आपके सबसे नियमित ग्राहक यहां दिखेंगे।"
+  },
+  "overdue": {
+    "title": "देर से चल रहे ऑर्डर",
+    "dueOn": "{{date}} को देय था"
+  },
+  "recentPayments": {
+    "title": "हाल के भुगतान",
+    "emptyTitle": "अभी तक कोई भुगतान नहीं",
+    "emptyDescription": "बिलों पर दर्ज किए गए भुगतान यहां दिखेंगे।"
+  },
+  "transactions": {
+    "title": "लेन-देन इतिहास",
+    "loading": "लेन-देन लोड हो रहे हैं...",
+    "loadError": "लेन-देन लोड नहीं हो सके",
+    "emptyTitle": "अभी तक कोई लेन-देन नहीं",
+    "emptyDescription": "बिलों पर दर्ज किए गए भुगतान यहां दिखेंगे",
+    "unknownCustomer": "अज्ञात ग्राहक",
+    "searchPlaceholder": "ग्राहक के नाम से खोजें"
+  },
+  "search": {
+    "title": "खोजें",
+    "placeholder": "ग्राहक के नाम या फोन से खोजें",
+    "emptyPromptTitle": "एक ग्राहक खोजें",
+    "emptyPromptDescription": "नाम या फोन नंबर टाइप करें, या आवाज़ से खोजने के लिए माइक पर टैप करें।",
+    "noResultsTitle": "कोई ग्राहक नहीं मिला",
+    "noResultsDescription": "जारी रखने के लिए उन्हें नए ग्राहक के रूप में जोड़ें।",
+    "addClient": "ग्राहक जोड़ें",
+    "noPhone": "फोन नहीं",
+    "createOrder": "ऑर्डर बनाएं",
+    "viewProfile": "प्रोफ़ाइल देखें",
+    "dictationFailed": "सुनाई नहीं दिया — फिर से कोशिश करें",
+    "microphonePermissionDenied": "आवाज़ से खोजने के लिए माइक्रोफ़ोन अनुमति ज़रूरी है",
+    "listening": "सुन रहे हैं…",
+    "listeningHint": "ग्राहक का नाम बोलें, या रोकने के लिए कहीं भी टैप करें"
+  },
   "dueSoon": {
     "title": "जल्द डिलीवरी वाले ऑर्डर"
   },

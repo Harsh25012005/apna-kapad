@@ -68,7 +68,7 @@ export default function SettingsScreen({ navigation }: SettingsScreenProps<'Sett
   return (
     <ScrollView
       className="flex-1 bg-gray-50 dark:bg-gray-950"
-      contentContainerStyle={{ paddingHorizontal: 20, paddingTop: insets.top + 8, paddingBottom: insets.bottom + 160, gap: 20 }}
+      contentContainerStyle={{ paddingHorizontal: 20, paddingTop: insets.top + 8, paddingBottom: insets.bottom + 100, gap: 20 }}
     >
       <View className="py-2">
         <Text className="text-[18px] font-semibold text-[#101828] dark:text-gray-50">{t('title')}</Text>

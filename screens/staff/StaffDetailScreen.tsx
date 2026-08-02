@@ -162,7 +162,7 @@ export default function StaffDetailScreen({ navigation, route }: SettingsScreenP
           </View>
         }
       />
-      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 130, gap: 16 }}>
+      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 180, gap: 16 }}>
         <Card>
           <View className="flex-row items-center">
             <Avatar name={staff.name} size="lg" />
@@ -181,13 +181,30 @@ export default function StaffDetailScreen({ navigation, route }: SettingsScreenP
           </View>
 
           <View className="mt-4 gap-2">
-            <View className="flex-row items-center justify-between rounded-md bg-gray-50 p-3 dark:bg-gray-800">
-              <Text className="font-sans text-sm text-gray-600 dark:text-gray-300">{t('detail.wageAmount')}</Text>
-              <Text className="text-base font-bold text-[#101828] dark:text-gray-50">
-                {formatCurrency(staff.wage_amount)}
-                <Text className="font-sans text-xs text-gray-500 dark:text-gray-400">/{WAGE_LABELS[staff.wage_type]}</Text>
-              </Text>
-            </View>
+            {staff.wage_type === 'per_piece' ? (
+              <>
+                <View className="flex-row items-center justify-between rounded-md bg-gray-50 p-3 dark:bg-gray-800">
+                  <Text className="font-sans text-sm text-gray-600 dark:text-gray-300">{t('detail.amountPerShirt')}</Text>
+                  <Text className="text-base font-bold text-[#101828] dark:text-gray-50">
+                    {formatCurrency(staff.wage_amount_shirt ?? 0)}
+                  </Text>
+                </View>
+                <View className="flex-row items-center justify-between rounded-md bg-gray-50 p-3 dark:bg-gray-800">
+                  <Text className="font-sans text-sm text-gray-600 dark:text-gray-300">{t('detail.amountPerPant')}</Text>
+                  <Text className="text-base font-bold text-[#101828] dark:text-gray-50">
+                    {formatCurrency(staff.wage_amount_pant ?? 0)}
+                  </Text>
+                </View>
+              </>
+            ) : (
+              <View className="flex-row items-center justify-between rounded-md bg-gray-50 p-3 dark:bg-gray-800">
+                <Text className="font-sans text-sm text-gray-600 dark:text-gray-300">{t('detail.wageAmount')}</Text>
+                <Text className="text-base font-bold text-[#101828] dark:text-gray-50">
+                  {formatCurrency(staff.wage_amount)}
+                  <Text className="font-sans text-xs text-gray-500 dark:text-gray-400">/{WAGE_LABELS[staff.wage_type]}</Text>
+                </Text>
+              </View>
+            )}
           </View>
         </Card>
 

@@ -107,7 +107,7 @@ export default function MeasurementFormScreen({
   const [customFields, setCustomFields] = useState<CustomField[]>([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [loadingRecord, setLoadingRecord] = useState(true);
+  const [loadingRecord, setLoadingRecord] = useState(isEditing);
 
   const groups = useMemo(() => {
     const match = GARMENT_TYPE_VALUES.find((v) => v === garmentType);
@@ -149,57 +149,68 @@ export default function MeasurementFormScreen({
   }, [shop.id]);
 
   const load = useCallback(async () => {
+    if (!measurementId) return;
     setLoadingRecord(true);
     try {
-      let recordCustomFields: CustomField[] = [];
+      const { data, error: fetchError } = await supabase
+        .from('measurements')
+        .select('*')
+        .eq('id', measurementId)
+        .single();
+      if (fetchError) throw fetchError;
+      if (data) {
+        const type = data.garment_type ?? '';
+        setGarmentType(type);
 
-      if (measurementId) {
-        const { data, error: fetchError } = await supabase
-          .from('measurements')
-          .select('*')
-          .eq('id', measurementId)
-          .single();
-        if (fetchError) throw fetchError;
-        if (data) {
-          const type = data.garment_type ?? '';
-          setGarmentType(type);
+        const match = GARMENT_TYPE_VALUES.find((v) => v === type);
+        const fields = match ? [...GROUPS[match].shirt, ...GROUPS[match].pant] : [];
+        const stored = Array.isArray(data.custom_fields)
+          ? (data.custom_fields as unknown as CustomField[])
+          : [];
 
-          const match = GARMENT_TYPE_VALUES.find((v) => v === type);
-          const fields = match ? [...GROUPS[match].shirt, ...GROUPS[match].pant] : [];
-          const stored = Array.isArray(data.custom_fields)
-            ? (data.custom_fields as unknown as CustomField[])
-            : [];
-
-          const next: Record<string, string> = {};
-          for (const field of fields) {
-            if (field.kind === 'column') {
-              next[field.id] = data[field.column]?.toString() ?? '';
-            } else {
-              next[field.id] = stored.find((f) => f?.label === field.label)?.value ?? '';
-            }
+        const next: Record<string, string> = {};
+        for (const field of fields) {
+          if (field.kind === 'column') {
+            next[field.id] = data[field.column]?.toString() ?? '';
+          } else {
+            next[field.id] = stored.find((f) => f?.label === field.label)?.value ?? '';
           }
-          setValues(next);
-          setNotes(data.notes ?? '');
-          recordCustomFields = stored.filter((f) => f && !RESERVED_CUSTOM_LABELS.has(f.label));
         }
+        setValues(next);
+        setNotes(data.notes ?? '');
+        setCustomFields(stored.filter((f) => f && !RESERVED_CUSTOM_LABELS.has(f.label)));
       }
-
-      const knownLabels = await fetchKnownCustomLabels();
-      const recordLabels = new Set(recordCustomFields.map((f) => f.label));
-      setCustomFields([
-        ...recordCustomFields,
-        ...knownLabels.filter((label) => !recordLabels.has(label)).map((label) => ({ label, value: '' })),
-      ]);
     } catch (err) {
       showToast(err instanceof Error ? err.message : t('measurementForm.loadError'), 'error');
     } finally {
       setLoadingRecord(false);
     }
-  }, [measurementId, fetchKnownCustomLabels, showToast, t]);
+  }, [measurementId, showToast, t]);
 
   useEffect(() => {
     void load();
   }, [load]);
+
+  // Runs independently of the record load above and never blocks the form —
+  // this is a "nice to have" background upgrade (pre-filling labels reused
+  // from other clients), not something worth holding up Save for if the
+  // network is slow or this query fails.
+  useEffect(() => {
+    let active = true;
+    void fetchKnownCustomLabels().then((knownLabels) => {
+      if (!active || knownLabels.length === 0) return;
+      setCustomFields((prev) => {
+        const existingLabels = new Set(prev.map((f) => f.label));
+        const additions = knownLabels
+          .filter((label) => !existingLabels.has(label))
+          .map((label) => ({ label, value: '' }));
+        return additions.length > 0 ? [...prev, ...additions] : prev;
+      });
+    });
+    return () => {
+      active = false;
+    };
+  }, [fetchKnownCustomLabels]);
 
   const addCustomField = () => {
     setCustomFields((prev) => [...prev, { label: '', value: '' }]);
@@ -306,7 +317,7 @@ export default function MeasurementFormScreen({
       >
       <ScrollView
         className="flex-1 bg-white dark:bg-gray-950"
-        contentContainerStyle={{ padding: 20, paddingBottom: 130 }}
+        contentContainerStyle={{ padding: 20, paddingBottom: 180 }}
         keyboardShouldPersistTaps="handled"
       >
         <Dropdown

@@ -236,7 +236,7 @@ export default function OrderDetailScreen({ navigation, route }: AppScreenProps<
           </View>
         }
       />
-      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 130, gap: 14 }}>
+      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 180, gap: 14 }}>
         {/* Header card: order number, status, priority */}
         <Card>
           <View className="flex-row items-center justify-between">

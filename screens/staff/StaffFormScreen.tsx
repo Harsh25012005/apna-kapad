@@ -23,6 +23,8 @@ export default function StaffFormScreen({ navigation, route }: SettingsScreenPro
   const [phone, setPhone] = useState('');
   const [wageType, setWageType] = useState<WageType>('monthly');
   const [wageAmount, setWageAmount] = useState('');
+  const [wageAmountShirt, setWageAmountShirt] = useState('');
+  const [wageAmountPant, setWageAmountPant] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -35,6 +37,8 @@ export default function StaffFormScreen({ navigation, route }: SettingsScreenPro
       setPhone(data.phone ?? '');
       setWageType(data.wage_type);
       setWageAmount(String(data.wage_amount ?? ''));
+      setWageAmountShirt(data.wage_amount_shirt != null ? String(data.wage_amount_shirt) : '');
+      setWageAmountPant(data.wage_amount_pant != null ? String(data.wage_amount_pant) : '');
     })();
   }, [staffId]);
 
@@ -46,15 +50,22 @@ export default function StaffFormScreen({ navigation, route }: SettingsScreenPro
     setError('');
     setLoading(true);
     try {
+      const isPerPiece = wageType === 'per_piece';
       const parsedWage = Number(wageAmount.trim());
+      const parsedShirt = Number(wageAmountShirt.trim());
+      const parsedPant = Number(wageAmountPant.trim());
       const payload = {
         shop_id: shop.id,
         name: name.trim(),
         phone: phone.trim() || null,
         wage_type: wageType,
-        wage_amount: Number.isFinite(parsedWage) && parsedWage > 0 ? parsedWage : 0,
-        wage_amount_shirt: null,
-        wage_amount_pant: null,
+        wage_amount: isPerPiece
+          ? 0
+          : Number.isFinite(parsedWage) && parsedWage > 0
+            ? parsedWage
+            : 0,
+        wage_amount_shirt: isPerPiece && Number.isFinite(parsedShirt) && parsedShirt > 0 ? parsedShirt : null,
+        wage_amount_pant: isPerPiece && Number.isFinite(parsedPant) && parsedPant > 0 ? parsedPant : null,
         wage_amount_pair: null,
       };
 
@@ -83,7 +94,7 @@ export default function StaffFormScreen({ navigation, route }: SettingsScreenPro
       >
         <ScrollView
           className="flex-1 bg-white dark:bg-gray-950"
-          contentContainerStyle={{ padding: 20, paddingBottom: 130 }}
+          contentContainerStyle={{ padding: 20, paddingBottom: 180 }}
           keyboardShouldPersistTaps="handled"
         >
           <InputField
@@ -113,13 +124,32 @@ export default function StaffFormScreen({ navigation, route }: SettingsScreenPro
               options={WAGE_TYPES}
             />
           </View>
-          <InputField
-            label={wageType === 'per_piece' ? t('form.amountPerPieceLabel') : t('form.wageAmountLabel')}
-            value={wageAmount}
-            onChangeText={setWageAmount}
-            placeholder={wageType === 'per_piece' ? t('form.amountPerPiecePlaceholder') : t('form.wageAmountPlaceholder')}
-            keyboardType="numeric"
-          />
+          {wageType === 'per_piece' ? (
+            <>
+              <InputField
+                label={t('form.amountPerShirtLabel')}
+                value={wageAmountShirt}
+                onChangeText={setWageAmountShirt}
+                placeholder={t('form.amountPerShirtPlaceholder')}
+                keyboardType="numeric"
+              />
+              <InputField
+                label={t('form.amountPerPantLabel')}
+                value={wageAmountPant}
+                onChangeText={setWageAmountPant}
+                placeholder={t('form.amountPerPantPlaceholder')}
+                keyboardType="numeric"
+              />
+            </>
+          ) : (
+            <InputField
+              label={t('form.wageAmountLabel')}
+              value={wageAmount}
+              onChangeText={setWageAmount}
+              placeholder={t('form.wageAmountPlaceholder')}
+              keyboardType="numeric"
+            />
+          )}
           <Button
             title={staffId ? t('form.updateStaff') : t('form.saveStaff')}
             size="lg"

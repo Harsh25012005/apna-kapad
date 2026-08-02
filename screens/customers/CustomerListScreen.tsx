@@ -140,7 +140,7 @@ export default function CustomerListScreen({ navigation }: CustomersScreenProps<
         keyExtractor={(item) => item.id}
         className="px-5"
         contentContainerStyle={
-          filtered.length === 0 ? { flexGrow: 1, paddingTop: 12 } : { paddingTop: 12, paddingBottom: 130, gap: 10 }
+          filtered.length === 0 ? { flexGrow: 1, paddingTop: 12 } : { paddingTop: 12, paddingBottom: 180, gap: 10 }
         }
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor="#1D4ED8" />

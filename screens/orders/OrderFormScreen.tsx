@@ -442,7 +442,7 @@ export default function OrderFormScreen({ navigation, route }: AppScreenProps<'O
         >
           <ScrollView
             className="flex-1 bg-white dark:bg-gray-950"
-            contentContainerStyle={{ padding: 20, paddingBottom: 130 }}
+            contentContainerStyle={{ padding: 20, paddingBottom: 180 }}
             keyboardShouldPersistTaps="handled"
           >
             <Dropdown
@@ -622,7 +622,7 @@ export default function OrderFormScreen({ navigation, route }: AppScreenProps<'O
       >
         <ScrollView
           className="flex-1 bg-white dark:bg-gray-950"
-          contentContainerStyle={{ padding: 20, paddingBottom: 130 }}
+          contentContainerStyle={{ padding: 20, paddingBottom: 180 }}
           keyboardShouldPersistTaps="handled"
         >
           {step === 0 ? (

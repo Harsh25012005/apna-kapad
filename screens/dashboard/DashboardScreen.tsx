@@ -107,7 +107,10 @@ export default function DashboardScreen({ navigation }: DashboardScreenProps<'Da
       const customerById = new Map(customers.map((c) => [c.id, c]));
       const billById = new Map(allBills.map((b) => [b.id, b]));
 
-      const todaysOrders = allOrders.filter((o) => o.order_date === localDate);
+      // "Due Today" means delivery is due today, not that the order was
+      // placed today — order_date only matches "today" on the day an order
+      // is created, so this tile read as permanently empty otherwise.
+      const todaysOrders = allOrders.filter((o) => o.delivery_date === localDate);
       const recentOrders = [...allOrders]
         .sort((a, b) => (a.created_at < b.created_at ? 1 : -1))
         .slice(0, 6);
@@ -194,7 +197,7 @@ export default function DashboardScreen({ navigation }: DashboardScreenProps<'Da
   return (
     <ScrollView
       className="flex-1 bg-white dark:bg-gray-950"
-      contentContainerStyle={{ paddingTop: insets.top + 8, paddingBottom: 130 }}
+      contentContainerStyle={{ paddingTop: insets.top + 8, paddingBottom: 180 }}
       refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor="#1D4ED8" />
       }

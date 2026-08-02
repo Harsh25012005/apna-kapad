@@ -115,7 +115,7 @@ export default function CustomerFormScreen({ navigation, route }: CustomersScree
       >
         <ScrollView
           className="flex-1 bg-white dark:bg-gray-950"
-          contentContainerStyle={{ padding: 20, paddingBottom: 130 }}
+          contentContainerStyle={{ padding: 20, paddingBottom: 180 }}
           keyboardShouldPersistTaps="handled"
         >
           <InputField

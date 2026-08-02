@@ -322,6 +322,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { error } = await supabase.auth.updateUser({ password: newPassword });
     if (error) throw error;
     setPasswordRecovery(false);
+    // Sign out of the recovery session so the user lands back on Login and
+    // signs in fresh with the new password, instead of being dropped
+    // straight into the app on the temporary recovery session.
+    await signOut();
   };
 
   const signOut = async () => {

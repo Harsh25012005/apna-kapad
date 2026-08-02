@@ -167,7 +167,7 @@ export default function BillFormScreen({ navigation, route }: AppScreenProps<'Bi
       >
       <ScrollView
         className="flex-1 bg-white dark:bg-gray-950"
-        contentContainerStyle={{ padding: 20, paddingBottom: insets.bottom + 100 }}
+        contentContainerStyle={{ padding: 20, paddingBottom: insets.bottom + 160 }}
         keyboardShouldPersistTaps="handled"
       >
         {customersLoaded && customers.length === 0 ? (

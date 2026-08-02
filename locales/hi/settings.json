@@ -39,6 +39,23 @@
     "saveSuccess": "दुकान प्रोफ़ाइल अपडेट हो गई",
     "saveError": "दुकान की जानकारी सेव नहीं हो सकी"
   },
+  "customMeasurementFields": {
+    "menuTitle": "कस्टम माप फ़ील्ड",
+    "title": "कस्टम माप फ़ील्ड",
+    "loading": "फ़ील्ड लोड हो रहे हैं...",
+    "loadError": "फ़ील्ड लोड नहीं हो सके",
+    "addFieldTitle": "नई फ़ील्ड जोड़ें",
+    "fieldNameLabel": "फ़ील्ड का नाम",
+    "fieldNamePlaceholder": "जैसे कॉलर, हिप, बॉटम",
+    "save": "सेव करें",
+    "saveSuccess": "फ़ील्ड जोड़ी गई",
+    "saveError": "फ़ील्ड जोड़ी नहीं जा सकी",
+    "duplicateError": "इस नाम की फ़ील्ड पहले से मौजूद है",
+    "deleteError": "फ़ील्ड हटाई नहीं जा सकी",
+    "listTitle": "आपकी फ़ील्ड",
+    "emptyTitle": "अभी तक कोई कस्टम फ़ील्ड नहीं",
+    "emptyDescription": "यहाँ जोड़ी गई फ़ील्ड हर ग्राहक के माप फॉर्म में दिखेंगी।"
+  },
   "appGuide": {
     "skip": "छोड़ें",
     "back": "पीछे",

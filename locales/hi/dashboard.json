@@ -31,8 +31,16 @@
     "count_one": "{{count}} ऑर्डर",
     "count_other": "{{count}} ऑर्डर"
   },
+  "thisMonthRevenue": {
+    "title": "इस महीने की आय"
+  },
   "owedToday": {
     "title": "आज बकाया"
+  },
+  "todaysDelivery": {
+    "title": "आज की कुल डिलीवरी",
+    "count_one": "{{count}} ऑर्डर",
+    "count_other": "{{count}} ऑर्डर"
   },
   "overdueAlert_one": "{{count}} ऑर्डर की डिलीवरी छूट गई — देखने के लिए टैप करें",
   "overdueAlert_other": "{{count}} ऑर्डर की डिलीवरी छूट गई — देखने के लिए टैप करें",
@@ -40,6 +48,7 @@
   "order": "ऑर्डर",
   "client": "ग्राहक",
   "topClients": "प्रमुख ग्राहक",
+  "viewMore": "और देखें",
   "add": "जोड़ें",
   "transactionHistory": "लेन-देन इतिहास",
   "viewAll": "सभी देखें",

@@ -31,8 +31,16 @@
     "count_one": "{{count}} ઓર્ડર",
     "count_other": "{{count}} ઓર્ડર"
   },
+  "thisMonthRevenue": {
+    "title": "આ મહિનાની આવક"
+  },
   "owedToday": {
     "title": "આજે બાકી"
+  },
+  "todaysDelivery": {
+    "title": "આજની કુલ ડિલિવરી",
+    "count_one": "{{count}} ઓર્ડર",
+    "count_other": "{{count}} ઓર્ડર"
   },
   "overdueAlert_one": "{{count}} ઓર્ડરની ડિલિવરી ચૂકાઈ ગઈ — જોવા માટે ટૅપ કરો",
   "overdueAlert_other": "{{count}} ઓર્ડરની ડિલિવરી ચૂકાઈ ગઈ — જોવા માટે ટૅપ કરો",
@@ -40,6 +48,7 @@
   "order": "ઓર્ડર",
   "client": "ગ્રાહક",
   "topClients": "મુખ્ય ગ્રાહકો",
+  "viewMore": "વધુ જુઓ",
   "add": "ઉમેરો",
   "transactionHistory": "વ્યવહાર ઇતિહાસ",
   "viewAll": "બધું જુઓ",

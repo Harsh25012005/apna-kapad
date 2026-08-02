@@ -31,8 +31,16 @@
     "count_one": "{{count}} order",
     "count_other": "{{count}} orders"
   },
+  "thisMonthRevenue": {
+    "title": "This Month Revenue"
+  },
   "owedToday": {
     "title": "Owed Today"
+  },
+  "todaysDelivery": {
+    "title": "Total Today's Delivery",
+    "count_one": "{{count}} order",
+    "count_other": "{{count}} orders"
   },
   "overdueAlert_one": "{{count}} order overdue — tap to view",
   "overdueAlert_other": "{{count}} orders overdue — tap to view",
@@ -40,6 +48,7 @@
   "order": "Order",
   "client": "Client",
   "topClients": "Top Clients",
+  "viewMore": "View more",
   "add": "Add",
   "transactionHistory": "Transaction history",
   "viewAll": "View all",

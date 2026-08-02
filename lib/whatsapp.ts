@@ -66,6 +66,32 @@ export function buildBillMessage({
   return i18n.t('whatsapp.bill', { ns: 'common', shopName, customerName, total, paid, pending });
 }
 
+/** Always Gujarati, regardless of app language — this is what the AI voice
+ * assistant sends after creating an order through the Gujarati conversation. */
+export function buildAiOrderConfirmationMessage({
+  shopName,
+  customerName,
+  orderNumber,
+  clothType,
+  clothCount,
+  totalAmount,
+}: {
+  shopName: string;
+  customerName: string;
+  orderNumber: string;
+  clothType: string;
+  clothCount: number;
+  totalAmount: number;
+}): string {
+  return [
+    `નમસ્તે ${customerName},`,
+    `${shopName} તરફથી તમારો ઓર્ડર #${orderNumber} નોંધાયો છે.`,
+    `વસ્તુ: ${clothType} (${clothCount} નંગ)`,
+    `કુલ રકમ: ₹${totalAmount}`,
+    `આભાર!`,
+  ].join('\n');
+}
+
 export function buildPaymentDueMessage({
   shopName,
   customerName,

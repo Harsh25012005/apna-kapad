@@ -39,6 +39,7 @@ export type DashboardStackParamList = SharedOrderRoutes & {
   Calendar: undefined;
   Transactions: undefined;
   Search: undefined;
+  AIOrderAssistant: undefined;
 };
 
 export type SettingsStackParamList = {
@@ -51,6 +52,7 @@ export type SettingsStackParamList = {
   Revenue: undefined;
   /** The whole Billing stack, nested here since Billing is no longer a tab. */
   Billing: undefined;
+  CustomMeasurementFields: undefined;
 };
 
 /**

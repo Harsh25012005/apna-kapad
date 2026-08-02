@@ -116,6 +116,13 @@ export default function SettingsScreen({ navigation }: SettingsScreenProps<'Sett
           iconColor="#7C3AED"
           label={t('staffManagement')}
           onPress={() => navigation.navigate('Staff')}
+        />
+        <MenuRow
+          icon="ruler-combined"
+          iconBg="bg-blue-50 dark:bg-blue-950"
+          iconColor="#1D4ED8"
+          label={t('customMeasurementFields.menuTitle')}
+          onPress={() => navigation.navigate('CustomMeasurementFields')}
           isLast
         />
       </SectionCard>

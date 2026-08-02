@@ -39,6 +39,23 @@
     "saveSuccess": "દુકાન પ્રોફાઇલ અપડેટ થઈ",
     "saveError": "દુકાનની વિગતો સાચવી શકાઈ નહીં"
   },
+  "customMeasurementFields": {
+    "menuTitle": "કસ્ટમ માપ ફીલ્ડ",
+    "title": "કસ્ટમ માપ ફીલ્ડ",
+    "loading": "ફીલ્ડ લોડ થઈ રહી છે...",
+    "loadError": "ફીલ્ડ લોડ કરી શકાઈ નહીં",
+    "addFieldTitle": "નવી ફીલ્ડ ઉમેરો",
+    "fieldNameLabel": "ફીલ્ડનું નામ",
+    "fieldNamePlaceholder": "દા.ત. કોલર, હિપ, બોટમ",
+    "save": "સેવ કરો",
+    "saveSuccess": "ફીલ્ડ ઉમેરાઈ",
+    "saveError": "ફીલ્ડ ઉમેરી શકાઈ નહીં",
+    "duplicateError": "આ નામની ફીલ્ડ પહેલેથી અસ્તિત્વમાં છે",
+    "deleteError": "ફીલ્ડ કાઢી શકાઈ નહીં",
+    "listTitle": "તમારી ફીલ્ડ",
+    "emptyTitle": "હજુ સુધી કોઈ કસ્ટમ ફીલ્ડ નથી",
+    "emptyDescription": "અહીં ઉમેરેલી ફીલ્ડ દરેક ગ્રાહકના માપ ફોર્મમાં દેખાશે."
+  },
   "appGuide": {
     "skip": "છોડો",
     "back": "પાછળ",

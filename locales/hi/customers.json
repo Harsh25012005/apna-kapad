@@ -131,6 +131,8 @@
     },
     "shirtSection": "शर्ट का माप",
     "pantSection": "पैंट का माप",
+    "fieldsSection": "माप",
+    "noFieldsDefined": "अभी तक कोई माप फ़ील्ड सेट नहीं है। सेटिंग्स → कस्टम माप फ़ील्ड से जोड़ें।",
     "fields": {
       "chest": {
         "label": "छाती (इंच)",

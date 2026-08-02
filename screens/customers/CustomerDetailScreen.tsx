@@ -8,6 +8,7 @@ import { supabase } from '../../lib/supabase';
 import { customersRepo, ordersRepo, billsRepo } from '../../lib/data/repository';
 import { formatCurrency, formatDate } from '../../lib/format';
 import { sendWhatsAppMessage, buildPaymentDueMessage } from '../../lib/whatsapp';
+import { getMeasurementFieldEntries } from '../../lib/measurementFields';
 import { useShop } from '../../context/AuthContext';
 import type { CustomersScreenProps } from '../../navigation/types';
 import type { Bill, Customer, Measurement, Order } from '../../types';
@@ -280,9 +281,7 @@ export default function CustomerDetailScreen({
           {measurements.length > 0 ? (
             <View className="gap-2">
               {measurements.map((m) => {
-                const customFields = Array.isArray(m.custom_fields)
-                  ? (m.custom_fields as unknown as { label: string; value: string }[])
-                  : [];
+                const fieldEntries = getMeasurementFieldEntries(m, t);
                 return (
                   <Card
                     key={m.id}
@@ -306,21 +305,12 @@ export default function CustomerDetailScreen({
                     </View>
 
                     <View className="mt-3 flex-row flex-wrap gap-y-3">
-                      {[
-                        { label: t('detail.measurementFields.chest'), value: m.chest },
-                        { label: t('detail.measurementFields.waist'), value: m.waist },
-                        { label: t('detail.measurementFields.shoulder'), value: m.shoulder },
-                        { label: t('detail.measurementFields.length'), value: m.length },
-                        { label: t('detail.measurementFields.sleeve'), value: m.sleeve },
-                        ...customFields.map((f) => ({ label: f.label, value: f.value })),
-                      ]
-                        .filter((f) => f.value !== null && f.value !== undefined && f.value !== '')
-                        .map((f, i) => (
-                          <View key={`${f.label}-${i}`} className="w-1/3 pr-2">
-                            <Text className="font-sans text-base text-gray-500 dark:text-gray-400">{f.label}</Text>
-                            <Text className="text-lg font-semibold text-gray-900 dark:text-gray-50">{f.value}</Text>
-                          </View>
-                        ))}
+                      {fieldEntries.map((f, i) => (
+                        <View key={`${f.label}-${i}`} className="w-1/3 pr-2">
+                          <Text className="font-sans text-base text-gray-500 dark:text-gray-400">{f.label}</Text>
+                          <Text className="text-lg font-semibold text-gray-900 dark:text-gray-50">{f.value}</Text>
+                        </View>
+                      ))}
                     </View>
 
                     {m.notes ? (

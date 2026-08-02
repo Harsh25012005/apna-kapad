@@ -164,6 +164,44 @@ export type Database = {
           },
         ]
       }
+      measurement_field_definitions: {
+        Row: {
+          created_at: string
+          field_key: string
+          id: string
+          input_type: string
+          label: string
+          shop_id: string
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string
+          field_key: string
+          id?: string
+          input_type?: string
+          label: string
+          shop_id: string
+          sort_order?: number
+        }
+        Update: {
+          created_at?: string
+          field_key?: string
+          id?: string
+          input_type?: string
+          label?: string
+          shop_id?: string
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "measurement_field_definitions_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       measurements: {
         Row: {
           chest: number | null
@@ -593,48 +631,6 @@ export type Database = {
           },
         ]
       }
-      staff_leave: {
-        Row: {
-          created_at: string
-          id: string
-          leave_date: string
-          reason: string | null
-          shop_id: string
-          staff_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          leave_date: string
-          reason?: string | null
-          shop_id: string
-          staff_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          leave_date?: string
-          reason?: string | null
-          shop_id?: string
-          staff_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "staff_leave_shop_id_fkey"
-            columns: ["shop_id"]
-            isOneToOne: false
-            referencedRelation: "shops"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "staff_leave_staff_id_fkey"
-            columns: ["staff_id"]
-            isOneToOne: false
-            referencedRelation: "staff"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       staff_orders: {
         Row: {
           assigned_at: string | null
@@ -731,57 +727,6 @@ export type Database = {
             columns: ["staff_id"]
             isOneToOne: false
             referencedRelation: "staff"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      till_entries: {
-        Row: {
-          cash_out: number
-          closing_cash: number | null
-          created_at: string
-          entry_date: string
-          id: string
-          notes: string | null
-          opening_cash: number
-          reconciled_by: string | null
-          shop_id: string
-        }
-        Insert: {
-          cash_out?: number
-          closing_cash?: number | null
-          created_at?: string
-          entry_date?: string
-          id?: string
-          notes?: string | null
-          opening_cash?: number
-          reconciled_by?: string | null
-          shop_id: string
-        }
-        Update: {
-          cash_out?: number
-          closing_cash?: number | null
-          created_at?: string
-          entry_date?: string
-          id?: string
-          notes?: string | null
-          opening_cash?: number
-          reconciled_by?: string | null
-          shop_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "till_entries_reconciled_by_fkey"
-            columns: ["reconciled_by"]
-            isOneToOne: false
-            referencedRelation: "staff"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "till_entries_shop_id_fkey"
-            columns: ["shop_id"]
-            isOneToOne: false
-            referencedRelation: "shops"
             referencedColumns: ["id"]
           },
         ]

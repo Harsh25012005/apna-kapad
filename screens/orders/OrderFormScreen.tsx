@@ -22,6 +22,7 @@ import { supabase } from '../../lib/supabase';
 import { customersRepo, ordersRepo, billsRepo, paymentsRepo } from '../../lib/data/repository';
 import { formatCurrency } from '../../lib/format';
 import { suggestDeliveryDate } from '../../lib/orderScheduling';
+import { getMeasurementFieldEntries } from '../../lib/measurementFields';
 import type { AppScreenProps } from '../../navigation/types';
 import type { Measurement, OrderPriority } from '../../types';
 
@@ -729,25 +730,17 @@ export default function OrderFormScreen({ navigation, route }: AppScreenProps<'O
                     </View>
                     <View className="bg-white p-4 dark:bg-gray-900">
                       <View className="mb-4 flex-row flex-wrap gap-2">
-                        {[
-                          { label: t('detail.measurementFields.chest'), value: measurement.chest },
-                          { label: t('detail.measurementFields.waist'), value: measurement.waist },
-                          { label: t('detail.measurementFields.shoulder'), value: measurement.shoulder },
-                          { label: t('detail.measurementFields.length'), value: measurement.length },
-                          { label: t('detail.measurementFields.sleeve'), value: measurement.sleeve },
-                        ]
-                          .filter((f) => f.value != null)
-                          .map((f) => (
-                            <View
-                              key={f.label}
-                              className="min-w-[80px] flex-1 rounded-md bg-gray-50 px-3 py-2 dark:bg-gray-800"
-                            >
-                              <Text className="font-sans text-base text-gray-500 dark:text-gray-400">{f.label}</Text>
-                              <Text className="mt-0.5 text-base font-bold text-gray-900 dark:text-gray-50">
-                                {f.value}"
-                              </Text>
-                            </View>
-                          ))}
+                        {getMeasurementFieldEntries(measurement, t).map((f) => (
+                          <View
+                            key={f.label}
+                            className="min-w-[80px] flex-1 rounded-md bg-gray-50 px-3 py-2 dark:bg-gray-800"
+                          >
+                            <Text className="font-sans text-base text-gray-500 dark:text-gray-400">{f.label}</Text>
+                            <Text className="mt-0.5 text-base font-bold text-gray-900 dark:text-gray-50">
+                              {f.value}"
+                            </Text>
+                          </View>
+                        ))}
                       </View>
                       <Button
                         title={t('form.viewEditMeasurements')}

@@ -6,6 +6,7 @@ import StaffFormScreen from '../screens/staff/StaffFormScreen';
 import StaffDetailScreen from '../screens/staff/StaffDetailScreen';
 import StaffWorkEntryFormScreen from '../screens/staff/StaffWorkEntryFormScreen';
 import RevenueScreen from '../screens/revenue/RevenueScreen';
+import CustomMeasurementFieldsScreen from '../screens/settings/CustomMeasurementFieldsScreen';
 import { BillingNavigator } from './BillingNavigator';
 import type { SettingsStackParamList } from './types';
 
@@ -26,6 +27,7 @@ export function SettingsNavigator() {
           re-registering each screen) keeps the Billing screens' existing
           BillingScreenProps typing working unchanged. */}
       <Stack.Screen name="Billing" component={BillingNavigator} />
+      <Stack.Screen name="CustomMeasurementFields" component={CustomMeasurementFieldsScreen} />
     </Stack.Navigator>
   );
 }

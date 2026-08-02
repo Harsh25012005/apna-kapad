@@ -39,6 +39,23 @@
     "saveSuccess": "Shop profile updated",
     "saveError": "Could not save shop details"
   },
+  "customMeasurementFields": {
+    "menuTitle": "Custom Measurement Fields",
+    "title": "Custom Measurement Fields",
+    "loading": "Loading fields...",
+    "loadError": "Could not load fields",
+    "addFieldTitle": "Add a new field",
+    "fieldNameLabel": "Field name",
+    "fieldNamePlaceholder": "e.g. Collar, Hip, Bottom",
+    "save": "Save",
+    "saveSuccess": "Field added",
+    "saveError": "Could not add field",
+    "duplicateError": "A field with this name already exists",
+    "deleteError": "Could not remove field",
+    "listTitle": "Your fields",
+    "emptyTitle": "No custom fields yet",
+    "emptyDescription": "Fields you add here will show up on every client's measurement form."
+  },
   "appGuide": {
     "skip": "Skip",
     "back": "Back",

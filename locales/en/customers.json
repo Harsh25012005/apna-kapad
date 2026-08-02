@@ -130,6 +130,8 @@
     },
     "shirtSection": "Shirt Measurements",
     "pantSection": "Pant Measurements",
+    "fieldsSection": "Measurements",
+    "noFieldsDefined": "No measurement fields set up yet. Add some from Settings → Custom Measurement Fields.",
     "fields": {
       "chest": {
         "label": "Chest (in)",

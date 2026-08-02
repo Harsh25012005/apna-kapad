@@ -31,11 +31,13 @@ type RecentPaymentItem = {
 
 type Stats = {
   todaysOrders: OrderListItem[];
+  todaysDeliveries: OrderListItem[];
   recentOrders: OrderListItem[];
   topClients: ClientItem[];
   recentPayments: RecentPaymentItem[];
   totalPendingBalance: number;
   unpaidBillsCount: number;
+  thisMonthRevenue: number;
 };
 
 const AVATAR_COLORS = [
@@ -107,6 +109,7 @@ export default function DashboardScreen({ navigation }: DashboardScreenProps<'Da
       const billById = new Map(allBills.map((b) => [b.id, b]));
 
       const todaysOrders = allOrders.filter((o) => o.order_date === localDate);
+      const todaysDeliveries = todaysOrders.filter((o) => o.status === 'delivered');
       const recentOrders = [...allOrders]
         .sort((a, b) => (a.created_at < b.created_at ? 1 : -1))
         .slice(0, 6);
@@ -140,6 +143,14 @@ export default function DashboardScreen({ navigation }: DashboardScreenProps<'Da
       }, 0);
       const unpaidBillsCount = allBills.filter((b) => b.payment_status !== 'paid').length;
 
+      // This month's revenue = payments received since the 1st of the
+      // current calendar month, in local time.
+      const monthKey = localDate.slice(0, 7);
+      const thisMonthRevenue = allPayments.reduce((sum, p) => {
+        const day = p.payment_date ? String(p.payment_date).slice(0, 10) : '';
+        return day.slice(0, 7) === monthKey ? sum + Number(p.amount_paid ?? 0) : sum;
+      }, 0);
+
       // Latest payments received, regardless of which bill/order they're
       // tied to — a fast "money coming in" pulse distinct from Transaction
       // History below (which is orders, not payments).
@@ -160,11 +171,13 @@ export default function DashboardScreen({ navigation }: DashboardScreenProps<'Da
 
       setStats({
         todaysOrders,
+        todaysDeliveries,
         recentOrders,
         topClients,
         recentPayments,
         totalPendingBalance,
         unpaidBillsCount,
+        thisMonthRevenue,
       });
     } catch (err) {
       showToast(err instanceof Error ? err.message : t('errorLoad'), 'error');
@@ -237,15 +250,15 @@ export default function DashboardScreen({ navigation }: DashboardScreenProps<'Da
           alert strip, each tappable straight into the filtered list. */}
       <View className="mb-4 flex-row gap-3 px-5">
         <Pressable
-          onPress={() => navigation.navigate('OrdersTab' as any)}
+          onPress={() => navigation.navigate('SettingsTab' as any, { screen: 'Revenue' })}
           className="flex-1 rounded-lg border border-gray-200 bg-white p-4 active:bg-gray-50 dark:border-gray-700 dark:bg-gray-900 dark:active:bg-gray-800"
         >
           <View className="mb-2 h-10 w-10 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-950">
-            <FontAwesome5 name="box-open" size={16} color="#1D4ED8" />
+            <FontAwesome5 name="chart-line" size={16} color="#1D4ED8" />
           </View>
-          <Text className="font-sans text-base font-medium text-gray-500 dark:text-gray-400">{t('dueToday.title')}</Text>
+          <Text className="font-sans text-base font-medium text-gray-500 dark:text-gray-400">{t('thisMonthRevenue.title')}</Text>
           <Text className="mt-0.5 text-[22px] font-bold text-[#101828] dark:text-gray-50">
-            {t('dueToday.count', { count: stats.todaysOrders.length })}
+            {formatCurrency(stats.thisMonthRevenue)}
           </Text>
         </Pressable>
 
@@ -326,9 +339,79 @@ export default function DashboardScreen({ navigation }: DashboardScreenProps<'Da
           )}
         </View>
 
-        {/* Recent Payments — a fast "money coming in" pulse, distinct from
-            Transaction History below (which lists orders, not payments). */}
+        {/* Total Today's Delivery — capped to 3 with a "view more" link into
+            the full Orders list, rather than an ever-growing scroll. */}
         <View className="mb-6 px-5">
+          <View className="mb-3 flex-row items-center justify-between">
+            <Text className="text-base font-semibold text-[#101828] dark:text-gray-50">{t('todaysDelivery.title')}</Text>
+          </View>
+
+          {stats.todaysDeliveries.length === 0 ? (
+            <EmptyState
+              variant="compact"
+              icon="calendar-day"
+              title={t('emptyTransactionsTitle')}
+              description={t('emptyTransactionsDescription')}
+            />
+          ) : (
+            <>
+              <View className="gap-3">
+                {stats.todaysDeliveries.slice(0, 3).map((o) => {
+                  const dateStr = o.order_date
+                    ? new Date(o.order_date).toLocaleDateString('en-US', {
+                      month: 'short',
+                      day: 'numeric',
+                      year: 'numeric',
+                    })
+                    : 'Recent';
+
+                  return (
+                    <Pressable
+                      key={o.id}
+                      onPress={() => navigation.navigate('OrderDetail', { orderId: o.id })}
+                      className="flex-row items-center justify-between rounded-xl py-2"
+                    >
+                      <View className="flex-1 flex-row items-center gap-3">
+                        <View className="h-[48px] w-[48px] items-center justify-center rounded-full bg-[#F4F6F9] dark:bg-gray-800">
+                          <FontAwesome5 name="shopping-bag" size={18} color="#1D4ED8" />
+                        </View>
+                        <View className="flex-1">
+                          <Text className="text-base font-semibold text-[#101828] dark:text-gray-50" numberOfLines={1}>
+                            #{o.order_number} · {o.customers?.name || t('customer')}
+                          </Text>
+                          <Text className="font-sans text-base font-medium text-[#667085] dark:text-gray-400">
+                            {dateStr}
+                          </Text>
+                        </View>
+                      </View>
+
+                      <View className="items-end">
+                        <Text className="text-base font-semibold text-[#101828] dark:text-gray-50">
+                          {o.cloth_type || t('garmentOrder')}
+                        </Text>
+                        <Text className="text-base font-medium text-[#12B76A]">
+                          {o.status.replace('_', ' ')}
+                        </Text>
+                      </View>
+                    </Pressable>
+                  );
+                })}
+              </View>
+              {stats.todaysDeliveries.length > 3 ? (
+                <Pressable
+                  onPress={() => navigation.navigate('OrdersTab' as any)}
+                  className="mt-2 items-center rounded-md py-2.5 active:bg-gray-50 dark:active:bg-gray-800"
+                >
+                  <Text className="text-base font-medium text-[#1D4ED8] underline">{t('viewMore')}</Text>
+                </Pressable>
+              ) : null}
+            </>
+          )}
+        </View>
+
+        {/* Recent Payments — a fast "money coming in" pulse, distinct from
+            Today's Delivery above (which lists orders, not payments). */}
+        <View className="px-5">
           <Text className="mb-3 text-base font-semibold text-[#101828] dark:text-gray-50">
             {t('recentPayments.title')}
           </Text>
@@ -361,77 +444,21 @@ export default function DashboardScreen({ navigation }: DashboardScreenProps<'Da
             </View>
           )}
         </View>
-
-        {/* Transaction History / Recent Activity */}
-        <View className="px-5">
-          <View className="mb-3 flex-row items-center justify-between">
-            <Text className="text-base font-semibold text-[#101828] dark:text-gray-50">{t('transactionHistory')}</Text>
-            {stats.recentOrders.length > 0 ? (
-              <Pressable onPress={() => navigation.navigate('Transactions')}>
-                <Text className="text-base font-medium text-[#1D4ED8] underline">{t('viewAll')}</Text>
-              </Pressable>
-            ) : null}
-          </View>
-
-          {stats.recentOrders.length === 0 ? (
-            <EmptyState
-              variant="compact"
-              icon="calendar-day"
-              title={t('emptyTransactionsTitle')}
-              description={t('emptyTransactionsDescription')}
-            />
-          ) : (
-            <View className="gap-3">
-              {stats.recentOrders.map((o) => {
-                const isDelivered = o.status === 'delivered';
-                const dateStr = o.order_date
-                  ? new Date(o.order_date).toLocaleDateString('en-US', {
-                    month: 'short',
-                    day: 'numeric',
-                    year: 'numeric',
-                  })
-                  : 'Recent';
-
-                return (
-                  <Pressable
-                    key={o.id}
-                    onPress={() => navigation.navigate('OrderDetail', { orderId: o.id })}
-                    className="flex-row items-center justify-between rounded-xl py-2"
-                  >
-                    <View className="flex-1 flex-row items-center gap-3">
-                      <View className="h-[48px] w-[48px] items-center justify-center rounded-full bg-[#F4F6F9] dark:bg-gray-800">
-                        <FontAwesome5 name="shopping-bag" size={18} color="#1D4ED8" />
-                      </View>
-                      <View className="flex-1">
-                        <Text className="text-base font-semibold text-[#101828] dark:text-gray-50" numberOfLines={1}>
-                          #{o.order_number} · {o.customers?.name || t('customer')}
-                        </Text>
-                        <Text className="font-sans text-base font-medium text-[#667085] dark:text-gray-400">
-                          {dateStr}
-                        </Text>
-                      </View>
-                    </View>
-
-                    <View className="items-end">
-                      <Text className="text-base font-semibold text-[#101828] dark:text-gray-50">
-                        {o.cloth_type || t('garmentOrder')}
-                      </Text>
-                      <Text
-                        className={`text-base font-medium ${isDelivered ? 'text-[#12B76A]' : 'text-amber-600'
-                          }`}
-                      >
-                        {o.status.replace('_', ' ')}
-                      </Text>
-                    </View>
-                  </Pressable>
-                );
-              })}
-            </View>
-          )}
-        </View>
       </View>
     </ScrollView>
 
+    {/* AI voice assistant — floats above the tab bar, opens a fresh
+        Gujarati conversation for hands-free order creation. */}
+    <Pressable
+      onPress={() => {
+        haptics.tap();
+        navigation.navigate('AIOrderAssistant');
+      }}
+      className="absolute bottom-6 right-5 h-14 w-14 items-center justify-center rounded-full bg-primary-600 shadow-lg active:bg-primary-700"
+      style={{ bottom: insets.bottom + 24 }}
+    >
+      <FontAwesome5 name="robot" size={20} color="#FFFFFF" />
+    </Pressable>
     </>
   );
 }

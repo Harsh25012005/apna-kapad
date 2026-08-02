@@ -17,9 +17,8 @@
     "loadError": "કેલેન્ડર લોડ થઈ શક્યું નથી",
     "deliveryLabel": "ડિલિવરી — #{{number}}",
     "trialLabel": "ટ્રાયલ — #{{number}}",
-    "leaveLabel": "{{name}} રજા પર",
     "emptyTitle": "કંઈ નિર્ધારિત નથી",
-    "emptyDescription": "આ દિવસ માટે ડિલિવરી, ટ્રાયલ અને સ્ટાફ રજા અહીં દેખાશે."
+    "emptyDescription": "આ દિવસ માટે ડિલિવરી અને ટ્રાયલ અહીં દેખાશે."
   },
   "loading": "ડેશબોર્ડ લોડ થઈ રહ્યું છે...",
   "greeting": "નમસ્તે, {{name}}",
@@ -87,14 +86,6 @@
     "microphonePermissionDenied": "અવાજથી શોધવા માટે માઇક્રોફોન પરવાનગી જરૂરી છે",
     "listening": "સાંભળી રહ્યા છીએ…",
     "listeningHint": "ગ્રાહકનું નામ બોલો, અથવા રોકવા માટે ગમે ત્યાં ટૅપ કરો"
-  },
-  "dueSoon": {
-    "title": "ટૂંક સમયમાં ડિલિવરી થનારા ઓર્ડર"
-  },
-  "pendingPayments": {
-    "title": "બાકી ચુકવણીઓ",
-    "subtitle_one": "{{count}} બિલની ચુકવણી બાકી",
-    "subtitle_other": "{{count}} બિલોની ચુકવણી બાકી"
   },
   "notifications": {
     "title": "સૂચનાઓ",

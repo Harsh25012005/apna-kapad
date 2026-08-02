@@ -46,7 +46,7 @@ export function Header({
             className="-ml-2 flex-row items-center gap-1 rounded-lg px-2 py-1 active:bg-gray-100 dark:active:bg-gray-800"
           >
             <Ionicons name="chevron-back" size={20} color={colors.textPrimary} />
-            <Text className="font-sans text-[15px] font-medium text-[#101828] dark:text-gray-50">
+            <Text className="font-sans text-base font-medium text-[#101828] dark:text-gray-50">
               {resolvedBackText}
             </Text>
           </Pressable>
@@ -64,7 +64,7 @@ export function Header({
             {title}
           </Text>
           {subtitle ? (
-            <Text className="font-sans text-xs text-gray-500 dark:text-gray-400">{subtitle}</Text>
+            <Text className="font-sans text-base text-gray-500 dark:text-gray-400">{subtitle}</Text>
           ) : null}
         </View>
 

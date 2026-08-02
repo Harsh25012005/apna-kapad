@@ -54,7 +54,7 @@ function MonthlyBarChart({ months }: { months: MonthBucket[] }) {
         return (
           <View key={m.key} className="flex-1 items-center">
             <Text
-              className={`mb-1 text-[10px] font-semibold ${
+              className={`mb-1 text-base font-semibold ${
                 isLast ? 'text-primary-600 dark:text-primary-400' : 'text-gray-500 dark:text-gray-400'
               }`}
               numberOfLines={1}
@@ -68,7 +68,7 @@ function MonthlyBarChart({ months }: { months: MonthBucket[] }) {
                 style={{ height: `${heightPct}%` }}
               />
             </View>
-            <Text className="font-sans mt-2 text-[10px] text-gray-500 dark:text-gray-400" numberOfLines={1}>
+            <Text className="font-sans mt-2 text-base text-gray-500 dark:text-gray-400" numberOfLines={1}>
               {m.label.split(' ')[0]}
             </Text>
           </View>
@@ -162,12 +162,12 @@ export default function RevenueScreen({ navigation }: SettingsScreenProps<'Reven
   return (
     <View className="flex-1 bg-gray-50 dark:bg-gray-950">
       <Header title={t('title')} onBack={() => navigation.goBack()} />
-      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 130, gap: 16 }}>
+      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 224, gap: 16 }}>
         {/* Total revenue hero */}
         <View className="rounded-md bg-[#101828] p-4 dark:border dark:border-gray-700">
           <View className="flex-row items-start justify-between">
             <View className="gap-1">
-              <Text className="font-sans text-sm font-medium text-[#98A2B3]">{t('totalRevenue')}</Text>
+              <Text className="font-sans text-base font-medium text-[#98A2B3]">{t('totalRevenue')}</Text>
               <Text className="text-[32px] font-medium tracking-tight text-white">
                 {formatCurrency(data.total)}
               </Text>
@@ -176,21 +176,21 @@ export default function RevenueScreen({ navigation }: SettingsScreenProps<'Reven
               <FontAwesome5 name="rupee-sign" size={20} color="#1D4ED8" />
             </View>
           </View>
-          <Text className="font-sans mt-2 text-xs text-[#667085] dark:text-gray-400">{t('revenueNote')}</Text>
+          <Text className="font-sans mt-2 text-base text-[#667085] dark:text-gray-400">{t('revenueNote')}</Text>
         </View>
 
         {/* This month / today / net */}
         <View className="flex-row gap-3">
           <View className="flex-1 rounded-md border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900">
-            <Text className="font-sans text-xs font-medium text-gray-500 dark:text-gray-400">{t('thisMonth')}</Text>
+            <Text className="font-sans text-base font-medium text-gray-500 dark:text-gray-400">{t('thisMonth')}</Text>
             <Text className="mt-1 text-base font-bold text-[#101828] dark:text-gray-50">{formatCurrency(data.thisMonth)}</Text>
           </View>
           <View className="flex-1 rounded-md border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900">
-            <Text className="font-sans text-xs font-medium text-gray-500 dark:text-gray-400">{t('today')}</Text>
+            <Text className="font-sans text-base font-medium text-gray-500 dark:text-gray-400">{t('today')}</Text>
             <Text className="mt-1 text-base font-bold text-[#101828] dark:text-gray-50">{formatCurrency(data.today)}</Text>
           </View>
           <View className="flex-1 rounded-md border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900">
-            <Text className="font-sans text-xs font-medium text-gray-500 dark:text-gray-400">{t('net')}</Text>
+            <Text className="font-sans text-base font-medium text-gray-500 dark:text-gray-400">{t('net')}</Text>
             <Text className="mt-1 text-base font-bold text-[#101828] dark:text-gray-50">{formatCurrency(net)}</Text>
           </View>
         </View>
@@ -209,19 +209,19 @@ export default function RevenueScreen({ navigation }: SettingsScreenProps<'Reven
           <Text className="mb-3 text-base font-semibold text-[#101828] dark:text-gray-50">{t('summary')}</Text>
           <View className="gap-2">
             <View className="flex-row items-center justify-between rounded-md bg-gray-50 p-3 dark:bg-gray-800">
-              <Text className="font-sans text-sm text-gray-600 dark:text-gray-300">{t('received')}</Text>
+              <Text className="font-sans text-base text-gray-600 dark:text-gray-300">{t('received')}</Text>
               <Text className="text-base font-bold text-emerald-700 dark:text-emerald-400">{formatCurrency(data.total)}</Text>
             </View>
             <View className="flex-row items-center justify-between rounded-md bg-gray-50 p-3 dark:bg-gray-800">
-              <Text className="font-sans text-sm text-gray-600 dark:text-gray-300">{t('staffCost')}</Text>
+              <Text className="font-sans text-base text-gray-600 dark:text-gray-300">{t('staffCost')}</Text>
               <Text className="text-base font-bold text-danger">- {formatCurrency(data.staffCost)}</Text>
             </View>
             <View className="flex-row items-center justify-between rounded-md bg-gray-100 p-3 dark:bg-gray-800">
-              <Text className="font-sans text-sm font-medium text-[#101828] dark:text-gray-50">{t('net')}</Text>
+              <Text className="font-sans text-base font-medium text-[#101828] dark:text-gray-50">{t('net')}</Text>
               <Text className="text-base font-bold text-[#101828] dark:text-gray-50">{formatCurrency(net)}</Text>
             </View>
             <View className="flex-row items-center justify-between rounded-md bg-amber-50 p-3 dark:bg-amber-950">
-              <Text className="font-sans text-sm text-amber-800 dark:text-amber-300">{t('outstanding')}</Text>
+              <Text className="font-sans text-base text-amber-800 dark:text-amber-300">{t('outstanding')}</Text>
               <Text className="text-base font-bold text-amber-800 dark:text-amber-300">{formatCurrency(data.outstanding)}</Text>
             </View>
           </View>

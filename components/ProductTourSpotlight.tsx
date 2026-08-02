@@ -62,12 +62,12 @@ export function ProductTourSpotlight({
               ))}
             </View>
             <Pressable onPress={onSkip} hitSlop={8}>
-              <Text className="text-sm font-medium text-gray-400">{t('appGuide.skip')}</Text>
+              <Text className="text-base font-medium text-gray-400">{t('appGuide.skip')}</Text>
             </Pressable>
           </View>
 
           <Text className="mb-1 text-base font-bold text-white">{t(`appGuide.steps.${step}.title`)}</Text>
-          <Text className="mb-4 text-sm leading-5 text-gray-300">
+          <Text className="mb-4 text-base leading-5 text-gray-300">
             {t(`appGuide.steps.${step}.description`)}
           </Text>
 
@@ -77,17 +77,17 @@ export function ProductTourSpotlight({
                 onPress={onBack}
                 className="rounded-full border border-white/15 px-4 py-2.5 active:bg-white/5"
               >
-                <Text className="text-sm font-semibold text-gray-200">{t('appGuide.back')}</Text>
+                <Text className="text-base font-semibold text-gray-200">{t('appGuide.back')}</Text>
               </Pressable>
             ) : null}
             <Pressable
               onPress={onTryItNow}
               className="flex-1 rounded-full border border-white/15 px-4 py-2.5 active:bg-white/5"
             >
-              <Text className="text-center text-sm font-semibold text-gray-200">{t('appGuide.tryItNow')}</Text>
+              <Text className="text-center text-base font-semibold text-gray-200">{t('appGuide.tryItNow')}</Text>
             </Pressable>
             <Pressable onPress={onNext} className="flex-1 rounded-full bg-primary-500 px-4 py-2.5 active:bg-primary-600">
-              <Text className="text-center text-sm font-semibold text-white">
+              <Text className="text-center text-base font-semibold text-white">
                 {isLast ? t('appGuide.getStarted') : t('appGuide.next')}
               </Text>
             </Pressable>

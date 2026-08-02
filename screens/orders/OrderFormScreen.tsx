@@ -76,8 +76,11 @@ export default function OrderFormScreen({ navigation, route }: AppScreenProps<'O
   const [customers, setCustomers] = useState<Option[]>([]);
 
   const [customerId, setCustomerId] = useState<string>(presetCustomerId ?? '');
-  const [garmentType, setGarmentType] = useState<GarmentType | ''>('');
-  const [clothCount, setClothCount] = useState('');
+  // Pre-filled for new orders so a routine order needs no typing: a tailor
+  // takes mostly the same kind of work all day, and one piece is by far the
+  // most common count. Both stay fully editable.
+  const [garmentType, setGarmentType] = useState<GarmentType | ''>(isEditing ? '' : 'shirt');
+  const [clothCount, setClothCount] = useState(isEditing ? '' : '1');
   const [shirtCount, setShirtCount] = useState('');
   const [pantCount, setPantCount] = useState('');
   const [notes, setNotes] = useState('');
@@ -98,9 +101,11 @@ export default function OrderFormScreen({ navigation, route }: AppScreenProps<'O
   // doesn't have to scroll through everything (garment, photos, delivery,
   // payment) at once — editing an existing order stays the original single
   // scroll, since that's a more deliberate, lower-frequency action.
-  const STEP_COUNT = 4;
+  // Only step 1 has required input; a "Save Order Now" shortcut appears
+  // from there on so the remaining steps never have to be tapped through.
+  const STEP_COUNT = 3;
   const [step, setStep] = useState(0);
-  const [measurement, setMeasurement] = useState<Measurement | null | undefined>(undefined);
+  const [measurement, setMeasurement] = useState<Measurement[]>([]);
   const [customersLoaded, setCustomersLoaded] = useState(false);
   const [quickAddVisible, setQuickAddVisible] = useState(false);
 
@@ -216,7 +221,7 @@ export default function OrderFormScreen({ navigation, route }: AppScreenProps<'O
   // a separate trip through Customer Detail to check them.
   useEffect(() => {
     if (!customerId) {
-      setMeasurement(undefined);
+      setMeasurement([]);
       return;
     }
     let active = true;
@@ -225,15 +230,25 @@ export default function OrderFormScreen({ navigation, route }: AppScreenProps<'O
       .select('*')
       .eq('customer_id', customerId)
       .order('updated_at', { ascending: false })
-      .limit(1)
-      .maybeSingle()
       .then(({ data }) => {
-        if (active) setMeasurement(data ?? null);
+        if (active) setMeasurement(data ?? []);
       });
     return () => {
       active = false;
     };
   }, [customerId]);
+
+  /**
+   * Measurements matching the chosen garment type. A "Shirt + Pant" order
+   * needs both the shirt and the pant record shown, so this filters rather
+   * than picking a single newest row — previously only one ever appeared.
+   */
+  const relevantMeasurements = measurement.filter((m) => {
+    const g = (m.garment_type ?? '').toLowerCase().replace(/[\s+]/g, '');
+    if (garmentType === 'shirt') return g.includes('shirt');
+    if (garmentType === 'pant') return g.includes('pant');
+    return true;
+  });
 
   const goNext = () => {
     if (step === 0 && !customerId) {
@@ -437,12 +452,12 @@ export default function OrderFormScreen({ navigation, route }: AppScreenProps<'O
         <Header title={t('form.editTitle')} onBack={() => navigation.goBack()} />
         <KeyboardAvoidingView
           className="flex-1"
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
         >
           <ScrollView
             className="flex-1 bg-white dark:bg-gray-950"
-            contentContainerStyle={{ padding: 20, paddingBottom: 130 }}
+            contentContainerStyle={{ padding: 20, paddingBottom: 224 }}
             keyboardShouldPersistTaps="handled"
           >
             <Dropdown
@@ -473,7 +488,7 @@ export default function OrderFormScreen({ navigation, route }: AppScreenProps<'O
               value={clothCount}
               onChangeText={setClothCount}
               placeholder={t('form.clothCountPlaceholder')}
-              keyboardType="numeric"
+              keyboardType="number-pad"
             />
 
             <InputField
@@ -485,7 +500,7 @@ export default function OrderFormScreen({ navigation, route }: AppScreenProps<'O
 
             {garmentType === 'shirt' || garmentType === 'both' ? (
               <View className="mb-4 w-full">
-                <Text className="mb-1.5 text-sm font-medium text-gray-700 dark:text-gray-300">
+                <Text className="mb-1.5 text-base font-medium text-gray-700 dark:text-gray-300">
                   {t('form.shirtPhotosCount', { count: shirtPhotoUris.length })}
                 </Text>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false}>
@@ -515,7 +530,7 @@ export default function OrderFormScreen({ navigation, route }: AppScreenProps<'O
 
             {garmentType === 'pant' || garmentType === 'both' ? (
               <View className="mb-4 w-full">
-                <Text className="mb-1.5 text-sm font-medium text-gray-700 dark:text-gray-300">
+                <Text className="mb-1.5 text-base font-medium text-gray-700 dark:text-gray-300">
                   {t('form.pantPhotosCount', { count: pantPhotoUris.length })}
                 </Text>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false}>
@@ -574,7 +589,7 @@ export default function OrderFormScreen({ navigation, route }: AppScreenProps<'O
               placeholder={t('form.billBookPlaceholder')}
             />
 
-            <Text className="font-sans mb-4 text-sm text-gray-500 dark:text-gray-400">{t('form.billingNotice')}</Text>
+            <Text className="font-sans mb-4 text-base text-gray-500 dark:text-gray-400">{t('form.billingNotice')}</Text>
 
             <Button title={t('form.updateOrder')} size="lg" onPress={handleSave} loading={loading} />
           </ScrollView>
@@ -596,13 +611,13 @@ export default function OrderFormScreen({ navigation, route }: AppScreenProps<'O
   // New order: 4-step wizard. Chunks "who/what, photos+measurements,
   // delivery, payment" into separate screens with a visible step count,
   // instead of one long scroll — steps 2-4 are all skippable.
-  const STEP_TITLE_KEYS = ['whoWhat', 'photos', 'delivery', 'payment'] as const;
+  const STEP_TITLE_KEYS = ['whoWhat', 'photos', 'deliveryPayment'] as const;
 
   return (
     <>
       <Header title={t('form.title')} onBack={() => navigation.goBack()} />
       <View className="border-b border-gray-100 bg-white px-5 pb-3 dark:border-gray-800 dark:bg-gray-950">
-        <Text className="mb-2 text-sm font-semibold text-primary-600 dark:text-primary-400">
+        <Text className="mb-2 text-base font-semibold text-primary-600 dark:text-primary-400">
           {t('form.stepOf', { current: step + 1, total: STEP_COUNT })} · {t(`form.stepTitles.${STEP_TITLE_KEYS[step]}`)}
         </Text>
         <View className="flex-row gap-1.5">
@@ -617,12 +632,12 @@ export default function OrderFormScreen({ navigation, route }: AppScreenProps<'O
 
       <KeyboardAvoidingView
         className="flex-1"
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
       >
         <ScrollView
           className="flex-1 bg-white dark:bg-gray-950"
-          contentContainerStyle={{ padding: 20, paddingBottom: 130 }}
+          contentContainerStyle={{ padding: 20, paddingBottom: 224 }}
           keyboardShouldPersistTaps="handled"
         >
           {step === 0 ? (
@@ -667,7 +682,7 @@ export default function OrderFormScreen({ navigation, route }: AppScreenProps<'O
                         value={shirtCount}
                         onChangeText={setShirtCount}
                         placeholder={t('form.clothCountPlaceholder')}
-                        keyboardType="numeric"
+                        keyboardType="number-pad"
                       />
                     </View>
                     <View className="flex-1">
@@ -676,7 +691,7 @@ export default function OrderFormScreen({ navigation, route }: AppScreenProps<'O
                         value={pantCount}
                         onChangeText={setPantCount}
                         placeholder={t('form.clothCountPlaceholder')}
-                        keyboardType="numeric"
+                        keyboardType="number-pad"
                       />
                     </View>
                   </View>
@@ -686,7 +701,7 @@ export default function OrderFormScreen({ navigation, route }: AppScreenProps<'O
                     value={clothCount}
                     onChangeText={setClothCount}
                     placeholder={t('form.clothCountPlaceholder')}
-                    keyboardType="numeric"
+                    keyboardType="number-pad"
                   />
                 )}
               </>
@@ -696,8 +711,9 @@ export default function OrderFormScreen({ navigation, route }: AppScreenProps<'O
           {step === 1 ? (
             <>
               {customerId ? (
-                measurement ? (
-                  <View className="mb-5 overflow-hidden rounded-lg border border-primary-200 dark:border-primary-800">
+                relevantMeasurements.length > 0 ? (
+                  relevantMeasurements.map((measurement) => (
+                  <View key={measurement.id} className="mb-5 overflow-hidden rounded-lg border border-primary-200 dark:border-primary-800">
                     <View className="flex-row items-center justify-between bg-primary-50 px-4 py-3 dark:bg-primary-950">
                       <View className="flex-row items-center">
                         <FontAwesome5 name="ruler-combined" size={13} color="#1D4ED8" />
@@ -706,7 +722,7 @@ export default function OrderFormScreen({ navigation, route }: AppScreenProps<'O
                         </Text>
                       </View>
                       <View className="rounded-full bg-primary-100 px-2.5 py-1 dark:bg-primary-900">
-                        <Text className="font-sans text-xs font-medium text-primary-700 dark:text-primary-300">
+                        <Text className="font-sans text-base font-medium text-primary-700 dark:text-primary-300">
                           {measurement.garment_type}
                         </Text>
                       </View>
@@ -726,7 +742,7 @@ export default function OrderFormScreen({ navigation, route }: AppScreenProps<'O
                               key={f.label}
                               className="min-w-[80px] flex-1 rounded-md bg-gray-50 px-3 py-2 dark:bg-gray-800"
                             >
-                              <Text className="font-sans text-xs text-gray-500 dark:text-gray-400">{f.label}</Text>
+                              <Text className="font-sans text-base text-gray-500 dark:text-gray-400">{f.label}</Text>
                               <Text className="mt-0.5 text-base font-bold text-gray-900 dark:text-gray-50">
                                 {f.value}"
                               </Text>
@@ -745,6 +761,7 @@ export default function OrderFormScreen({ navigation, route }: AppScreenProps<'O
                       />
                     </View>
                   </View>
+                  ))
                 ) : (
                   <View className="mb-5 flex-row items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-900 dark:bg-amber-950">
                     <View className="mt-0.5 h-8 w-8 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900">
@@ -754,7 +771,7 @@ export default function OrderFormScreen({ navigation, route }: AppScreenProps<'O
                       <Text className="mb-0.5 text-base font-semibold text-gray-900 dark:text-gray-50">
                         {t('form.noMeasurementsOnFile')}
                       </Text>
-                      <Text className="font-sans mb-3 text-sm text-gray-600 dark:text-gray-300">
+                      <Text className="font-sans mb-3 text-base text-gray-600 dark:text-gray-300">
                         {t('form.noMeasurementsHint')}
                       </Text>
                       <Button
@@ -780,8 +797,11 @@ export default function OrderFormScreen({ navigation, route }: AppScreenProps<'O
                 placeholder={t('form.itemNotesPlaceholder')}
               />
 
+              {/* Shirt and pant photo columns sit side by side when the
+                  order has both, so neither is hidden below the fold. */}
+              <View className={garmentType === 'both' ? 'flex-row gap-3' : ''}>
               {garmentType === 'shirt' || garmentType === 'both' ? (
-                <View className="mb-4 w-full">
+                <View className={garmentType === 'both' ? 'mb-4 flex-1' : 'mb-4 w-full'}>
                   <Text className="mb-1.5 text-base font-medium text-gray-700 dark:text-gray-300">
                     {t('form.shirtPhotosCount', { count: shirtPhotoUris.length })}
                   </Text>
@@ -811,7 +831,7 @@ export default function OrderFormScreen({ navigation, route }: AppScreenProps<'O
               ) : null}
 
               {garmentType === 'pant' || garmentType === 'both' ? (
-                <View className="mb-4 w-full">
+                <View className={garmentType === 'both' ? 'mb-4 flex-1' : 'mb-4 w-full'}>
                   <Text className="mb-1.5 text-base font-medium text-gray-700 dark:text-gray-300">
                     {t('form.pantPhotosCount', { count: pantPhotoUris.length })}
                   </Text>
@@ -839,6 +859,7 @@ export default function OrderFormScreen({ navigation, route }: AppScreenProps<'O
                   </ScrollView>
                 </View>
               ) : null}
+              </View>
             </>
           ) : null}
 
@@ -854,7 +875,7 @@ export default function OrderFormScreen({ navigation, route }: AppScreenProps<'O
                 minimumDate={new Date()}
               />
               {!deliveryDateTouched && clothCountNum > 0 ? (
-                <Text className="font-sans -mt-3 mb-4 text-sm text-gray-400 dark:text-gray-500">
+                <Text className="font-sans -mt-3 mb-4 text-base text-gray-400 dark:text-gray-500">
                   {t('form.deliverySuggested')}
                 </Text>
               ) : null}
@@ -881,12 +902,10 @@ export default function OrderFormScreen({ navigation, route }: AppScreenProps<'O
                 onChangeText={setBillBookNumber}
                 placeholder={t('form.billBookPlaceholder')}
               />
-            </>
-          ) : null}
 
-          {step === 3 ? (
-            <>
-              <View className="mb-4">
+              {/* Payment merged into the delivery step — neither had enough
+                  on it to justify its own screen, and both are optional. */}
+              <View className="mb-4 mt-2 border-t border-gray-100 pt-4 dark:border-gray-800">
                 <Text className="mb-1.5 text-base font-medium text-gray-700 dark:text-gray-300">{t('form.paymentMode')}</Text>
                 <RadioGroup<string>
                   variant="cards"
@@ -902,7 +921,7 @@ export default function OrderFormScreen({ navigation, route }: AppScreenProps<'O
                 value={totalAmount}
                 onChangeText={setTotalAmount}
                 placeholder={t('form.totalAmountPlaceholder')}
-                keyboardType="numeric"
+                keyboardType="number-pad"
               />
 
               <InputField
@@ -910,7 +929,7 @@ export default function OrderFormScreen({ navigation, route }: AppScreenProps<'O
                 value={paidAmount}
                 onChangeText={setPaidAmount}
                 placeholder={t('form.paidAmountPlaceholder')}
-                keyboardType="numeric"
+                keyboardType="number-pad"
               />
             </>
           ) : null}
@@ -939,6 +958,7 @@ export default function OrderFormScreen({ navigation, route }: AppScreenProps<'O
               />
             )}
           </View>
+
         </ScrollView>
       </KeyboardAvoidingView>
 

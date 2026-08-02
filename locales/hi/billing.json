@@ -1,26 +1,8 @@
 {
-  "cashRegister": {
-    "title": "कैश रजिस्टर",
-    "loading": "आज का रजिस्टर लोड हो रहा है...",
-    "loadError": "आज का रजिस्टर लोड नहीं हो सका",
-    "today": "आज",
-    "cashIn": "प्राप्त नकद भुगतान",
-    "expectedClosing": "अपेक्षित क्लोजिंग नकद",
-    "openingCash": "ओपनिंग नकद",
-    "cashOut": "नकद व्यय",
-    "closingCash": "क्लोजिंग नकद (गिना हुआ)",
-    "closingCashPlaceholder": "दराज गिनें और यहाँ दर्ज करें",
-    "notes": "नोट्स",
-    "shortBy": "{{amount}} कम",
-    "overBy": "{{amount}} अधिक",
-    "save": "मिलान सहेजें",
-    "saveSuccess": "टिल मिलान हो गया",
-    "saveError": "मिलान सहेज नहीं सका"
-  },
   "list": {
     "title": "बिलिंग",
     "totalPending": "सभी ग्राहकों की कुल बकाया राशि",
-    "searchPlaceholder": "ग्राहक का नाम या बिल ID खोजें",
+    "searchPlaceholder": "ग्राहक के नाम से खोजें",
     "filters": {
       "paid": "भुगतान हुआ",
       "partial": "आंशिक",
@@ -35,7 +17,10 @@
     "emptyTitle": "अभी तक कोई बिल नहीं",
     "emptyDescription": "भुगतान ट्रैक करने के लिए अपना पहला बिल बनाएं",
     "newBill": "नया बिल",
-    "errorLoad": "बिल लोड नहीं हो सके"
+    "errorLoad": "बिल लोड नहीं हो सके",
+    "lastBill": "आखिरी बिल {{date}}",
+    "billCount": "{{count}} बिल",
+    "outstanding": "{{amount}} बाकी"
   },
   "detail": {
     "loading": "बिल लोड हो रहा है...",
@@ -118,5 +103,13 @@
     "createBill": "बिल बनाएं",
     "successCreated": "बिल बन गया",
     "errorCreate": "बिल नहीं बन सका"
+  },
+  "collect": {
+    "title": "{{name}} से वसूली",
+    "sectionTitle": "वसूली बाकी",
+    "button": "वसूलें",
+    "emptyTitle": "सब चुकता है",
+    "emptyDescription": "जब किसी ग्राहक का पैसा बाकी होगा, वह यहाँ वसूली के लिए दिखेगा।",
+    "totalOwed": "{{count}} ग्राहकों से {{amount}} बाकी"
   }
 }

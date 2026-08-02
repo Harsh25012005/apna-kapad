@@ -58,7 +58,7 @@ export function Badge(props: BadgeProps) {
       style={{ backgroundColor: bgColor }}
     >
       {icon ? <FontAwesome5 name={icon} size={11} color={textColor} /> : null}
-      <Text className="text-sm font-semibold" style={{ color: textColor }}>
+      <Text className="text-base font-semibold" style={{ color: textColor }}>
         {text}
       </Text>
     </View>

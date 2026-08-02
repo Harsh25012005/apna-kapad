@@ -1,15 +1,4 @@
 {
-  "leaderboard": {
-    "title": "સ્ટાફ લીડરબોર્ડ",
-    "loading": "લીડરબોર્ડ લોડ થઈ રહ્યું છે...",
-    "loadError": "લીડરબોર્ડ લોડ થઈ શક્યું નથી",
-    "week": "આ અઠવાડિયે",
-    "month": "આ મહિને",
-    "ordersCompleted": "{{count}} ઓર્ડર પૂર્ણ થયા",
-    "avgTurnaround": "સરેરાશ {{hours}} કલાક",
-    "emptyTitle": "હજુ સુધી કોઈ ઓર્ડર પૂર્ણ થયો નથી",
-    "emptyDescription": "આ સમયગાળામાં પૂર્ણ થયેલા ઓર્ડર અહીં દેખાશે."
-  },
   "wageUnit": {
     "daily": "/દિવસ",
     "monthly": "/મહિનો",
@@ -46,8 +35,10 @@
     "rolePlaceholder": "ભૂમિકા પસંદ કરો",
     "wageTypeLabel": "વેતન પ્રકાર",
     "wageTypePlaceholder": "વેતન પ્રકાર પસંદ કરો",
-    "amountPerPieceLabel": "પ્રતિ નંગ રકમ",
-    "amountPerPiecePlaceholder": "પ્રતિ નંગ રકમ દાખલ કરો",
+    "amountPerPantLabel": "પેન્ટની કિંમત",
+    "amountPerPantPlaceholder": "પ્રતિ પેન્ટ રકમ દાખલ કરો",
+    "amountPerShirtLabel": "શર્ટની કિંમત",
+    "amountPerShirtPlaceholder": "પ્રતિ શર્ટ રકમ દાખલ કરો",
     "wageAmountLabel": "વેતન રકમ",
     "wageAmountPlaceholder": "વેતન રકમ દાખલ કરો",
     "updateStaff": "સ્ટાફ અપડેટ કરો",

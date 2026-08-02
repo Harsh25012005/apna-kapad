@@ -131,10 +131,10 @@ export default function ConfirmEmailScreen({ navigation, route }: AuthScreenProp
         </View>
 
         <View className="mt-8 flex-row items-center justify-center gap-1">
-          <Text className="font-sans text-sm text-gray-500 dark:text-gray-400">{t('confirmEmail.noEmail')}</Text>
+          <Text className="font-sans text-base text-gray-500 dark:text-gray-400">{t('confirmEmail.noEmail')}</Text>
           <Pressable onPress={handleResend} disabled={resending || cooldown > 0}>
             <Text
-              className={`text-sm font-semibold ${
+              className={`text-base font-semibold ${
                 resending || cooldown > 0 ? 'text-gray-400 dark:text-gray-600' : 'text-primary-600'
               }`}
             >
@@ -144,7 +144,7 @@ export default function ConfirmEmailScreen({ navigation, route }: AuthScreenProp
         </View>
 
         <Pressable className="mt-6 items-center" onPress={() => navigation.navigate('Login')}>
-          <Text className="text-sm font-semibold text-gray-500 dark:text-gray-400">{t('confirmEmail.backToLogin')}</Text>
+          <Text className="text-base font-semibold text-gray-500 dark:text-gray-400">{t('confirmEmail.backToLogin')}</Text>
         </Pressable>
       </View>
 
@@ -159,7 +159,7 @@ export default function ConfirmEmailScreen({ navigation, route }: AuthScreenProp
               onPress={() => handlePickMailApp(app)}
               className="flex-row items-center justify-between rounded-md border border-gray-200 bg-gray-50 p-3.5 active:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:active:bg-gray-700"
             >
-              <Text className="text-sm font-semibold text-gray-800 dark:text-gray-200">{app.label}</Text>
+              <Text className="text-base font-semibold text-gray-800 dark:text-gray-200">{app.label}</Text>
               <FontAwesome5 name="chevron-right" size={12} color="#9CA3AF" />
             </Pressable>
           ))}

@@ -34,7 +34,3 @@ export type BillWithRelations = Bill & {
   customers: Pick<Customer, 'name' | 'phone'> | null;
   payments: Payment[];
 };
-
-export type StaffWithOrders = Staff & {
-  staff_orders: Pick<StaffOrder, 'id' | 'completed_at'>[];
-};

@@ -34,7 +34,7 @@ export function SearchBar({
           placeholder={placeholder}
           placeholderTextColor={colors.textFaint}
           autoCapitalize="none"
-          className="font-sans flex-1 text-[15px] text-gray-900 py-0 dark:text-gray-50"
+          className="font-sans flex-1 text-base text-gray-900 py-0 dark:text-gray-50"
         />
         {value.length > 0 ? (
           <Pressable onPress={() => onChangeText('')} hitSlop={8}>

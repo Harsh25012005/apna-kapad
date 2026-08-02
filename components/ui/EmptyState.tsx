@@ -48,14 +48,14 @@ export function EmptyState({
       </View>
       <Text
         className={`text-center font-semibold text-gray-900 dark:text-gray-50 ${
-          isCompact ? 'mb-0.5 text-sm' : 'mb-1 text-base'
+          isCompact ? 'mb-0.5 text-base' : 'mb-1 text-base'
         }`}
       >
         {title ?? t('empty.title')}
       </Text>
       {description ? (
         <Text
-          className={`text-center text-gray-500 dark:text-gray-400 ${isCompact ? 'mb-3 text-xs' : 'mb-5 text-sm'}`}
+          className={`text-center text-gray-500 dark:text-gray-400 ${isCompact ? 'mb-3 text-base' : 'mb-5 text-base'}`}
         >
           {description}
         </Text>

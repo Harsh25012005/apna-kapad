@@ -3,7 +3,7 @@
     "dashboard": "હોમ",
     "customers": "ગ્રાહકો",
     "orders": "ઓર્ડર",
-    "settings": "પ્રોફાઇલ",
+    "settings": "બિઝનેસ",
     "add": "ઉમેરો"
   },
   "quickAdd": {
@@ -94,5 +94,9 @@
     "paymentDue": "નમસ્તે {{customerName}}, {{shopName}} માં તમારા ₹{{pending}} બાકી છે. અનુકૂળતાએ ચૂકવી દેશો. આભાર!",
     "errorNoPhone": "ગ્રાહકનો ફોન નંબર નોંધાયેલ નથી",
     "errorNotAvailable": "આ ફોનમાં વોટ્સએપ ઉપલબ્ધ નથી"
+  },
+  "filters": {
+    "clear": "દૂર કરો",
+    "applied": "ફિલ્ટર લાગુ છે: {{what}}"
   }
 }

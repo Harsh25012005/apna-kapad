@@ -83,14 +83,14 @@ export default function ShopSetupScreen() {
   };
 
   return (
-    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} className="flex-1 bg-white dark:bg-gray-950">
+    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} className="flex-1 bg-white dark:bg-gray-950">
       <ScrollView
         className="flex-1 bg-white dark:bg-gray-950"
         contentContainerStyle={{ padding: 24, paddingTop: insets.top + 24, paddingBottom: insets.bottom + 32 }}
         keyboardShouldPersistTaps="handled"
       >
         <Text className="mb-1 text-2xl font-bold text-gray-900 dark:text-gray-50">{t('shopSetup.title')}</Text>
-        <Text className="font-sans mb-6 text-sm text-gray-500 dark:text-gray-400">
+        <Text className="font-sans mb-6 text-base text-gray-500 dark:text-gray-400">
           {t('shopSetup.subtitle')}
         </Text>
 
@@ -120,7 +120,7 @@ export default function ShopSetupScreen() {
               );
             })}
           </View>
-          <Text className="font-sans mt-1.5 text-sm text-gray-400 dark:text-gray-500">{t('shopSetup.languageHint')}</Text>
+          <Text className="font-sans mt-1.5 text-base text-gray-400 dark:text-gray-500">{t('shopSetup.languageHint')}</Text>
         </View>
 
         <InputField
@@ -168,7 +168,7 @@ export default function ShopSetupScreen() {
             <Text className="text-base font-semibold text-primary-600 dark:text-primary-400">
               {t('shopSetup.addMoreDetails')}
             </Text>
-            <Text className="font-sans mt-1 text-sm text-gray-500 dark:text-gray-400">
+            <Text className="font-sans mt-1 text-base text-gray-500 dark:text-gray-400">
               {t('shopSetup.addMoreDetailsHint')}
             </Text>
           </Pressable>

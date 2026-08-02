@@ -74,7 +74,7 @@ export default function ShopEditScreen({ navigation }: SettingsScreenProps<'Shop
   };
 
   return (
-    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} className="flex-1 bg-white dark:bg-gray-950">
+    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} className="flex-1 bg-white dark:bg-gray-950">
       <Header title={t('shopEdit.title')} onBack={() => navigation.goBack()} />
       <ScrollView
         className="flex-1 bg-white dark:bg-gray-950"

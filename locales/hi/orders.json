@@ -16,7 +16,8 @@
       "whoWhat": "कौन और क्या",
       "photos": "माप और फ़ोटो",
       "delivery": "कब चाहिए?",
-      "payment": "भुगतान"
+      "payment": "भुगतान",
+      "deliveryPayment": "डिलीवरी और भुगतान"
     },
     "next": "आगे",
     "back": "पीछे",
@@ -130,7 +131,8 @@
     "orderUpdateFailed": "ऑर्डर अपडेट नहीं हो सका",
     "loading": "ऑर्डर लोड हो रहा है...",
     "loadError": "ऑर्डर लोड नहीं हो सका",
-    "billingNotice": "कुल राशि, भुगतान की गई राशि और भुगतान का तरीका इस ऑर्डर का बिल बनने के बाद वहीं से प्रबंधित होते हैं — भुगतान दर्ज करने के लिए ऑर्डर विवरण पर \"भुगतान जोड़ें / बिल देखें\" का उपयोग करें।"
+    "billingNotice": "कुल राशि, भुगतान की गई राशि और भुगतान का तरीका इस ऑर्डर का बिल बनने के बाद वहीं से प्रबंधित होते हैं — भुगतान दर्ज करने के लिए ऑर्डर विवरण पर \"भुगतान जोड़ें / बिल देखें\" का उपयोग करें।",
+    "saveNow": "ऑर्डर अभी सेव करें"
   },
   "detail": {
     "pantPieces": "पैंट के टुकड़े",
@@ -188,13 +190,14 @@
     "whatsapp": {
       "sectionTitle": "ग्राहक को संदेश",
       "sendCompletion": "तैयार होने का संदेश भेजें",
-      "sendReminder": "रिमाइंडर भेजें",
+      "sendReminder": "भुगतान रिमाइंडर भेजें",
       "noPhone": "इस ग्राहक का फ़ोन नंबर सेव नहीं है, इसलिए WhatsApp संदेश नहीं भेजा जा सकता।",
       "sendFailed": "WhatsApp नहीं खुल सका",
       "completionBody": "नमस्ते {{customerName}}, {{shopName}} में आपका ऑर्डर #{{orderNumber}} तैयार है और ले जाने के लिए उपलब्ध है। धन्यवाद!",
-      "reminderPaymentBody": "नमस्ते {{customerName}}, {{shopName}} में आपके ऑर्डर #{{orderNumber}} पर {{amount}} अभी बाकी है। सुविधानुसार चुका दें। धन्यवाद!",
-      "reminderPickupBody": "नमस्ते {{customerName}}, {{shopName}} से अपना ऑर्डर #{{orderNumber}} ले जाना न भूलें। धन्यवाद!"
-    }
+      "reminderPaymentBody": "नमस्ते {{customerName}}, {{shopName}} में आपके ऑर्डर #{{orderNumber}} पर {{amount}} अभी बाकी है। सुविधानुसार चुका दें। धन्यवाद!"
+    },
+    "tokenBadge": "टोकन #{{number}}",
+    "deliveryBadge": "डिलीवरी {{date}}"
   },
   "list": {
     "title": "ऑर्डर",
@@ -224,6 +227,11 @@
     "pieces": "{{count}} टुकड़े",
     "noClothCount": "कपड़े की संख्या नहीं",
     "delivery": "डिलीवरी {{date}}",
-    "urgent": "अत्यावश्यक"
+    "urgent": "अत्यावश्यक",
+    "showDelivered": "पूरे हुए ऑर्डर दिखाएं ({{count}})",
+    "allCaughtUpTitle": "सब पूरा हो गया",
+    "allCaughtUpDescription": "अभी कुछ बाकी नहीं है। {{count}} पूरे हुए ऑर्डर छिपे हैं — देखने के लिए फ़िल्टर आइकन दबाएं।",
+    "tokenBadge": "टोकन #{{number}}",
+    "deliveryBadge": "डिलीवरी {{date}}"
   }
 }

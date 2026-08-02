@@ -22,12 +22,12 @@ export function ProductTourWelcome() {
           <Text className="mb-1.5 text-center text-lg font-bold text-gray-900 dark:text-gray-50">
             {t('appGuide.welcome.title')}
           </Text>
-          <Text className="mb-6 text-center text-sm leading-5 text-gray-500 dark:text-gray-400">
+          <Text className="mb-6 text-center text-base leading-5 text-gray-500 dark:text-gray-400">
             {t('appGuide.welcome.subtitle')}
           </Text>
           <Button title={t('appGuide.welcome.cta')} onPress={next} />
           <Pressable onPress={finish} hitSlop={8} className="mt-4">
-            <Text className="text-sm font-medium text-gray-400 dark:text-gray-500">{t('appGuide.skip')}</Text>
+            <Text className="text-base font-medium text-gray-400 dark:text-gray-500">{t('appGuide.skip')}</Text>
           </Pressable>
         </View>
       </View>

@@ -61,7 +61,7 @@ export default function SignupScreen({ navigation }: AuthScreenProps<'Signup'>) 
 
   return (
     <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       className="flex-1 bg-white dark:bg-gray-950"
     >
       <ScrollView
@@ -99,7 +99,7 @@ export default function SignupScreen({ navigation }: AuthScreenProps<'Signup'>) 
 
           <View className="my-6 flex-row items-center">
             <View className="h-px flex-1 bg-gray-200 dark:bg-gray-800" />
-            <Text className="font-sans mx-3 text-xs text-gray-400 dark:text-gray-500">{t('signup.or')}</Text>
+            <Text className="font-sans mx-3 text-base text-gray-400 dark:text-gray-500">{t('signup.or')}</Text>
             <View className="h-px flex-1 bg-gray-200 dark:bg-gray-800" />
           </View>
 

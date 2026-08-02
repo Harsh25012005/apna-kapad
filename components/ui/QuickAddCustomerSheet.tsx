@@ -25,15 +25,19 @@ export function QuickAddCustomerSheet({ visible, onClose, onCreated }: QuickAddC
   const shop = useShop();
   const showToast = useToast();
 
+  const [bookNumber, setBookNumber] = useState('');
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
+  const [bookNumberError, setBookNumberError] = useState('');
   const [nameError, setNameError] = useState('');
   const [phoneError, setPhoneError] = useState('');
   const [loading, setLoading] = useState(false);
 
   const reset = () => {
+    setBookNumber('');
     setName('');
     setPhone('');
+    setBookNumberError('');
     setNameError('');
     setPhoneError('');
   };
@@ -45,6 +49,13 @@ export function QuickAddCustomerSheet({ visible, onClose, onCreated }: QuickAddC
 
   const handleSave = async () => {
     let hasError = false;
+
+    if (!bookNumber.trim()) {
+      setBookNumberError(t('form.bookNumberRequired'));
+      hasError = true;
+    } else {
+      setBookNumberError('');
+    }
 
     if (!name.trim()) {
       setNameError(t('form.nameRequired'));
@@ -73,7 +84,7 @@ export function QuickAddCustomerSheet({ visible, onClose, onCreated }: QuickAddC
         name: name.trim(),
         phone: digits,
         address: null,
-        book_number: null,
+        book_number: bookNumber.trim(),
       });
 
       showToast(t('form.saveSuccess'), 'success');
@@ -88,6 +99,19 @@ export function QuickAddCustomerSheet({ visible, onClose, onCreated }: QuickAddC
 
   return (
     <BottomSheet visible={visible} onClose={handleClose} title={t('quickAdd.title')}>
+      {/* Same field order as the full client form: client number, name,
+          phone — matching how a shop owner reads their paper order book. */}
+      <InputField
+        label={t('form.bookNumberLabel')}
+        value={bookNumber}
+        onChangeText={(v) => {
+          setBookNumber(v);
+          setBookNumberError('');
+        }}
+        placeholder={t('form.bookNumberPlaceholder')}
+        error={bookNumberError}
+        required
+      />
       <InputField
         label={t('form.nameLabel')}
         value={name}

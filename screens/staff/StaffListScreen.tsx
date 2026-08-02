@@ -100,14 +100,14 @@ export default function StaffListScreen({ navigation }: SettingsScreenProps<'Sta
                     setWageTypeFilter(null);
                   }}
                 >
-                  <Text className="text-xs font-semibold text-primary-600 dark:text-primary-400">{t('list.reset')}</Text>
+                  <Text className="text-base font-semibold text-primary-600 dark:text-primary-400">{t('list.reset')}</Text>
                 </Pressable>
               ) : null}
             </View>
 
             {/* Wage Type Section */}
             <View>
-              <Text className="mb-2 text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+              <Text className="mb-2 text-base font-semibold text-gray-600 dark:text-gray-400">
                 {t('list.wageTypeSection')}
               </Text>
               <View className="flex-row flex-wrap gap-2">
@@ -121,7 +121,7 @@ export default function StaffListScreen({ navigation }: SettingsScreenProps<'Sta
                         active ? 'border-primary-600 bg-primary-600' : 'border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800'
                       }`}
                     >
-                      <Text className={`text-xs font-semibold ${active ? 'text-white' : 'text-gray-600 dark:text-gray-300'}`}>
+                      <Text className={`text-base font-semibold ${active ? 'text-white' : 'text-gray-600 dark:text-gray-300'}`}>
                         {WAGE_LABELS[wt]}
                       </Text>
                     </Pressable>
@@ -134,7 +134,7 @@ export default function StaffListScreen({ navigation }: SettingsScreenProps<'Sta
               onPress={() => setShowFilterModal(false)}
               className="items-center rounded-md bg-primary-600 py-3 active:bg-primary-700"
             >
-              <Text className="text-sm font-semibold text-white">{t('list.applyFilters')}</Text>
+              <Text className="text-base font-semibold text-white">{t('list.applyFilters')}</Text>
             </Pressable>
           </Pressable>
         </Pressable>
@@ -144,7 +144,7 @@ export default function StaffListScreen({ navigation }: SettingsScreenProps<'Sta
         data={filteredStaff}
         keyExtractor={(item) => item.id}
         className="px-5"
-        contentContainerStyle={filteredStaff.length === 0 ? { flexGrow: 1, paddingTop: 12 } : { paddingTop: 12, paddingBottom: 130, gap: 10 }}
+        contentContainerStyle={filteredStaff.length === 0 ? { flexGrow: 1, paddingTop: 12 } : { paddingTop: 12, paddingBottom: 224, gap: 10 }}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor="#1D4ED8" />
         }
@@ -166,8 +166,8 @@ export default function StaffListScreen({ navigation }: SettingsScreenProps<'Sta
             <View className="flex-row items-center">
               <Avatar name={item.name} size="md" />
               <View className="ml-3 flex-1">
-                <Text className="text-base font-semibold text-gray-900 dark:text-gray-50">{item.name}</Text>
-                <Text className="font-sans text-sm text-gray-500 dark:text-gray-400">{item.phone ?? t('list.noPhone')}</Text>
+                <Text className="text-lg font-semibold text-gray-900 dark:text-gray-50">{item.name}</Text>
+                <Text className="font-sans text-base text-gray-500 dark:text-gray-400">{item.phone ?? t('list.noPhone')}</Text>
               </View>
               <Badge label={WAGE_LABELS[item.wage_type]} />
             </View>

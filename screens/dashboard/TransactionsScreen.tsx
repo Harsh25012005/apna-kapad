@@ -69,7 +69,7 @@ export default function TransactionsScreen({ navigation }: DashboardScreenProps<
         keyExtractor={(item) => item.id}
         className="px-5"
         contentContainerStyle={
-          filtered.length === 0 ? { flexGrow: 1, paddingTop: 12 } : { paddingTop: 12, paddingBottom: 130, gap: 10 }
+          filtered.length === 0 ? { flexGrow: 1, paddingTop: 12 } : { paddingTop: 12, paddingBottom: 224, gap: 10 }
         }
         ListEmptyComponent={
           <EmptyState
@@ -85,8 +85,8 @@ export default function TransactionsScreen({ navigation }: DashboardScreenProps<
                 <FontAwesome5 name="rupee-sign" size={16} color="#1D4ED8" />
               </View>
               <View className="ml-3 flex-1">
-                <Text className="text-sm font-semibold text-gray-900 dark:text-gray-50">{item.customerName}</Text>
-                <Text className="font-sans mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+                <Text className="text-base font-semibold text-gray-900 dark:text-gray-50">{item.customerName}</Text>
+                <Text className="font-sans mt-0.5 text-base text-gray-500 dark:text-gray-400">
                   {formatDateTime(item.payment_date)}
                   {item.payment_mode ? ` · ${item.payment_mode}` : ''}
                 </Text>

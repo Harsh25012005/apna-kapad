@@ -88,7 +88,7 @@ export default function SearchScreen({ navigation }: DashboardScreenProps<'Searc
             placeholder={t('search.placeholder')}
             placeholderTextColor={colors.textFaint}
             autoFocus
-            className="font-sans ml-3 flex-1 text-[15px] text-gray-900 dark:text-gray-50"
+            className="font-sans ml-3 flex-1 text-base text-gray-900 dark:text-gray-50"
           />
           {query.length > 0 ? (
             <Pressable onPress={() => setQuery('')} hitSlop={8}>
@@ -136,7 +136,7 @@ export default function SearchScreen({ navigation }: DashboardScreenProps<'Searc
                 <Text className="text-base font-semibold text-gray-900 dark:text-gray-50" numberOfLines={1}>
                   {item.name}
                 </Text>
-                <Text className="font-sans text-sm text-gray-500 dark:text-gray-400">
+                <Text className="font-sans text-base text-gray-500 dark:text-gray-400">
                   {item.phone || t('search.noPhone')}
                 </Text>
               </View>

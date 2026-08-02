@@ -135,6 +135,58 @@ const INACTIVE = '#8A8A8A';
 const FAB_SIZE = 54;
 
 /**
+ * The bottom bar only shows on the app's five main "browse" screens — Home,
+ * Clients, Orders, Staff, and Billing lists. Every detail/form/nested screen
+ * hides it, so drilling into a record doesn't keep a persistent nav bar
+ * (and stray FAB) competing for space and taps on a screen that's meant to
+ * be focused on one task.
+ */
+/**
+ * Screens that hide the bottom bar — every add/edit form and every detail
+ * page, which are focused single-task screens with their own back button.
+ *
+ * Deliberately a blacklist, not a whitelist: a tab's `route.state` is
+ * undefined until its nested navigator has rendered at least once, so a
+ * whitelist made the bar vanish on a tab's first visit (it saw "OrdersTab"
+ * rather than "OrderList"). Defaulting to *visible* means an unrecognised
+ * or not-yet-rendered screen keeps the bar instead of losing it.
+ */
+const TAB_BAR_HIDDEN_SCREENS = [
+  // Add / edit forms
+  'OrderForm',
+  'CustomerForm',
+  'MeasurementForm',
+  'BillForm',
+  'StaffForm',
+  'StaffWorkEntryForm',
+  'ShopEdit',
+  // Detail pages
+  'OrderDetail',
+  'CustomerDetail',
+  'BillDetail',
+  'StaffDetail',
+  'Revenue',
+  // Staff list is reached from Business rather than being a tab of its own,
+  // so it behaves like a nested page and hides the bar too.
+  'Staff',
+  // Full-screen focused tasks
+  'Search',
+];
+
+/**
+ * Drills into nested navigator state to find the name of the screen
+ * actually on top, since `route.name` alone only ever gives the name of the
+ * top-level tab/stack entry (e.g. "Billing"), not the real screen nested
+ * inside it (e.g. "BillingList" vs "BillDetail").
+ */
+function getDeepestRouteName(route: { name: string; state?: { index?: number; routes: { name: string; state?: unknown }[] } }): string {
+  if (!route.state) return route.name;
+  const nested = route.state;
+  const activeRoute = nested.routes[nested.index ?? nested.routes.length - 1];
+  return getDeepestRouteName(activeRoute as typeof route);
+}
+
+/**
  * Concave dip in the bar's top edge that the Add button nests into.
  * Mirrors the notch cut into the bottom of the QuickAddMenu card, so the two
  * line up around the same circle — see NOTCH in QuickAddMenu.
@@ -226,6 +278,22 @@ export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
     setIsAddMenuOpen((prev) => !prev);
   };
 
+  // Close the Add menu whenever the user actually navigates to a different
+  // screen. We only watch `state.index` (which tab) and the innermost screen
+  // name. Importantly we do NOT fire on the first render: React Navigation sets
+  // `route.state` to undefined until the nested navigator renders once, which
+  // would trigger an immediate close right after the FAB is tapped on a
+  // fresh-mounted tab.
+  const activeDeepest = getDeepestRouteName(state.routes[state.index] as never);
+  const activeRouteKey = `${state.index}:${activeDeepest}`;
+  const prevRouteKey = useRef(activeRouteKey);
+  useEffect(() => {
+    if (prevRouteKey.current !== activeRouteKey) {
+      prevRouteKey.current = activeRouteKey;
+      setIsAddMenuOpen(false);
+    }
+  });
+
   /**
    * The tab navigator's own param list only knows about the four tab routes,
    * so it can't type a nested `{ screen: ... }` jump into a tab's inner stack.
@@ -249,6 +317,11 @@ export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
     }
     jumpTo(tab, screen);
   };
+
+  // Tour stays visible regardless of screen (it drives its own navigation).
+  if (!tourStep && TAB_BAR_HIDDEN_SCREENS.includes(activeDeepest)) {
+    return null;
+  }
 
   return (
     <View pointerEvents="box-none" style={styles.wrapper}>
@@ -373,16 +446,13 @@ export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
               });
               if (!event.defaultPrevented) {
                 haptics.tap();
-                // Re-tapping the tab you're already on jumps back to its
-                // root screen (standard "tap to go home" convention).
-                // Switching TO a different tab preserves whatever screen was
-                // last open there instead of discarding it — a shop owner
-                // who steps deep into Customers, checks Dashboard, then taps
-                // Clients again should land back where they left off, not
-                // get bounced to the Customer List every time.
-                const alreadyFocused = state.index === routeIndex;
+                // Every tab press (whether re-tapping the current tab or
+                // switching to a new one) always navigates to that tab's root
+                // screen. This ensures that after opening a form via Quick Add
+                // and going back, tapping the tab always shows the list screen
+                // instead of the form that was last open there.
                 const rootScreen = TAB_ROOT_SCREENS[route.name];
-                if (alreadyFocused && rootScreen) {
+                if (rootScreen) {
                   (navigation as any).navigate(route.name, {
                     screen: rootScreen,
                   });
@@ -465,11 +535,10 @@ const styles = StyleSheet.create({
   /** Android pads text by the font's ascender/descender unless disabled,
    *  which silently makes each label taller than its lineHeight. */
   tabLabel: {
-    fontSize: 12,
-    lineHeight: 13,
+    fontSize: 14,
+    lineHeight: 16,
     textAlign: 'center',
     includeFontPadding: false,
     textAlignVertical: 'center',
-
   },
 });

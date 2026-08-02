@@ -23,6 +23,8 @@ export default function StaffFormScreen({ navigation, route }: SettingsScreenPro
   const [phone, setPhone] = useState('');
   const [wageType, setWageType] = useState<WageType>('monthly');
   const [wageAmount, setWageAmount] = useState('');
+  const [wageAmountPant, setWageAmountPant] = useState('');
+  const [wageAmountShirt, setWageAmountShirt] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -35,6 +37,8 @@ export default function StaffFormScreen({ navigation, route }: SettingsScreenPro
       setPhone(data.phone ?? '');
       setWageType(data.wage_type);
       setWageAmount(String(data.wage_amount ?? ''));
+      setWageAmountPant(data.wage_amount_pant != null ? String(data.wage_amount_pant) : '');
+      setWageAmountShirt(data.wage_amount_shirt != null ? String(data.wage_amount_shirt) : '');
     })();
   }, [staffId]);
 
@@ -47,14 +51,17 @@ export default function StaffFormScreen({ navigation, route }: SettingsScreenPro
     setLoading(true);
     try {
       const parsedWage = Number(wageAmount.trim());
+      const parsedPant = Number(wageAmountPant.trim());
+      const parsedShirt = Number(wageAmountShirt.trim());
+      const isPerPiece = wageType === 'per_piece';
       const payload = {
         shop_id: shop.id,
         name: name.trim(),
         phone: phone.trim() || null,
         wage_type: wageType,
-        wage_amount: Number.isFinite(parsedWage) && parsedWage > 0 ? parsedWage : 0,
-        wage_amount_shirt: null,
-        wage_amount_pant: null,
+        wage_amount: !isPerPiece && Number.isFinite(parsedWage) && parsedWage > 0 ? parsedWage : 0,
+        wage_amount_pant: isPerPiece && Number.isFinite(parsedPant) && parsedPant > 0 ? parsedPant : null,
+        wage_amount_shirt: isPerPiece && Number.isFinite(parsedShirt) && parsedShirt > 0 ? parsedShirt : null,
         wage_amount_pair: null,
       };
 
@@ -78,12 +85,12 @@ export default function StaffFormScreen({ navigation, route }: SettingsScreenPro
       <Header title={staffId ? t('form.titleEdit') : t('form.titleAdd')} onBack={() => navigation.goBack()} />
       <KeyboardAvoidingView
         className="flex-1"
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
       >
         <ScrollView
           className="flex-1 bg-white dark:bg-gray-950"
-          contentContainerStyle={{ padding: 20, paddingBottom: 130 }}
+          contentContainerStyle={{ padding: 20, paddingBottom: 224 }}
           keyboardShouldPersistTaps="handled"
         >
           <InputField
@@ -113,13 +120,32 @@ export default function StaffFormScreen({ navigation, route }: SettingsScreenPro
               options={WAGE_TYPES}
             />
           </View>
-          <InputField
-            label={wageType === 'per_piece' ? t('form.amountPerPieceLabel') : t('form.wageAmountLabel')}
-            value={wageAmount}
-            onChangeText={setWageAmount}
-            placeholder={wageType === 'per_piece' ? t('form.amountPerPiecePlaceholder') : t('form.wageAmountPlaceholder')}
-            keyboardType="numeric"
-          />
+          {wageType === 'per_piece' ? (
+            <>
+              <InputField
+                label={t('form.amountPerPantLabel')}
+                value={wageAmountPant}
+                onChangeText={setWageAmountPant}
+                placeholder={t('form.amountPerPantPlaceholder')}
+                keyboardType="number-pad"
+              />
+              <InputField
+                label={t('form.amountPerShirtLabel')}
+                value={wageAmountShirt}
+                onChangeText={setWageAmountShirt}
+                placeholder={t('form.amountPerShirtPlaceholder')}
+                keyboardType="number-pad"
+              />
+            </>
+          ) : (
+            <InputField
+              label={t('form.wageAmountLabel')}
+              value={wageAmount}
+              onChangeText={setWageAmount}
+              placeholder={t('form.wageAmountPlaceholder')}
+              keyboardType="number-pad"
+            />
+          )}
           <Button
             title={staffId ? t('form.updateStaff') : t('form.saveStaff')}
             size="lg"

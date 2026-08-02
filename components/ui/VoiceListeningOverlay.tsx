@@ -44,7 +44,7 @@ export function VoiceListeningOverlay({ visible, onStop, label, hint }: VoiceLis
             <FontAwesome5 name="microphone" size={24} color="#FFFFFF" />
           </Animated.View>
           <Text className="text-base font-semibold text-gray-900 dark:text-gray-50">{label}</Text>
-          <Text className="font-sans text-xs text-gray-500 dark:text-gray-400">{hint}</Text>
+          <Text className="font-sans text-base text-gray-500 dark:text-gray-400">{hint}</Text>
         </View>
       </Pressable>
     </Modal>

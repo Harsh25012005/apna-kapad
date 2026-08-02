@@ -19,3 +19,5 @@ export { SearchBar, type SearchBarProps } from './SearchBar';
 export { OrderProgressStepper, type OrderProgressStepperProps } from './OrderProgressStepper';
 export { QuickAddCustomerSheet, type QuickAddCustomerSheetProps } from './QuickAddCustomerSheet';
 export { VoiceListeningOverlay, type VoiceListeningOverlayProps } from './VoiceListeningOverlay';
+export { RecordPaymentSheet, type RecordPaymentSheetProps, type PayableBill } from './RecordPaymentSheet';
+export { FilterNotice, type FilterNoticeProps } from './FilterNotice';

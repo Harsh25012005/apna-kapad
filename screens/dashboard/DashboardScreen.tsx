@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { FontAwesome5, Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
-import { Badge, Button, EmptyState, LoadingSpinner, useToast } from '../../components/ui';
+import { Button, EmptyState, LoadingSpinner, useToast } from '../../components/ui';
 import { ordersRepo, customersRepo, billsRepo, paymentsRepo } from '../../lib/data/repository';
 import { formatCurrency } from '../../lib/format';
 import { haptics } from '../../lib/haptics';
@@ -32,7 +32,6 @@ type RecentPaymentItem = {
 type Stats = {
   todaysOrders: OrderListItem[];
   recentOrders: OrderListItem[];
-  overdueOrders: OrderListItem[];
   topClients: ClientItem[];
   recentPayments: RecentPaymentItem[];
   totalPendingBalance: number;
@@ -111,9 +110,6 @@ export default function DashboardScreen({ navigation }: DashboardScreenProps<'Da
       const recentOrders = [...allOrders]
         .sort((a, b) => (a.created_at < b.created_at ? 1 : -1))
         .slice(0, 6);
-      const overdueOrders = allOrders.filter(
-        (o) => o.delivery_date != null && o.delivery_date < localDate && o.status !== 'delivered'
-      );
 
       // "Top clients" = best customers, ranked by how many orders they've
       // placed (ties broken by total value billed to them). Customers with no
@@ -165,7 +161,6 @@ export default function DashboardScreen({ navigation }: DashboardScreenProps<'Da
       setStats({
         todaysOrders,
         recentOrders,
-        overdueOrders,
         topClients,
         recentPayments,
         totalPendingBalance,
@@ -192,9 +187,10 @@ export default function DashboardScreen({ navigation }: DashboardScreenProps<'Da
   if (loading || !stats) return <LoadingSpinner fullScreen text={t('loading')} />;
 
   return (
+    <>
     <ScrollView
       className="flex-1 bg-white dark:bg-gray-950"
-      contentContainerStyle={{ paddingTop: insets.top + 8, paddingBottom: 130 }}
+      contentContainerStyle={{ paddingTop: insets.top + 8, paddingBottom: 224 }}
       refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor="#1D4ED8" />
       }
@@ -211,14 +207,14 @@ export default function DashboardScreen({ navigation }: DashboardScreenProps<'Da
             className="min-h-[48px] flex-row items-center gap-1.5 rounded-full px-2.5 active:bg-gray-100 dark:active:bg-gray-800"
           >
             <Ionicons name="calendar-outline" size={20} color={scheme === 'dark' ? '#F3F4F6' : '#101828'} />
-            <Text className="font-sans text-sm font-medium text-[#101828] dark:text-gray-50">{t('calendarNavLabel')}</Text>
+            <Text className="font-sans text-base font-medium text-[#101828] dark:text-gray-50">{t('calendarNavLabel')}</Text>
           </Pressable>
           <Pressable
             onPress={() => navigation.navigate('Notifications')}
             className="min-h-[48px] flex-row items-center gap-1.5 rounded-full px-2.5 active:bg-gray-100 dark:active:bg-gray-800"
           >
             <Ionicons name="notifications-outline" size={20} color={scheme === 'dark' ? '#F3F4F6' : '#101828'} />
-            <Text className="font-sans text-sm font-medium text-[#101828] dark:text-gray-50">{t('alerts')}</Text>
+            <Text className="font-sans text-base font-medium text-[#101828] dark:text-gray-50">{t('alerts')}</Text>
           </Pressable>
         </View>
       </View>
@@ -232,7 +228,7 @@ export default function DashboardScreen({ navigation }: DashboardScreenProps<'Da
           className="h-[48px] flex-row items-center gap-3 rounded-md border border-gray-200 bg-gray-50 px-4 dark:border-gray-700 dark:bg-gray-800"
         >
           <Ionicons name="search-outline" size={18} color={scheme === 'dark' ? '#9CA3AF' : '#6B7280'} />
-          <Text className="font-sans text-[15px] text-gray-400 dark:text-gray-500">{t('searchPlaceholder')}</Text>
+          <Text className="font-sans text-base text-gray-400 dark:text-gray-500">{t('searchPlaceholder')}</Text>
         </Pressable>
       </View>
 
@@ -247,7 +243,7 @@ export default function DashboardScreen({ navigation }: DashboardScreenProps<'Da
           <View className="mb-2 h-10 w-10 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-950">
             <FontAwesome5 name="box-open" size={16} color="#1D4ED8" />
           </View>
-          <Text className="font-sans text-sm font-medium text-gray-500 dark:text-gray-400">{t('dueToday.title')}</Text>
+          <Text className="font-sans text-base font-medium text-gray-500 dark:text-gray-400">{t('dueToday.title')}</Text>
           <Text className="mt-0.5 text-[22px] font-bold text-[#101828] dark:text-gray-50">
             {t('dueToday.count', { count: stats.todaysOrders.length })}
           </Text>
@@ -260,27 +256,13 @@ export default function DashboardScreen({ navigation }: DashboardScreenProps<'Da
           <View className="mb-2 h-10 w-10 items-center justify-center rounded-full bg-amber-50 dark:bg-amber-950">
             <FontAwesome5 name="rupee-sign" size={16} color={amberIconColor} />
           </View>
-          <Text className="font-sans text-sm font-medium text-gray-500 dark:text-gray-400">{t('owedToday.title')}</Text>
+          <Text className="font-sans text-base font-medium text-gray-500 dark:text-gray-400">{t('owedToday.title')}</Text>
           <Text className="mt-0.5 text-[22px] font-bold text-[#101828] dark:text-gray-50">
             {formatCurrency(stats.totalPendingBalance)}
           </Text>
         </Pressable>
       </View>
 
-      {/* What needs attention — only shown when there's actually something
-          overdue, so it never competes for space on a good day. */}
-      {stats.overdueOrders.length > 0 ? (
-        <Pressable
-          onPress={() => navigation.navigate('OrdersTab' as any)}
-          className="mx-5 mb-4 flex-row items-center gap-3 rounded-lg border border-red-200 bg-red-50 p-4 active:bg-red-100 dark:border-red-900 dark:bg-red-950 dark:active:bg-red-900"
-        >
-          <FontAwesome5 name="exclamation-triangle" size={16} color="#DC2626" />
-          <Text className="flex-1 text-base font-semibold text-danger">
-            {t('overdueAlert', { count: stats.overdueOrders.length })}
-          </Text>
-          <Ionicons name="chevron-forward" size={18} color="#DC2626" />
-        </Pressable>
-      ) : null}
 
       {/* One primary action, unambiguous but no longer the oversized 56px
           hero button — medium size reads as "the main action" without
@@ -303,7 +285,7 @@ export default function DashboardScreen({ navigation }: DashboardScreenProps<'Da
 
         {/* Top Clients — ranked by order count */}
         <View className="mb-6 px-5">
-          <Text className="mb-3 text-[14px] font-semibold text-[#101828] dark:text-gray-50">{t('topClients')}</Text>
+          <Text className="mb-3 text-base font-semibold text-[#101828] dark:text-gray-50">{t('topClients')}</Text>
           {stats.topClients.length === 0 ? (
             <EmptyState
               variant="compact"
@@ -334,7 +316,7 @@ export default function DashboardScreen({ navigation }: DashboardScreenProps<'Da
                     <View className={`h-[54px] w-[54px] items-center justify-center rounded-full ${colorStyle.bg}`}>
                       <Text className={`text-[18px] font-semibold ${colorStyle.text}`}>{initial}</Text>
                     </View>
-                    <Text className="font-sans text-[12px] font-medium text-[#101828] dark:text-gray-50 text-center" numberOfLines={1}>
+                    <Text className="font-sans text-base font-medium text-[#101828] dark:text-gray-50 text-center" numberOfLines={1}>
                       {client.name.split(' ')[0]}
                     </Text>
                   </Pressable>
@@ -344,47 +326,10 @@ export default function DashboardScreen({ navigation }: DashboardScreenProps<'Da
           )}
         </View>
 
-        {/* Overdue Orders — the actual list behind the alert strip at the
-            top, which only ever showed a count. Red-coded, one tap into
-            the order. */}
-        {stats.overdueOrders.length > 0 ? (
-          <View className="mb-6 px-5">
-            <View className="mb-3 flex-row items-center justify-between">
-              <Text className="text-[14px] font-semibold text-[#101828] dark:text-gray-50">{t('overdue.title')}</Text>
-              <Pressable onPress={() => navigation.navigate('OrdersTab' as any)}>
-                <Text className="text-[12px] font-medium text-[#1D4ED8] underline">{t('viewAll')}</Text>
-              </Pressable>
-            </View>
-            <View className="gap-2.5">
-              {stats.overdueOrders.slice(0, 4).map((o) => (
-                <Pressable
-                  key={o.id}
-                  onPress={() => navigation.navigate('OrderDetail', { orderId: o.id })}
-                  className="flex-row items-center justify-between rounded-md border border-red-200 bg-red-50 px-4 py-3.5 dark:border-red-900 dark:bg-red-950"
-                >
-                  <View className="flex-1 pr-2">
-                    <Text className="text-base font-semibold text-[#101828] dark:text-gray-50" numberOfLines={1}>
-                      #{o.order_number} · {o.customers?.name || t('customer')}
-                    </Text>
-                    <Text className="font-sans text-xs text-danger">
-                      {t('overdue.dueOn', {
-                        date: o.delivery_date
-                          ? new Date(o.delivery_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-                          : '',
-                      })}
-                    </Text>
-                  </View>
-                  <Badge type="order_status" value={o.status} />
-                </Pressable>
-              ))}
-            </View>
-          </View>
-        ) : null}
-
         {/* Recent Payments — a fast "money coming in" pulse, distinct from
             Transaction History below (which lists orders, not payments). */}
         <View className="mb-6 px-5">
-          <Text className="mb-3 text-[14px] font-semibold text-[#101828] dark:text-gray-50">
+          <Text className="mb-3 text-base font-semibold text-[#101828] dark:text-gray-50">
             {t('recentPayments.title')}
           </Text>
           {stats.recentPayments.length === 0 ? (
@@ -405,7 +350,7 @@ export default function DashboardScreen({ navigation }: DashboardScreenProps<'Da
                     <Text className="text-base font-semibold text-[#101828] dark:text-gray-50" numberOfLines={1}>
                       {payment.customerName}
                     </Text>
-                    <Text className="font-sans text-xs text-gray-500 dark:text-gray-400">
+                    <Text className="font-sans text-base text-gray-500 dark:text-gray-400">
                       {new Date(payment.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                       {payment.mode ? ` · ${payment.mode}` : ''}
                     </Text>
@@ -420,10 +365,10 @@ export default function DashboardScreen({ navigation }: DashboardScreenProps<'Da
         {/* Transaction History / Recent Activity */}
         <View className="px-5">
           <View className="mb-3 flex-row items-center justify-between">
-            <Text className="text-[14px] font-semibold text-[#101828] dark:text-gray-50">{t('transactionHistory')}</Text>
+            <Text className="text-base font-semibold text-[#101828] dark:text-gray-50">{t('transactionHistory')}</Text>
             {stats.recentOrders.length > 0 ? (
               <Pressable onPress={() => navigation.navigate('Transactions')}>
-                <Text className="text-[12px] font-medium text-[#1D4ED8] underline">{t('viewAll')}</Text>
+                <Text className="text-base font-medium text-[#1D4ED8] underline">{t('viewAll')}</Text>
               </Pressable>
             ) : null}
           </View>
@@ -458,21 +403,21 @@ export default function DashboardScreen({ navigation }: DashboardScreenProps<'Da
                         <FontAwesome5 name="shopping-bag" size={18} color="#1D4ED8" />
                       </View>
                       <View className="flex-1">
-                        <Text className="text-[15px] font-semibold text-[#101828] dark:text-gray-50" numberOfLines={1}>
+                        <Text className="text-base font-semibold text-[#101828] dark:text-gray-50" numberOfLines={1}>
                           #{o.order_number} · {o.customers?.name || t('customer')}
                         </Text>
-                        <Text className="font-sans text-[12px] font-medium text-[#667085] dark:text-gray-400">
+                        <Text className="font-sans text-base font-medium text-[#667085] dark:text-gray-400">
                           {dateStr}
                         </Text>
                       </View>
                     </View>
 
                     <View className="items-end">
-                      <Text className="text-[14px] font-semibold text-[#101828] dark:text-gray-50">
+                      <Text className="text-base font-semibold text-[#101828] dark:text-gray-50">
                         {o.cloth_type || t('garmentOrder')}
                       </Text>
                       <Text
-                        className={`text-[12px] font-medium ${isDelivered ? 'text-[#12B76A]' : 'text-amber-600'
+                        className={`text-base font-medium ${isDelivered ? 'text-[#12B76A]' : 'text-amber-600'
                           }`}
                       >
                         {o.status.replace('_', ' ')}
@@ -486,5 +431,7 @@ export default function DashboardScreen({ navigation }: DashboardScreenProps<'Da
         </View>
       </View>
     </ScrollView>
+
+    </>
   );
 }

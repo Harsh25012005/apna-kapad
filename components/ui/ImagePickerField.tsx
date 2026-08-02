@@ -58,7 +58,7 @@ export function ImagePickerField({
   return (
     <View className="w-full mb-4">
       {label ? (
-        <Text className="mb-1.5 text-xs font-bold uppercase tracking-[0.4px] text-gray-500 dark:text-gray-400">
+        <Text className="mb-1.5 text-base font-semibold text-gray-600 dark:text-gray-400">
           {label}
         </Text>
       ) : null}
@@ -75,7 +75,7 @@ export function ImagePickerField({
             <View className="mb-1.5 h-9 w-9 items-center justify-center rounded-full bg-primary-50 dark:bg-primary-950">
               <FontAwesome5 name="camera" size={14} color={colors.primary} />
             </View>
-            <Text className="text-xs font-medium text-gray-400 dark:text-gray-500">{t('fields.addPhoto')}</Text>
+            <Text className="text-base font-medium text-gray-400 dark:text-gray-500">{t('fields.addPhoto')}</Text>
           </View>
         )}
       </Pressable>

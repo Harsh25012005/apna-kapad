@@ -18,7 +18,7 @@ type SharedOrderRoutes = {
 
 export type CustomersStackParamList = SharedOrderRoutes & {
   CustomerList: undefined;
-  CustomerDetail: { customerId: string };
+  CustomerDetail: { customerId: string; initialTab?: 'info' | 'orders' | 'bills' };
   CustomerForm: { customerId?: string } | undefined;
   MeasurementForm: { customerId: string; measurementId?: string };
 };

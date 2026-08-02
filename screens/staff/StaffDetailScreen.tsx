@@ -162,32 +162,57 @@ export default function StaffDetailScreen({ navigation, route }: SettingsScreenP
           </View>
         }
       />
-      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 130, gap: 16 }}>
+      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 224, gap: 16 }}>
         <Card>
           <View className="flex-row items-center">
             <Avatar name={staff.name} size="lg" />
             <View className="ml-4 flex-1">
               <Text className="text-lg font-semibold text-[#101828] dark:text-gray-50">{staff.name}</Text>
-              <Text className="font-sans mt-0.5 text-sm text-gray-500 dark:text-gray-400">{staff.role ?? t('detail.defaultRole')}</Text>
+              <Text className="font-sans mt-0.5 text-base text-gray-500 dark:text-gray-400">{staff.role ?? t('detail.defaultRole')}</Text>
               {staff.phone ? (
                 <View className="mt-1 flex-row items-center">
                   <FontAwesome5 name="phone-alt" size={11} color="#9CA3AF" />
-                  <Text className="font-sans ml-1.5 text-sm text-gray-500 dark:text-gray-400">{staff.phone}</Text>
+                  <Text className="font-sans ml-1.5 text-base text-gray-500 dark:text-gray-400">{staff.phone}</Text>
                 </View>
               ) : (
-                <Text className="font-sans mt-1 text-sm text-gray-400 dark:text-gray-500">{t('detail.noPhone')}</Text>
+                <Text className="font-sans mt-1 text-base text-gray-400 dark:text-gray-500">{t('detail.noPhone')}</Text>
               )}
             </View>
           </View>
 
+          {/* Per-piece staff have a rate per garment, not one flat wage —
+              showing the single `wage_amount` displayed ₹0 for them. */}
           <View className="mt-4 gap-2">
-            <View className="flex-row items-center justify-between rounded-md bg-gray-50 p-3 dark:bg-gray-800">
-              <Text className="font-sans text-sm text-gray-600 dark:text-gray-300">{t('detail.wageAmount')}</Text>
-              <Text className="text-base font-bold text-[#101828] dark:text-gray-50">
-                {formatCurrency(staff.wage_amount)}
-                <Text className="font-sans text-xs text-gray-500 dark:text-gray-400">/{WAGE_LABELS[staff.wage_type]}</Text>
-              </Text>
-            </View>
+            {staff.wage_type === 'per_piece' ? (
+              <>
+                <View className="flex-row items-center justify-between rounded-md bg-gray-50 p-3 dark:bg-gray-800">
+                  <Text className="font-sans text-base text-gray-600 dark:text-gray-300">{t('detail.amountPerPant')}</Text>
+                  <Text className="text-base font-bold text-[#101828] dark:text-gray-50">
+                    {formatCurrency(staff.wage_amount_pant ?? 0)}
+                  </Text>
+                </View>
+                <View className="flex-row items-center justify-between rounded-md bg-gray-50 p-3 dark:bg-gray-800">
+                  <Text className="font-sans text-base text-gray-600 dark:text-gray-300">{t('detail.amountPerShirt')}</Text>
+                  <Text className="text-base font-bold text-[#101828] dark:text-gray-50">
+                    {formatCurrency(staff.wage_amount_shirt ?? 0)}
+                  </Text>
+                </View>
+                <View className="flex-row items-center justify-between rounded-md bg-gray-50 p-3 dark:bg-gray-800">
+                  <Text className="font-sans text-base text-gray-600 dark:text-gray-300">{t('detail.amountPerPair')}</Text>
+                  <Text className="text-base font-bold text-[#101828] dark:text-gray-50">
+                    {formatCurrency(Number(staff.wage_amount_pant ?? 0) + Number(staff.wage_amount_shirt ?? 0))}
+                  </Text>
+                </View>
+              </>
+            ) : (
+              <View className="flex-row items-center justify-between rounded-md bg-gray-50 p-3 dark:bg-gray-800">
+                <Text className="font-sans text-base text-gray-600 dark:text-gray-300">{t('detail.wageAmount')}</Text>
+                <Text className="text-base font-bold text-[#101828] dark:text-gray-50">
+                  {formatCurrency(staff.wage_amount)}
+                  <Text className="font-sans text-base text-gray-500 dark:text-gray-400">/{WAGE_LABELS[staff.wage_type]}</Text>
+                </Text>
+              </View>
+            )}
           </View>
         </Card>
 
@@ -198,20 +223,20 @@ export default function StaffDetailScreen({ navigation, route }: SettingsScreenP
           </View>
           <View className="flex-row gap-3">
             <View className="flex-1 rounded-md bg-emerald-50 p-3 dark:bg-emerald-950">
-              <Text className="font-sans text-xs text-emerald-700 dark:text-emerald-400">{t('detail.thisMonth')}</Text>
+              <Text className="font-sans text-base text-emerald-700 dark:text-emerald-400">{t('detail.thisMonth')}</Text>
               <Text className="mt-1 text-lg font-bold text-emerald-800 dark:text-emerald-300">
                 {formatCurrency(thisMonthEarnings)}
               </Text>
             </View>
             <View className="flex-1 rounded-md bg-gray-50 p-3 dark:bg-gray-800">
-              <Text className="font-sans text-xs text-gray-500 dark:text-gray-400">{t('detail.lastMonth')}</Text>
+              <Text className="font-sans text-base text-gray-500 dark:text-gray-400">{t('detail.lastMonth')}</Text>
               <Text className="mt-1 text-lg font-bold text-[#101828] dark:text-gray-50">
                 {formatCurrency(lastMonthEarnings)}
               </Text>
             </View>
           </View>
           <View className="mt-2 flex-row items-center justify-between rounded-md bg-gray-50 p-3 dark:bg-gray-800">
-            <Text className="font-sans text-sm text-gray-600 dark:text-gray-300">{t('detail.allTimeEarnings')}</Text>
+            <Text className="font-sans text-base text-gray-600 dark:text-gray-300">{t('detail.allTimeEarnings')}</Text>
             <Text className="text-base font-bold text-[#101828] dark:text-gray-50">{formatCurrency(totalEarnings)}</Text>
           </View>
 
@@ -237,13 +262,13 @@ export default function StaffDetailScreen({ navigation, route }: SettingsScreenP
                   <Text className="ml-2 text-base font-semibold text-[#101828] dark:text-gray-50">{t('detail.workEntries')}</Text>
                 </View>
                 <Pressable onPress={() => navigation.navigate('StaffWorkEntryForm', { staffId: staff.id })}>
-                  <Text className="text-sm font-semibold text-primary-600 dark:text-primary-400">{t('detail.addWorkEntry')}</Text>
+                  <Text className="text-base font-semibold text-primary-600 dark:text-primary-400">{t('detail.addWorkEntry')}</Text>
                 </Pressable>
               </View>
 
               <Card>
                 <View className="mb-3 flex-row items-center justify-between rounded-md bg-emerald-50 p-3 dark:bg-emerald-950">
-                  <Text className="font-sans text-sm font-medium text-emerald-800 dark:text-emerald-300">
+                  <Text className="font-sans text-base font-medium text-emerald-800 dark:text-emerald-300">
                     {t('detail.workTotal')}
                   </Text>
                   <Text className="text-base font-bold text-emerald-800 dark:text-emerald-300">
@@ -265,15 +290,15 @@ export default function StaffDetailScreen({ navigation, route }: SettingsScreenP
                         <FontAwesome5 name="tshirt" size={14} color="#1D4ED8" />
                       </View>
                       <View className="ml-3 flex-1">
-                        <Text className="text-sm font-semibold text-[#101828] dark:text-gray-50">
+                        <Text className="text-base font-semibold text-[#101828] dark:text-gray-50">
                           {WORK_TYPE_LABELS[w.work_type]} × {w.quantity}
                         </Text>
-                        <Text className="font-sans mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+                        <Text className="font-sans mt-0.5 text-base text-gray-500 dark:text-gray-400">
                           {formatDate(w.work_date)} · {formatCurrency(w.rate_applied)}
                           {t('detail.perPieceSuffix')}
                         </Text>
                       </View>
-                      <Text className="text-sm font-bold text-[#101828] dark:text-gray-50">
+                      <Text className="text-base font-bold text-[#101828] dark:text-gray-50">
                         {formatCurrency(Number(w.quantity) * Number(w.rate_applied))}
                       </Text>
                     </View>

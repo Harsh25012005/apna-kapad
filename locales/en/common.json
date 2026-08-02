@@ -3,7 +3,7 @@
     "dashboard": "Home",
     "customers": "Clients",
     "orders": "Orders",
-    "settings": "Profile",
+    "settings": "Business",
     "add": "Add"
   },
   "quickAdd": {
@@ -94,5 +94,9 @@
     "paymentDue": "Hi {{customerName}}, a friendly reminder that ₹{{pending}} is pending at {{shopName}}. Please clear it at your convenience. Thank you!",
     "errorNoPhone": "Customer has no phone number on file",
     "errorNotAvailable": "WhatsApp is not available on this device"
+  },
+  "filters": {
+    "clear": "Clear",
+    "applied": "Filter applied: {{what}}"
   }
 }

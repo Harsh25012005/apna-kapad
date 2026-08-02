@@ -100,9 +100,9 @@ export function InputField({
       </View>
 
       {error ? (
-        <Text className="mt-1.5 text-sm font-medium text-danger">{error}</Text>
+        <Text className="mt-1.5 text-base font-medium text-danger">{error}</Text>
       ) : helperText ? (
-        <Text className="font-sans mt-1.5 text-sm text-gray-500 dark:text-gray-400">{helperText}</Text>
+        <Text className="font-sans mt-1.5 text-base text-gray-500 dark:text-gray-400">{helperText}</Text>
       ) : null}
     </View>
   );

@@ -31,11 +31,14 @@
     "measurementSummary": "Chest {{chest}} · Waist {{waist}} · Shoulder {{shoulder}} · Length {{length}} · Sleeve {{sleeve}}",
     "orderHistory": "Order History",
     "newOrderShort": "+ New Order",
+    "addBillShort": "+ Bill",
+    "editClient": "Edit",
     "noOrdersTitle": "No orders yet",
     "noOrdersDescription": "Create this client's first order to start tracking it",
     "newOrder": "New Order",
     "noClothType": "No cloth type",
     "ordered": "Ordered {{date}}",
+    "deliveryBadge": "Delivery {{date}}",
     "loadError": "Could not load client",
     "whatsappError": "Could not open WhatsApp",
     "deleteCustomer": "Delete Client",
@@ -48,7 +51,24 @@
     "deleteMeasurementSuccess": "Measurement deleted",
     "deleteMeasurementFailed": "Could not delete measurement",
     "cancel": "Cancel",
-    "delete": "Delete"
+    "delete": "Delete",
+    "tabs": {
+      "info": "Profile",
+      "orders": "Orders",
+      "bills": "Bills"
+    },
+    "searchOrders": "Search orders",
+    "searchBills": "Search bills",
+    "pendingAmount": "{{amount}} due",
+    "noBillsTitle": "No bills yet",
+    "noBillsDescription": "This client's bills and payments will show here.",
+    "measurementFields": {
+      "chest": "Chest",
+      "waist": "Waist",
+      "shoulder": "Shoulder",
+      "length": "Length",
+      "sleeve": "Sleeve"
+    }
   },
   "quickAdd": {
     "title": "Add Client",
@@ -68,7 +88,6 @@
     "addressPlaceholder": "Address",
     "bookNumberLabel": "Client No.",
     "bookNumberPlaceholder": "e.g. C-104",
-    "bookNumberHelper": "The number from your order book, if you keep one. Leave blank if not.",
     "bookNumberRequired": "Client number is required",
     "saveCustomer": "Save Client",
     "saveSuccess": "Client added",

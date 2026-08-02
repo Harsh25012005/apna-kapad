@@ -38,7 +38,7 @@ export default function ForgotPasswordScreen({ navigation }: AuthScreenProps<'Fo
       <Header title={t('forgotPassword.title')} onBack={() => navigation.goBack()} />
       <KeyboardAvoidingView
         className="flex-1"
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
       >
       <View className="flex-1 px-6 py-8">
@@ -53,7 +53,7 @@ export default function ForgotPasswordScreen({ navigation }: AuthScreenProps<'Fo
           </View>
         ) : (
           <>
-            <Text className="font-sans mb-6 text-sm text-gray-500 dark:text-gray-400">
+            <Text className="font-sans mb-6 text-base text-gray-500 dark:text-gray-400">
               {t('forgotPassword.instructions')}
             </Text>
             <InputField

@@ -16,7 +16,8 @@
       "whoWhat": "કોણ અને શું",
       "photos": "માપ અને ફોટા",
       "delivery": "ક્યારે જોઈએ છે?",
-      "payment": "ચુકવણી"
+      "payment": "ચુકવણી",
+      "deliveryPayment": "ડિલિવરી અને ચુકવણી"
     },
     "next": "આગળ",
     "back": "પાછળ",
@@ -130,7 +131,8 @@
     "orderUpdateFailed": "ઓર્ડર અપડેટ કરી શકાયો નહીં",
     "loading": "ઓર્ડર લોડ થઈ રહ્યો છે...",
     "loadError": "ઓર્ડર લોડ કરી શકાયો નહીં",
-    "billingNotice": "કુલ રકમ, ચૂકવેલી રકમ અને ચુકવણી પદ્ધતિ આ ઓર્ડરના બિલ બન્યા પછી ત્યાંથી સંભાળાય છે — ચુકવણી નોંધવા માટે ઓર્ડર વિગત પર \"ચુકવણી ઉમેરો / બિલ જુઓ\" વાપરો."
+    "billingNotice": "કુલ રકમ, ચૂકવેલી રકમ અને ચુકવણી પદ્ધતિ આ ઓર્ડરના બિલ બન્યા પછી ત્યાંથી સંભાળાય છે — ચુકવણી નોંધવા માટે ઓર્ડર વિગત પર \"ચુકવણી ઉમેરો / બિલ જુઓ\" વાપરો.",
+    "saveNow": "ઓર્ડર હમણાં સેવ કરો"
   },
   "detail": {
     "pantPieces": "પેન્ટના ટુકડા",
@@ -188,13 +190,14 @@
     "whatsapp": {
       "sectionTitle": "ગ્રાહકને સંદેશ",
       "sendCompletion": "તૈયાર થયાનો સંદેશ મોકલો",
-      "sendReminder": "રિમાઇન્ડર મોકલો",
+      "sendReminder": "ચુકવણી રિમાઇન્ડર મોકલો",
       "noPhone": "આ ગ્રાહકનો ફોન નંબર સાચવેલો નથી, તેથી WhatsApp સંદેશ મોકલી શકાતો નથી.",
       "sendFailed": "WhatsApp ખોલી શકાયું નહીં",
       "completionBody": "નમસ્તે {{customerName}}, {{shopName}} માં તમારો ઓર્ડર #{{orderNumber}} તૈયાર છે અને લઈ જવા માટે રાહ જુએ છે. આભાર!",
-      "reminderPaymentBody": "નમસ્તે {{customerName}}, {{shopName}} માં તમારા ઓર્ડર #{{orderNumber}} પર {{amount}} બાકી છે. અનુકૂળતાએ ચૂકવી દેશો. આભાર!",
-      "reminderPickupBody": "નમસ્તે {{customerName}}, {{shopName}} માંથી તમારો ઓર્ડર #{{orderNumber}} લઈ જવાનું યાદ અપાવીએ છીએ. આભાર!"
-    }
+      "reminderPaymentBody": "નમસ્તે {{customerName}}, {{shopName}} માં તમારા ઓર્ડર #{{orderNumber}} પર {{amount}} બાકી છે. અનુકૂળતાએ ચૂકવી દેશો. આભાર!"
+    },
+    "tokenBadge": "ટોકન #{{number}}",
+    "deliveryBadge": "ડિલિવરી {{date}}"
   },
   "list": {
     "title": "ઓર્ડરો",
@@ -224,6 +227,11 @@
     "pieces": "{{count}} ટુકડા",
     "noClothCount": "કપડાની સંખ્યા નથી",
     "delivery": "ડિલિવરી {{date}}",
-    "urgent": "તાત્કાલિક"
+    "urgent": "તાત્કાલિક",
+    "showDelivered": "પૂર્ણ થયેલા ઓર્ડર બતાવો ({{count}})",
+    "allCaughtUpTitle": "બધું પૂર્ણ થઈ ગયું",
+    "allCaughtUpDescription": "હમણાં કંઈ બાકી નથી. {{count}} પૂર્ણ થયેલા ઓર્ડર છુપાયેલા છે — જોવા માટે ફિલ્ટર આઇકન દબાવો.",
+    "tokenBadge": "ટોકન #{{number}}",
+    "deliveryBadge": "ડિલિવરી {{date}}"
   }
 }

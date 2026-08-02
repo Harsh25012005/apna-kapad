@@ -86,7 +86,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
             style={{ backgroundColor: TYPE_STYLES[toast.type].bg }}
           />
           <FontAwesome5 name={TYPE_STYLES[toast.type].icon} size={16} color="#FFFFFF" />
-          <Text className="ml-2 flex-1 text-sm font-medium text-white">{toast.message}</Text>
+          <Text className="ml-2 flex-1 text-base font-medium text-white">{toast.message}</Text>
         </Animated.View>
       ) : null}
     </ToastContext.Provider>

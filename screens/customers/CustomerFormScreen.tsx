@@ -20,6 +20,7 @@ export default function CustomerFormScreen({ navigation, route }: CustomersScree
   const [bookNumber, setBookNumber] = useState('');
   const [error, setError] = useState('');
   const [phoneError, setPhoneError] = useState('');
+  const [bookNumberError, setBookNumberError] = useState('');
   const [loading, setLoading] = useState(false);
 
   const phoneDigits = phone.trim().replace(/\D/g, '');
@@ -48,6 +49,13 @@ export default function CustomerFormScreen({ navigation, route }: CustomersScree
 
   const handleSave = async () => {
     let hasError = false;
+
+    if (!bookNumber.trim()) {
+      setBookNumberError(t('form.bookNumberRequired'));
+      hasError = true;
+    } else {
+      setBookNumberError('');
+    }
 
     if (!name.trim()) {
       setError(t('form.nameRequired'));
@@ -110,14 +118,27 @@ export default function CustomerFormScreen({ navigation, route }: CustomersScree
       />
       <KeyboardAvoidingView
         className="flex-1"
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
       >
         <ScrollView
           className="flex-1 bg-white dark:bg-gray-950"
-          contentContainerStyle={{ padding: 20, paddingBottom: 130 }}
+          contentContainerStyle={{ padding: 20, paddingBottom: 224 }}
           keyboardShouldPersistTaps="handled"
         >
+          {/* Order matches how a shop owner works from their paper book:
+              client number first, then name, phone, address. */}
+          <InputField
+            label={t('form.bookNumberLabel')}
+            value={bookNumber}
+            onChangeText={(v) => {
+              setBookNumber(v);
+              setBookNumberError('');
+            }}
+            placeholder={t('form.bookNumberPlaceholder')}
+            error={bookNumberError}
+            required
+          />
           <InputField
             label={t('form.nameLabel')}
             value={name}
@@ -138,13 +159,6 @@ export default function CustomerFormScreen({ navigation, route }: CustomersScree
             error={phoneError}
             helperText={!phoneError && phoneDigits.length === 10 ? t('form.phoneValid') : undefined}
             required
-          />
-          <InputField
-            label={t('form.bookNumberLabel')}
-            value={bookNumber}
-            onChangeText={setBookNumber}
-            placeholder={t('form.bookNumberPlaceholder')}
-            helperText={t('form.bookNumberHelper')}
           />
           <InputField
             label={t('form.addressLabel')}

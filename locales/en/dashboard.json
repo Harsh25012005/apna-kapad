@@ -17,9 +17,8 @@
     "loadError": "Could not load calendar",
     "deliveryLabel": "Delivery — #{{number}}",
     "trialLabel": "Trial — #{{number}}",
-    "leaveLabel": "{{name}} off",
     "emptyTitle": "Nothing scheduled",
-    "emptyDescription": "Deliveries, trials, and staff leave for this day will show up here."
+    "emptyDescription": "Deliveries and trials for this day will show up here."
   },
   "loading": "Loading dashboard...",
   "greeting": "Hi, {{name}}",

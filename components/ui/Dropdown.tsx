@@ -86,7 +86,7 @@ export function Dropdown<T extends string = string>({
   return (
     <View className="w-full mb-4">
       {label ? (
-        <Text className="mb-1.5 text-xs font-bold uppercase tracking-[0.4px] text-gray-500 dark:text-gray-400">
+        <Text className="mb-1.5 text-base font-semibold text-gray-600 dark:text-gray-400">
           {label}
           {required ? <Text className="text-danger normal-case tracking-normal"> *</Text> : null}
         </Text>
@@ -104,7 +104,7 @@ export function Dropdown<T extends string = string>({
         <FontAwesome5 name="chevron-down" size={12} color={colors.iconMuted} />
       </Pressable>
 
-      {error ? <Text className="mt-1.5 text-xs font-medium text-danger">{error}</Text> : null}
+      {error ? <Text className="mt-1.5 text-base font-medium text-danger">{error}</Text> : null}
 
       <Modal visible={open} transparent animationType="fade" onRequestClose={closeSheet}>
         <Pressable className="flex-1 justify-end bg-black/40" onPress={closeSheet}>
@@ -148,7 +148,7 @@ export function Dropdown<T extends string = string>({
                 className="mb-2 flex-row items-center gap-2 rounded-md bg-primary-50 px-3 py-3 dark:bg-primary-950"
               >
                 <FontAwesome5 name="plus-circle" size={14} color={colors.primary} />
-                <Text className="text-sm font-semibold text-primary-600 dark:text-primary-400">
+                <Text className="text-base font-semibold text-primary-600 dark:text-primary-400">
                   {addNewLabel ?? t('fields.addNew')}
                 </Text>
               </Pressable>
@@ -173,7 +173,7 @@ export function Dropdown<T extends string = string>({
               )}
               ItemSeparatorComponent={() => <View className="h-px bg-gray-100 dark:bg-gray-800" />}
               ListEmptyComponent={
-                <Text className="font-sans py-3 text-sm text-gray-400 dark:text-gray-500">{t('fields.noOptions')}</Text>
+                <Text className="font-sans py-3 text-base text-gray-400 dark:text-gray-500">{t('fields.noOptions')}</Text>
               }
             />
           </Pressable>

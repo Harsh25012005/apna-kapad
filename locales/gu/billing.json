@@ -1,26 +1,8 @@
 {
-  "cashRegister": {
-    "title": "કેશ રજિસ્ટર",
-    "loading": "આજનું રજિસ્ટર લોડ થઈ રહ્યું છે...",
-    "loadError": "આજનું રજિસ્ટર લોડ થઈ શક્યું નથી",
-    "today": "આજે",
-    "cashIn": "મળેલ રોકડ ચુકવણી",
-    "expectedClosing": "અપેક્ષિત ક્લોઝિંગ રોકડ",
-    "openingCash": "ઓપનિંગ રોકડ",
-    "cashOut": "રોકડ ખર્ચ",
-    "closingCash": "ક્લોઝિંગ રોકડ (ગણેલ)",
-    "closingCashPlaceholder": "ડ્રોઅર ગણો અને અહીં દાખલ કરો",
-    "notes": "નોંધ",
-    "shortBy": "{{amount}} ઓછું",
-    "overBy": "{{amount}} વધારે",
-    "save": "મેળવણી સાચવો",
-    "saveSuccess": "ટિલ મેળવણી થઈ",
-    "saveError": "મેળવણી સાચવી શકાયું નથી"
-  },
   "list": {
     "title": "બિલિંગ",
     "totalPending": "તમામ ગ્રાહકોની કુલ બાકી રકમ",
-    "searchPlaceholder": "ગ્રાહકનું નામ અથવા બિલ ID શોધો",
+    "searchPlaceholder": "ગ્રાહકના નામથી શોધો",
     "filters": {
       "paid": "ચૂકવેલ",
       "partial": "આંશિક",
@@ -35,7 +17,10 @@
     "emptyTitle": "હજુ સુધી કોઈ બિલ નથી",
     "emptyDescription": "ચુકવણી ટ્રેક કરવા માટે તમારું પહેલું બિલ બનાવો",
     "newBill": "નવું બિલ",
-    "errorLoad": "બિલ લોડ કરી શકાયા નહીં"
+    "errorLoad": "બિલ લોડ કરી શકાયા નહીં",
+    "lastBill": "છેલ્લું બિલ {{date}}",
+    "billCount": "{{count}} બિલ",
+    "outstanding": "{{amount}} બાકી"
   },
   "detail": {
     "loading": "બિલ લોડ થઈ રહ્યું છે...",
@@ -118,5 +103,13 @@
     "createBill": "બિલ બનાવો",
     "successCreated": "બિલ બનાવવામાં આવ્યું",
     "errorCreate": "બિલ બનાવી શકાયું નહીં"
+  },
+  "collect": {
+    "title": "{{name}} પાસેથી વસૂલો",
+    "sectionTitle": "વસૂલવાના પૈસા",
+    "button": "વસૂલો",
+    "emptyTitle": "બધું ચૂકતે છે",
+    "emptyDescription": "જ્યારે કોઈ ગ્રાહકના પૈસા બાકી હશે, તે અહીં વસૂલવા માટે દેખાશે.",
+    "totalOwed": "{{count}} ગ્રાહકો પાસેથી {{amount}} બાકી"
   }
 }

@@ -3,7 +3,7 @@ import { FlatList, Modal, Pressable, RefreshControl, Text, View } from 'react-na
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { FontAwesome5 } from '@expo/vector-icons';
-import { Badge, Card, EmptyState, Header, LoadingSpinner, SearchBar, useToast } from '../../components/ui';
+import { Badge, Card, EmptyState, FilterNotice, Header, LoadingSpinner, SearchBar, useToast } from '../../components/ui';
 import { billsRepo } from '../../lib/data/repository';
 import { useShop } from '../../context/AuthContext';
 import { formatCurrency, formatDate } from '../../lib/format';
@@ -19,6 +19,7 @@ export default function BillingListScreen({ navigation }: BillingScreenProps<'Bi
   const shop = useShop();
   const insets = useSafeAreaInsets();
   const { t } = useTranslation('billing');
+  const { t: tCommon } = useTranslation('common');
   const [bills, setBills] = useState<BillWithRelations[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -47,14 +48,43 @@ export default function BillingListScreen({ navigation }: BillingScreenProps<'Bi
     setRefreshing(false);
   };
 
-  const filteredBills = useMemo(() => {
+  /**
+   * One row per client, not per bill. A regular customer racks up many bills
+   * and the flat list made the same name repeat over and over, burying who
+   * actually owes money. Each row shows that client's most recent bill plus
+   * their combined outstanding total; tapping opens their full bill history.
+   */
+  const clientRows = useMemo(() => {
     const query = search.trim().toLowerCase();
-    return bills.filter((bill) => {
-      if (statusFilter && bill.payment_status !== statusFilter) return false;
-      if (!query) return true;
-      const name = bill.customers?.name?.toLowerCase() ?? '';
-      return name.includes(query) || bill.id.toLowerCase().includes(query);
-    });
+    const byCustomer = new Map<
+      string,
+      { customerId: string; name: string; latest: BillWithRelations; billCount: number; outstanding: number }
+    >();
+
+    for (const bill of bills) {
+      if (statusFilter && bill.payment_status !== statusFilter) continue;
+      const key = bill.customer_id;
+      if (!key) continue;
+      const pending = Math.max(Number(bill.total_amount ?? 0) - Number((bill as { paid?: number }).paid ?? 0), 0);
+      const existing = byCustomer.get(key);
+      if (!existing) {
+        byCustomer.set(key, {
+          customerId: key,
+          name: bill.customers?.name ?? '',
+          latest: bill,
+          billCount: 1,
+          outstanding: pending,
+        });
+      } else {
+        existing.billCount += 1;
+        existing.outstanding += pending;
+        if (bill.created_at > existing.latest.created_at) existing.latest = bill;
+      }
+    }
+
+    return [...byCustomer.values()]
+      .filter((row) => !query || row.name.toLowerCase().includes(query))
+      .sort((a, b) => b.outstanding - a.outstanding || (a.latest.created_at < b.latest.created_at ? 1 : -1));
   }, [bills, search, statusFilter]);
 
   const hasActiveFilters = Boolean(statusFilter);
@@ -95,7 +125,7 @@ export default function BillingListScreen({ navigation }: BillingScreenProps<'Bi
               <Text className="text-base font-semibold text-gray-900 dark:text-gray-50">{t('list.filterModalTitle')}</Text>
               {hasActiveFilters ? (
                 <Pressable onPress={() => setStatusFilter(null)}>
-                  <Text className="text-xs font-semibold text-primary-600 dark:text-primary-400">{t('list.reset')}</Text>
+                  <Text className="text-base font-semibold text-primary-600 dark:text-primary-400">{t('list.reset')}</Text>
                 </Pressable>
               ) : null}
             </View>
@@ -110,7 +140,7 @@ export default function BillingListScreen({ navigation }: BillingScreenProps<'Bi
                   !statusFilter ? 'border-primary-600 bg-primary-50 dark:bg-primary-950' : 'border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800'
                 }`}
               >
-                <Text className={`text-sm font-semibold ${!statusFilter ? 'text-primary-700 dark:text-primary-300' : 'text-gray-700 dark:text-gray-300'}`}>
+                <Text className={`text-base font-semibold ${!statusFilter ? 'text-primary-700 dark:text-primary-300' : 'text-gray-700 dark:text-gray-300'}`}>
                   {t('list.allBills')}
                 </Text>
                 {!statusFilter ? <FontAwesome5 name="check" size={14} color="#1D4ED8" /> : null}
@@ -129,7 +159,7 @@ export default function BillingListScreen({ navigation }: BillingScreenProps<'Bi
                       active ? 'border-primary-600 bg-primary-50 dark:bg-primary-950' : 'border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800'
                     }`}
                   >
-                    <Text className={`text-sm font-semibold capitalize ${active ? 'text-primary-700 dark:text-primary-300' : 'text-gray-700 dark:text-gray-300'}`}>
+                    <Text className={`text-base font-semibold capitalize ${active ? 'text-primary-700 dark:text-primary-300' : 'text-gray-700 dark:text-gray-300'}`}>
                       {t(`list.filters.${status}`)}
                     </Text>
                     {active ? <FontAwesome5 name="check" size={14} color="#1D4ED8" /> : null}
@@ -141,12 +171,20 @@ export default function BillingListScreen({ navigation }: BillingScreenProps<'Bi
         </Pressable>
       </Modal>
 
+      <View className="px-5 pt-2">
+        <FilterNotice
+          visible={hasActiveFilters}
+          label={tCommon('filters.applied', { what: statusFilter ? t('list.filters.'+statusFilter) : '' })}
+          onClear={() => setStatusFilter(null)}
+        />
+      </View>
+
       <FlatList
-        data={filteredBills}
-        keyExtractor={(item) => item.id}
+        data={clientRows}
+        keyExtractor={(item) => item.customerId}
         className="px-5"
         contentContainerStyle={
-          filteredBills.length === 0 ? { flexGrow: 1, paddingTop: 12 } : { paddingTop: 12, paddingBottom: 130, gap: 12 }
+          clientRows.length === 0 ? { flexGrow: 1, paddingTop: 12 } : { paddingTop: 12, paddingBottom: 224, gap: 12 }
         }
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor="#1D4ED8" />
@@ -169,17 +207,31 @@ export default function BillingListScreen({ navigation }: BillingScreenProps<'Bi
           )
         }
         renderItem={({ item }) => (
-          <Card onPress={() => navigation.navigate('BillDetail', { billId: item.id })}>
+          // Tapping a client opens their Bills tab — the full history lives
+          // there, so the list itself stays one row per person.
+          <Card
+            onPress={() =>
+              (navigation as unknown as { navigate: (t: string, p?: object) => void }).navigate('CustomersTab', {
+                screen: 'CustomerDetail',
+                params: { customerId: item.customerId, initialTab: 'bills' },
+              })
+            }
+          >
             <View className="flex-row items-center justify-between">
-              <Text className="text-base font-semibold text-gray-900 dark:text-gray-50">
-                {item.customers?.name}
-              </Text>
-              <Badge type="payment_status" value={item.payment_status} />
+              <Text className="text-lg font-semibold text-gray-900 dark:text-gray-50">{item.name}</Text>
+              <Badge type="payment_status" value={item.latest.payment_status} />
             </View>
             <View className="mt-1 flex-row items-center justify-between">
-              <Text className="font-sans text-sm text-gray-500 dark:text-gray-400">{formatDate(item.created_at)}</Text>
-              <Text className="text-sm font-semibold text-gray-900 dark:text-gray-50">
-                {formatCurrency(item.total_amount)}
+              <Text className="font-sans text-base text-gray-500 dark:text-gray-400">
+                {t('list.lastBill', { date: formatDate(item.latest.created_at) })}
+                {item.billCount > 1 ? ` · ${t('list.billCount', { count: item.billCount })}` : ''}
+              </Text>
+              <Text
+                className={`text-base font-bold ${item.outstanding > 0 ? 'text-danger' : 'text-gray-900 dark:text-gray-50'}`}
+              >
+                {item.outstanding > 0
+                  ? t('list.outstanding', { amount: formatCurrency(item.outstanding) })
+                  : formatCurrency(item.latest.total_amount)}
               </Text>
             </View>
           </Card>

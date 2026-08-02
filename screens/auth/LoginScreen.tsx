@@ -69,7 +69,7 @@ export default function LoginScreen({ navigation }: AuthScreenProps<'Login'>) {
 
   return (
     <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       className="flex-1 bg-white dark:bg-gray-950"
     >
       <ScrollView
@@ -114,7 +114,7 @@ export default function LoginScreen({ navigation }: AuthScreenProps<'Login'>) {
 
           <View className="my-6 flex-row items-center">
             <View className="h-px flex-1 bg-gray-200 dark:bg-gray-800" />
-            <Text className="font-sans mx-3 text-xs text-gray-400 dark:text-gray-500">{t('login.or')}</Text>
+            <Text className="font-sans mx-3 text-base text-gray-400 dark:text-gray-500">{t('login.or')}</Text>
             <View className="h-px flex-1 bg-gray-200 dark:bg-gray-800" />
           </View>
 

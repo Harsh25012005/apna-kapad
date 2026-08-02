@@ -17,9 +17,8 @@
     "loadError": "कैलेंडर लोड नहीं हो सका",
     "deliveryLabel": "डिलीवरी — #{{number}}",
     "trialLabel": "ट्रायल — #{{number}}",
-    "leaveLabel": "{{name}} छुट्टी पर",
     "emptyTitle": "कुछ भी निर्धारित नहीं है",
-    "emptyDescription": "इस दिन की डिलीवरी, ट्रायल और स्टाफ छुट्टी यहाँ दिखेंगी।"
+    "emptyDescription": "इस दिन की डिलीवरी और ट्रायल यहाँ दिखेंगे।"
   },
   "loading": "डैशबोर्ड लोड हो रहा है...",
   "greeting": "नमस्ते, {{name}}",
@@ -87,14 +86,6 @@
     "microphonePermissionDenied": "आवाज़ से खोजने के लिए माइक्रोफ़ोन अनुमति ज़रूरी है",
     "listening": "सुन रहे हैं…",
     "listeningHint": "ग्राहक का नाम बोलें, या रोकने के लिए कहीं भी टैप करें"
-  },
-  "dueSoon": {
-    "title": "जल्द डिलीवरी वाले ऑर्डर"
-  },
-  "pendingPayments": {
-    "title": "बकाया भुगतान",
-    "subtitle_one": "{{count}} बिल का भुगतान बाकी",
-    "subtitle_other": "{{count}} बिलों का भुगतान बाकी"
   },
   "notifications": {
     "title": "सूचनाएं",

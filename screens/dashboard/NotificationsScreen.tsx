@@ -103,10 +103,10 @@ export default function NotificationsScreen({ navigation }: DashboardScreenProps
                 <FontAwesome5 name={meta.icon} size={16} color={meta.color} />
               </View>
               <View className="ml-3 flex-1">
-                <Text className="text-sm font-semibold text-gray-900 dark:text-gray-50">
+                <Text className="text-base font-semibold text-gray-900 dark:text-gray-50">
                   {t(`notifications.types.${item.type}`)} · {item.customers?.name ?? t('notifications.customer')}
                 </Text>
-                <Text className="font-sans mt-0.5 text-xs text-gray-500 dark:text-gray-400">
+                <Text className="font-sans mt-0.5 text-base text-gray-500 dark:text-gray-400">
                   {relativeTime(item.sent_at, t)}
                   {item.status !== 'sent' ? ` · ${item.status}` : ''}
                 </Text>

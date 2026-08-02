@@ -68,7 +68,7 @@ export default function SettingsScreen({ navigation }: SettingsScreenProps<'Sett
   return (
     <ScrollView
       className="flex-1 bg-gray-50 dark:bg-gray-950"
-      contentContainerStyle={{ paddingHorizontal: 20, paddingTop: insets.top + 8, paddingBottom: insets.bottom + 100, gap: 20 }}
+      contentContainerStyle={{ paddingHorizontal: 20, paddingTop: insets.top + 8, paddingBottom: 224, gap: 20 }}
     >
       <View className="py-2">
         <Text className="text-[18px] font-semibold text-[#101828] dark:text-gray-50">{t('title')}</Text>
@@ -95,21 +95,14 @@ export default function SettingsScreen({ navigation }: SettingsScreenProps<'Sett
         {shop?.owner_name ? (
           <View className="mt-1.5 flex-row items-center gap-1.5 rounded-full bg-white/10 px-3 py-1">
             <FontAwesome5 name="user" size={10} color="#98A2B3" />
-            <Text className="font-sans text-xs font-medium text-[#D0D5DD]">{shop.owner_name}</Text>
+            <Text className="font-sans text-base font-medium text-[#D0D5DD]">{shop.owner_name}</Text>
           </View>
         ) : null}
-        <Text className="font-sans mt-2 text-xs text-[#667085]">{user?.email}</Text>
+        <Text className="font-sans mt-2 text-base text-[#667085]">{user?.email}</Text>
       </View>
 
       {/* Business section */}
       <SectionCard title={t('business')}>
-        <MenuRow
-          icon="file-invoice-dollar"
-          iconBg="bg-blue-50 dark:bg-blue-950"
-          iconColor="#1D4ED8"
-          label={t('billingAndPayments')}
-          onPress={() => navigation.navigate('Billing')}
-        />
         <MenuRow
           icon="chart-line"
           iconBg="bg-emerald-50 dark:bg-emerald-950"
@@ -143,7 +136,7 @@ export default function SettingsScreen({ navigation }: SettingsScreenProps<'Sett
                 }`}
               >
                 <Text
-                  className={`font-sans text-sm font-medium ${
+                  className={`font-sans text-base font-medium ${
                     active ? 'text-primary-600 dark:text-primary-400' : 'text-gray-600 dark:text-gray-400'
                   }`}
                 >
@@ -171,7 +164,7 @@ export default function SettingsScreen({ navigation }: SettingsScreenProps<'Sett
                 }`}
               >
                 <Text
-                  className={`font-sans text-sm font-medium ${
+                  className={`font-sans text-base font-medium ${
                     active ? 'text-primary-600 dark:text-primary-400' : 'text-gray-600 dark:text-gray-400'
                   }`}
                 >
@@ -200,7 +193,7 @@ export default function SettingsScreen({ navigation }: SettingsScreenProps<'Sett
         className="flex-row items-center justify-center rounded-md border border-red-100 bg-red-50 py-3.5 active:bg-red-100 dark:border-red-900 dark:bg-red-950 dark:active:bg-red-900"
       >
         <FontAwesome5 name="sign-out-alt" size={14} color="#DC2626" />
-        <Text className="ml-2 text-sm font-semibold text-danger">{t('signOut')}</Text>
+        <Text className="ml-2 text-base font-semibold text-danger">{t('signOut')}</Text>
       </Pressable>
     </ScrollView>
   );
@@ -209,7 +202,7 @@ export default function SettingsScreen({ navigation }: SettingsScreenProps<'Sett
 function SectionCard({ title, children }: { title: string; children: ReactNode }) {
   return (
     <View>
-      <Text className="mb-2 px-1 text-xs font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">
+      <Text className="mb-2 px-1 text-base font-semibold text-gray-500 dark:text-gray-400">
         {title}
       </Text>
       <Card>{children}</Card>
@@ -244,10 +237,10 @@ function MenuRow({
         <View className={`h-9 w-9 items-center justify-center rounded-md ${iconBg}`}>
           <FontAwesome5 name={icon} size={14} color={iconColor} />
         </View>
-        <Text className="font-sans ml-3 text-sm font-medium text-gray-800 dark:text-gray-200">{label}</Text>
+        <Text className="font-sans ml-3 text-base font-medium text-gray-800 dark:text-gray-200">{label}</Text>
       </View>
       {value ? (
-        <Text className="font-sans text-sm text-gray-500 dark:text-gray-400">{value}</Text>
+        <Text className="font-sans text-base text-gray-500 dark:text-gray-400">{value}</Text>
       ) : onPress ? (
         <FontAwesome5 name="chevron-right" size={12} color="#9CA3AF" />
       ) : null}

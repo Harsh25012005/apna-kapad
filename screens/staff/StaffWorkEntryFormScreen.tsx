@@ -47,7 +47,22 @@ export default function StaffWorkEntryFormScreen({
     })();
   }, [staffId]);
 
-  const rate = staff ? Number(staff.wage_amount ?? 0) : 0;
+  /**
+   * Per-piece staff store a separate rate per garment (pant / shirt / both),
+   * so the rate must follow the selected work type. Reading the flat
+   * `wage_amount` meant per-piece staff always priced at 0 — their
+   * `wage_amount` is 0 by design — which blocked saving entirely.
+   */
+  const rateFor = (type: WorkType): number => {
+    if (!staff) return 0;
+    if (staff.wage_type !== 'per_piece') return Number(staff.wage_amount ?? 0);
+    if (type === 'pant') return Number(staff.wage_amount_pant ?? 0);
+    if (type === 'shirt') return Number(staff.wage_amount_shirt ?? 0);
+    // "Pant + Shirt" bills as the two garment rates combined.
+    return Number(staff.wage_amount_pant ?? 0) + Number(staff.wage_amount_shirt ?? 0);
+  };
+
+  const rate = rateFor(workType);
   const parsedQty = Number(quantity.trim());
   const previewQty = Number.isFinite(parsedQty) && parsedQty > 0 ? Math.floor(parsedQty) : 0;
 
@@ -87,7 +102,7 @@ export default function StaffWorkEntryFormScreen({
       <Header title={t('workEntry.title')} onBack={() => navigation.goBack()} />
       <KeyboardAvoidingView
         className="flex-1"
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
       >
         <ScrollView
@@ -113,21 +128,21 @@ export default function StaffWorkEntryFormScreen({
             value={quantity}
             onChangeText={setQuantity}
             placeholder={t('workEntry.quantityPlaceholder')}
-            keyboardType="numeric"
+            keyboardType="number-pad"
             error={error}
           />
 
           <View className="mb-4 gap-2 rounded-md bg-gray-50 p-3 dark:bg-gray-800">
             <View className="flex-row items-center justify-between">
-              <Text className="font-sans text-sm text-gray-600 dark:text-gray-300">{t('workEntry.rateApplied')}</Text>
+              <Text className="font-sans text-base text-gray-600 dark:text-gray-300">{t('workEntry.rateApplied')}</Text>
               <Text className="text-base font-bold text-[#101828] dark:text-gray-50">{formatCurrency(rate)}</Text>
             </View>
             <View className="flex-row items-center justify-between">
-              <Text className="font-sans text-sm text-gray-600 dark:text-gray-300">{t('workEntry.totalPay')}</Text>
+              <Text className="font-sans text-base text-gray-600 dark:text-gray-300">{t('workEntry.totalPay')}</Text>
               <Text className="text-base font-bold text-[#101828] dark:text-gray-50">{formatCurrency(rate * previewQty)}</Text>
             </View>
             {rate === 0 ? (
-              <Text className="font-sans text-xs text-amber-600 dark:text-amber-400">{t('workEntry.noRateWarning')}</Text>
+              <Text className="font-sans text-base text-amber-600 dark:text-amber-400">{t('workEntry.noRateWarning')}</Text>
             ) : null}
           </View>
 

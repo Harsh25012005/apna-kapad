@@ -42,7 +42,7 @@ export function DatePickerField({
   return (
     <View className="w-full mb-4">
       {label ? (
-        <Text className="mb-1.5 text-xs font-bold uppercase tracking-[0.4px] text-gray-500 dark:text-gray-400">
+        <Text className="mb-1.5 text-base font-semibold text-gray-600 dark:text-gray-400">
           {label}
         </Text>
       ) : null}
@@ -59,7 +59,7 @@ export function DatePickerField({
         <FontAwesome5 name="calendar-alt" size={16} color={colors.iconMuted} />
       </Pressable>
 
-      {error ? <Text className="font-sans mt-1 text-xs text-danger">{error}</Text> : null}
+      {error ? <Text className="font-sans mt-1 text-base text-danger">{error}</Text> : null}
 
       {show ? (
         <DateTimePicker

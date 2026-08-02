@@ -31,6 +31,8 @@
     "measurementSummary": "छाती {{chest}} · कमर {{waist}} · कंधा {{shoulder}} · लंबाई {{length}} · आस्तीन {{sleeve}}",
     "orderHistory": "ऑर्डर इतिहास",
     "newOrderShort": "+ नया ऑर्डर",
+    "addBillShort": "+ बिल",
+    "editClient": "संपादित करें",
     "noOrdersTitle": "अभी तक कोई ऑर्डर नहीं",
     "noOrdersDescription": "ट्रैकिंग शुरू करने के लिए इस ग्राहक का पहला ऑर्डर बनाएं",
     "newOrder": "नया ऑर्डर",
@@ -49,7 +51,25 @@
     "deleteMeasurementSuccess": "माप हटा दिया गया",
     "deleteMeasurementFailed": "माप हटाया नहीं जा सका",
     "cancel": "रद्द करें",
-    "delete": "हटाएं"
+    "delete": "हटाएं",
+    "deliveryBadge": "डिलीवरी {{date}}",
+    "tabs": {
+      "info": "प्रोफ़ाइल",
+      "orders": "ऑर्डर",
+      "bills": "बिल"
+    },
+    "searchOrders": "ऑर्डर खोजें",
+    "searchBills": "बिल खोजें",
+    "pendingAmount": "{{amount}} बाकी",
+    "noBillsTitle": "अभी तक कोई बिल नहीं",
+    "noBillsDescription": "इस ग्राहक के बिल और भुगतान यहाँ दिखेंगे।",
+    "measurementFields": {
+      "chest": "छाती",
+      "waist": "कमर",
+      "shoulder": "कंधा",
+      "length": "लंबाई",
+      "sleeve": "आस्तीन"
+    }
   },
   "quickAdd": {
     "title": "ग्राहक जोड़ें",
@@ -69,7 +89,6 @@
     "addressPlaceholder": "पता",
     "bookNumberLabel": "ग्राहक नं.",
     "bookNumberPlaceholder": "जैसे C-104",
-    "bookNumberHelper": "आपकी ऑर्डर बुक का नंबर, अगर आप एक रखते हैं। खाली छोड़ सकते हैं।",
     "bookNumberRequired": "ग्राहक नंबर आवश्यक है",
     "saveCustomer": "ग्राहक सेव करें",
     "saveSuccess": "ग्राहक जोड़ा गया",

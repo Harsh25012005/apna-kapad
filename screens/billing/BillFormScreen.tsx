@@ -162,7 +162,7 @@ export default function BillFormScreen({ navigation, route }: AppScreenProps<'Bi
       <Header title={t('form.title')} onBack={() => navigation.goBack()} />
       <KeyboardAvoidingView
         className="flex-1"
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
       >
       <ScrollView
@@ -200,7 +200,7 @@ export default function BillFormScreen({ navigation, route }: AppScreenProps<'Bi
             {selectedCustomer ? (
               <View className="mb-4 flex-row items-center gap-2 rounded-md bg-gray-50 px-4 py-3 dark:bg-gray-800">
                 <FontAwesome5 name="phone-alt" size={12} color="#6B7280" />
-                <Text className="font-sans text-sm text-gray-600 dark:text-gray-300">
+                <Text className="font-sans text-base text-gray-600 dark:text-gray-300">
                   {selectedCustomer.phone ?? t('form.noPhone')}
                 </Text>
               </View>
@@ -215,28 +215,28 @@ export default function BillFormScreen({ navigation, route }: AppScreenProps<'Bi
               value={fabricCost}
               onChangeText={setFabricCost}
               placeholder={t('form.fabricCostPlaceholder')}
-              keyboardType="numeric"
+              keyboardType="number-pad"
             />
             <InputField
               label={t('form.stitchingCharge')}
               value={stitchingCharge}
               onChangeText={setStitchingCharge}
               placeholder={t('form.stitchingChargePlaceholder')}
-              keyboardType="numeric"
+              keyboardType="number-pad"
             />
             <InputField
               label={t('form.discount')}
               value={discount}
               onChangeText={setDiscount}
               placeholder={t('form.discountPlaceholder')}
-              keyboardType="numeric"
+              keyboardType="number-pad"
             />
             <InputField
               label={t('form.tax')}
               value={tax}
               onChangeText={setTax}
               placeholder={t('form.taxPlaceholder')}
-              keyboardType="numeric"
+              keyboardType="number-pad"
             />
             <Pressable onPress={() => setItemized(false)} hitSlop={8} className="mb-4 -mt-1 self-start py-2">
               <Text className="text-base font-semibold text-primary-600 dark:text-primary-400">
@@ -254,7 +254,7 @@ export default function BillFormScreen({ navigation, route }: AppScreenProps<'Bi
                 setAmountError('');
               }}
               placeholder={t('form.billAmountPlaceholder')}
-              keyboardType="numeric"
+              keyboardType="number-pad"
               error={amountError}
               required
             />
@@ -267,7 +267,7 @@ export default function BillFormScreen({ navigation, route }: AppScreenProps<'Bi
         )}
 
         <View className="mb-4">
-          <Text className="mb-1.5 text-xs font-bold uppercase tracking-[0.4px] text-gray-500 dark:text-gray-400">
+          <Text className="mb-1.5 text-base font-semibold text-gray-600 dark:text-gray-400">
             {t('form.paymentStatus')}
           </Text>
           <RadioGroup

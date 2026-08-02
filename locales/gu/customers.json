@@ -31,6 +31,8 @@
     "measurementSummary": "છાતી {{chest}} · કમર {{waist}} · ખભા {{shoulder}} · લંબાઈ {{length}} · સ્લીવ {{sleeve}}",
     "orderHistory": "ઓર્ડર ઇતિહાસ",
     "newOrderShort": "+ નવો ઓર્ડર",
+    "addBillShort": "+ બિલ",
+    "editClient": "સંપાદિત કરો",
     "noOrdersTitle": "હજુ સુધી કોઈ ઓર્ડર નથી",
     "noOrdersDescription": "ટ્રેકિંગ શરૂ કરવા માટે આ ગ્રાહકનો પ્રથમ ઓર્ડર બનાવો",
     "newOrder": "નવો ઓર્ડર",
@@ -49,7 +51,25 @@
     "deleteMeasurementSuccess": "માપ કાઢી નાખવામાં આવ્યું",
     "deleteMeasurementFailed": "માપ કાઢી શકાયું નથી",
     "cancel": "રદ કરો",
-    "delete": "કાઢી નાખો"
+    "delete": "કાઢી નાખો",
+    "deliveryBadge": "ડિલિવરી {{date}}",
+    "tabs": {
+      "info": "પ્રોફાઇલ",
+      "orders": "ઓર્ડર",
+      "bills": "બિલ"
+    },
+    "searchOrders": "ઓર્ડર શોધો",
+    "searchBills": "બિલ શોધો",
+    "pendingAmount": "{{amount}} બાકી",
+    "noBillsTitle": "હજુ સુધી કોઈ બિલ નથી",
+    "noBillsDescription": "આ ગ્રાહકના બિલ અને ચુકવણી અહીં દેખાશે.",
+    "measurementFields": {
+      "chest": "છાતી",
+      "waist": "કમર",
+      "shoulder": "ખભા",
+      "length": "લંબાઈ",
+      "sleeve": "બાંય"
+    }
   },
   "quickAdd": {
     "title": "ગ્રાહક ઉમેરો",
@@ -69,7 +89,6 @@
     "addressPlaceholder": "સરનામું",
     "bookNumberLabel": "ગ્રાહક નં.",
     "bookNumberPlaceholder": "દા.ત. C-104",
-    "bookNumberHelper": "તમારી ઓર્ડર બુકનો નંબર, જો તમે એક રાખતા હો. ખાલી છોડી શકો છો.",
     "bookNumberRequired": "ગ્રાહક નંબર જરૂરી છે",
     "saveCustomer": "ગ્રાહક સેવ કરો",
     "saveSuccess": "ગ્રાહક ઉમેરાયો",

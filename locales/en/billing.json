@@ -1,25 +1,15 @@
 {
-  "cashRegister": {
-    "title": "Cash Register",
-    "loading": "Loading today's register...",
-    "loadError": "Could not load today's register",
-    "today": "Today",
-    "cashIn": "Cash payments received",
-    "expectedClosing": "Expected closing cash",
-    "openingCash": "Opening cash",
-    "cashOut": "Cash out (expenses)",
-    "closingCash": "Closing cash (counted)",
-    "closingCashPlaceholder": "Count the drawer and enter here",
-    "notes": "Notes",
-    "shortBy": "Short by {{amount}}",
-    "overBy": "Over by {{amount}}",
-    "save": "Save reconciliation",
-    "saveSuccess": "Till reconciled",
-    "saveError": "Could not save reconciliation"
+  "collect": {
+    "title": "Collect from {{name}}",
+    "sectionTitle": "Money to Collect",
+    "button": "Collect",
+    "emptyTitle": "All settled up",
+    "emptyDescription": "When a client owes you money it will show here, ready to collect.",
+    "totalOwed": "{{amount}} owed by {{count}} clients"
   },
   "list": {
     "title": "Billing",
-    "searchPlaceholder": "Search by customer or bill ID",
+    "searchPlaceholder": "Search by client name",
     "filters": {
       "paid": "Paid",
       "partial": "Partial",
@@ -34,7 +24,10 @@
     "emptyTitle": "No bills yet",
     "emptyDescription": "Create your first bill to start tracking payments",
     "newBill": "New Bill",
-    "errorLoad": "Could not load bills"
+    "errorLoad": "Could not load bills",
+    "lastBill": "Last bill {{date}}",
+    "billCount": "{{count}} bills",
+    "outstanding": "{{amount}} due"
   },
   "detail": {
     "loading": "Loading bill...",

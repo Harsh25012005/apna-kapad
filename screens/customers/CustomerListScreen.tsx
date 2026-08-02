@@ -4,7 +4,8 @@ import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { FontAwesome5, Ionicons } from '@expo/vector-icons';
-import { Avatar, Card, EmptyState, Header, LoadingSpinner, SearchBar, useToast } from '../../components/ui';
+import { Avatar, Card, EmptyState,
+  FilterNotice, Header, LoadingSpinner, SearchBar, useToast } from '../../components/ui';
 import { customersRepo, billsRepo } from '../../lib/data/repository';
 import { useShop } from '../../context/AuthContext';
 import { formatCurrency } from '../../lib/format';
@@ -95,7 +96,7 @@ export default function CustomerListScreen({ navigation }: CustomersScreenProps<
               <Text className="text-base font-semibold text-gray-900 dark:text-gray-50">{t('list.filterModalTitle')}</Text>
               {balanceOnly ? (
                 <Pressable onPress={() => setBalanceOnly(false)}>
-                  <Text className="text-xs font-semibold text-primary-600 dark:text-primary-400">{t('list.reset')}</Text>
+                  <Text className="text-base font-semibold text-primary-600 dark:text-primary-400">{t('list.reset')}</Text>
                 </Pressable>
               ) : null}
             </View>
@@ -110,7 +111,7 @@ export default function CustomerListScreen({ navigation }: CustomersScreenProps<
                   !balanceOnly ? 'border-primary-600 bg-primary-50 dark:bg-primary-950' : 'border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800'
                 }`}
               >
-                <Text className={`text-sm font-semibold ${!balanceOnly ? 'text-primary-700 dark:text-primary-300' : 'text-gray-700 dark:text-gray-300'}`}>
+                <Text className={`text-base font-semibold ${!balanceOnly ? 'text-primary-700 dark:text-primary-300' : 'text-gray-700 dark:text-gray-300'}`}>
                   {t('list.allCustomers')}
                 </Text>
                 {!balanceOnly ? <FontAwesome5 name="check" size={14} color="#1D4ED8" /> : null}
@@ -125,7 +126,7 @@ export default function CustomerListScreen({ navigation }: CustomersScreenProps<
                   balanceOnly ? 'border-primary-600 bg-primary-50 dark:bg-primary-950' : 'border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800'
                 }`}
               >
-                <Text className={`text-sm font-semibold ${balanceOnly ? 'text-primary-700 dark:text-primary-300' : 'text-gray-700 dark:text-gray-300'}`}>
+                <Text className={`text-base font-semibold ${balanceOnly ? 'text-primary-700 dark:text-primary-300' : 'text-gray-700 dark:text-gray-300'}`}>
                   {t('list.hasBalanceFilter')}
                 </Text>
                 {balanceOnly ? <FontAwesome5 name="check" size={14} color="#1D4ED8" /> : null}
@@ -140,7 +141,7 @@ export default function CustomerListScreen({ navigation }: CustomersScreenProps<
         keyExtractor={(item) => item.id}
         className="px-5"
         contentContainerStyle={
-          filtered.length === 0 ? { flexGrow: 1, paddingTop: 12 } : { paddingTop: 12, paddingBottom: 130, gap: 10 }
+          filtered.length === 0 ? { flexGrow: 1, paddingTop: 12 } : { paddingTop: 12, paddingBottom: 224, gap: 10 }
         }
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} tintColor="#1D4ED8" />
@@ -163,15 +164,15 @@ export default function CustomerListScreen({ navigation }: CustomersScreenProps<
             <View className="flex-row items-center">
               <Avatar name={item.name} size="md" />
               <View className="ml-3 flex-1">
-                <Text className="text-base font-semibold text-gray-900 dark:text-gray-50">{item.name}</Text>
-                <Text className="font-sans text-sm text-gray-500 dark:text-gray-400">{item.phone ?? t('list.noPhone')}</Text>
+                <Text className="text-lg font-semibold text-gray-900 dark:text-gray-50">{item.name}</Text>
+                <Text className="font-sans text-base text-gray-500 dark:text-gray-400">{item.phone ?? t('list.noPhone')}</Text>
               </View>
               {item.balance > 0 ? (
-                <Text className="ml-2 text-sm font-semibold text-danger">
+                <Text className="ml-2 text-base font-semibold text-danger">
                   {formatCurrency(item.balance)}
                 </Text>
               ) : (
-                <Text className="ml-2 font-sans text-sm text-success">{t('list.settled')}</Text>
+                <Text className="ml-2 font-sans text-base text-success">{t('list.settled')}</Text>
               )}
             </View>
           </Card>

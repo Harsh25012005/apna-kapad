@@ -5,6 +5,7 @@ import { FontAwesome5 } from '@expo/vector-icons';
 import { Button, Card, Dropdown, Header, InputField, LoadingSpinner, useToast } from '../../components/ui';
 import type { DropdownOption } from '../../components/ui';
 import { supabase } from '../../lib/supabase';
+import { runSync } from '../../lib/data/sync';
 import { useShop } from '../../context/AuthContext';
 import type { CustomersScreenProps } from '../../navigation/types';
 
@@ -253,6 +254,13 @@ export default function MeasurementFormScreen({
         custom_fields: [...presetCustomFields, ...cleanedCustomFields],
       };
 
+      // Customers are written local-first (SQLite -> pending_ops -> push),
+      // but measurements go straight to Supabase. Saving a measurement for a
+      // client created moments ago therefore hit a foreign-key violation,
+      // because that customer row hadn't been pushed yet. Flushing the sync
+      // queue first guarantees the customer exists server-side.
+      await runSync(shop.id);
+
       if (isEditing && measurementId) {
         const { error: updateError } = await supabase
           .from('measurements')
@@ -284,7 +292,7 @@ export default function MeasurementFormScreen({
             value={values[field.id] ?? ''}
             onChangeText={(v) => setValue(field.id, v)}
             placeholder={t(`measurementForm.fields.${field.id}.placeholder`)}
-            keyboardType="numeric"
+            keyboardType="number-pad"
           />
         </View>
       ))}
@@ -301,12 +309,12 @@ export default function MeasurementFormScreen({
       />
       <KeyboardAvoidingView
         className="flex-1"
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
       >
       <ScrollView
         className="flex-1 bg-white dark:bg-gray-950"
-        contentContainerStyle={{ padding: 20, paddingBottom: 130 }}
+        contentContainerStyle={{ padding: 20, paddingBottom: 224 }}
         keyboardShouldPersistTaps="handled"
       >
         <Dropdown
@@ -321,7 +329,7 @@ export default function MeasurementFormScreen({
 
         {groups.shirt.length > 0 ? (
           <Card className="mb-4">
-            <Text className="mb-3 text-sm font-semibold text-gray-900 dark:text-gray-50">
+            <Text className="mb-3 text-base font-semibold text-gray-900 dark:text-gray-50">
               {t('measurementForm.shirtSection')}
             </Text>
             {renderGroup(groups.shirt)}
@@ -330,7 +338,7 @@ export default function MeasurementFormScreen({
 
         {groups.pant.length > 0 ? (
           <Card className="mb-4">
-            <Text className="mb-3 text-sm font-semibold text-gray-900 dark:text-gray-50">
+            <Text className="mb-3 text-base font-semibold text-gray-900 dark:text-gray-50">
               {t('measurementForm.pantSection')}
             </Text>
             {renderGroup(groups.pant)}
@@ -346,7 +354,7 @@ export default function MeasurementFormScreen({
 
         <View className="mt-2">
           <View className="mb-2 flex-row items-center justify-between">
-            <Text className="text-sm font-semibold text-gray-900 dark:text-gray-50">
+            <Text className="text-base font-semibold text-gray-900 dark:text-gray-50">
               {t('measurementForm.customFieldsLabel')}
             </Text>
             <Pressable
@@ -354,14 +362,14 @@ export default function MeasurementFormScreen({
               className="flex-row items-center rounded-md bg-primary-50 px-3 py-1.5 dark:bg-primary-950"
             >
               <FontAwesome5 name="plus" size={11} color="#1D4ED8" />
-              <Text className="ml-1.5 text-sm font-semibold text-primary-600 dark:text-primary-400">
+              <Text className="ml-1.5 text-base font-semibold text-primary-600 dark:text-primary-400">
                 {t('measurementForm.addCustomField')}
               </Text>
             </Pressable>
           </View>
 
           {customFields.length === 0 ? (
-            <Text className="font-sans text-xs text-gray-400 dark:text-gray-500">
+            <Text className="font-sans text-base text-gray-400 dark:text-gray-500">
               {t('measurementForm.noCustomFields')}
             </Text>
           ) : (
@@ -382,6 +390,7 @@ export default function MeasurementFormScreen({
                       value={field.value}
                       onChangeText={(v) => updateCustomField(index, 'value', v)}
                       placeholder={t('measurementForm.customFieldValuePlaceholder')}
+                      keyboardType="number-pad"
                     />
                   </View>
                   <Pressable

@@ -48,6 +48,13 @@
     "fieldNameLabel": "ફીલ્ડનું નામ",
     "fieldNamePlaceholder": "દા.ત. કોલર, હિપ, બોટમ",
     "save": "સેવ કરો",
+    "garmentScopeLabel": "શેના માટે લાગુ",
+    "garmentScope": {
+      "Shirt": "શર્ટ",
+      "Pant": "પેન્ટ",
+      "Both": "બંને"
+    },
+    "addDefaultFields": "+ ડિફોલ્ટ ફીલ્ડ ઉમેરો (ચેસ્ટ, વેસ્ટ, શોલ્ડર, વગેરે)",
     "saveSuccess": "ફીલ્ડ ઉમેરાઈ",
     "saveError": "ફીલ્ડ ઉમેરી શકાઈ નહીં",
     "duplicateError": "આ નામની ફીલ્ડ પહેલેથી અસ્તિત્વમાં છે",

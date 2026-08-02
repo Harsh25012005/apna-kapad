@@ -48,6 +48,13 @@
     "fieldNameLabel": "Field name",
     "fieldNamePlaceholder": "e.g. Collar, Hip, Bottom",
     "save": "Save",
+    "garmentScopeLabel": "Applies to",
+    "garmentScope": {
+      "Shirt": "Shirt",
+      "Pant": "Pant",
+      "Both": "Both"
+    },
+    "addDefaultFields": "+ Add default fields (Chest, Waist, Shoulder, etc.)",
     "saveSuccess": "Field added",
     "saveError": "Could not add field",
     "duplicateError": "A field with this name already exists",

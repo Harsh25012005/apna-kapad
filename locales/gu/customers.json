@@ -133,6 +133,8 @@
     "pantSection": "પેન્ટનું માપ",
     "fieldsSection": "માપ",
     "noFieldsDefined": "હજુ સુધી કોઈ માપ ફીલ્ડ સેટ નથી. સેટિંગ્સ → કસ્ટમ માપ ફીલ્ડ પરથી ઉમેરો.",
+    "addDefaultFields": "+ ડિફોલ્ટ ફીલ્ડ ઉમેરો",
+    "selectGarmentTypeFirst": "માપ ફીલ્ડ ઉમેરવા માટે પહેલા ઉપર ગારમેન્ટ ટાઇપ પસંદ કરો.",
     "fields": {
       "chest": {
         "label": "છાતી (ઇંચ)",

@@ -132,6 +132,8 @@
     "pantSection": "Pant Measurements",
     "fieldsSection": "Measurements",
     "noFieldsDefined": "No measurement fields set up yet. Add some from Settings → Custom Measurement Fields.",
+    "addDefaultFields": "+ Add default fields",
+    "selectGarmentTypeFirst": "Select a garment type above to start adding measurement fields.",
     "fields": {
       "chest": {
         "label": "Chest (in)",

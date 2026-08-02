@@ -48,6 +48,13 @@
     "fieldNameLabel": "फ़ील्ड का नाम",
     "fieldNamePlaceholder": "जैसे कॉलर, हिप, बॉटम",
     "save": "सेव करें",
+    "garmentScopeLabel": "किसके लिए लागू",
+    "garmentScope": {
+      "Shirt": "शर्ट",
+      "Pant": "पैंट",
+      "Both": "दोनों"
+    },
+    "addDefaultFields": "+ डिफ़ॉल्ट फ़ील्ड जोड़ें (चेस्ट, वेस्ट, शोल्डर, आदि)",
     "saveSuccess": "फ़ील्ड जोड़ी गई",
     "saveError": "फ़ील्ड जोड़ी नहीं जा सकी",
     "duplicateError": "इस नाम की फ़ील्ड पहले से मौजूद है",

@@ -96,6 +96,50 @@ export function extractNameAroundPhone(text: string, phone: string | null): stri
   return cleaned.replace(/\s+/g, ' ').trim();
 }
 
+const NAME_FILLER_WORDS = [
+  'ગ્રાહકનું નામ',
+  'ગ્રાહકનુ નામ',
+  'ગ્રાહકનું',
+  'નામ',
+  'naam',
+  'name',
+  'graahak',
+  'ग्राहक',
+  'છે',
+  'chhe',
+  'che',
+  'is',
+  'નો',
+  'ની',
+  'નું',
+];
+
+/** Strips "customer's name is ___" filler down to just the spoken name. */
+export function cleanSpokenName(text: string): string {
+  let cleaned = text.replace(/\d+/g, ' ');
+  for (const f of NAME_FILLER_WORDS) {
+    cleaned = cleaned.replace(new RegExp(f, 'gi'), ' ');
+  }
+  return cleaned.replace(/\s+/g, ' ').trim();
+}
+
+/**
+ * Whether a saved customer name plausibly matches a spoken search query.
+ * Speech recognition rarely transcribes a name back exactly the way it's
+ * stored, so this checks substrings in both directions plus any shared word,
+ * rather than requiring the whole utterance to literally contain the name.
+ */
+export function customerNameMatches(query: string, customerName: string): boolean {
+  const q = normalize(cleanSpokenName(query));
+  const name = normalize(customerName);
+  if (!q) return false;
+  if (name.includes(q) || q.includes(name)) return true;
+
+  const qWords = q.split(/\s+/).filter((w) => w.length >= 2);
+  const nameWords = name.split(/\s+/).filter((w) => w.length >= 2);
+  return qWords.some((w) => nameWords.some((nw) => nw.includes(w) || w.includes(nw)));
+}
+
 export type ClothOrderSummary = { shirtCount: number; pantCount: number };
 
 const PAIR_WORDS = ['જોડ', 'jod', 'pair'];

@@ -168,6 +168,7 @@ export type Database = {
         Row: {
           created_at: string
           field_key: string
+          garment_type: string
           id: string
           input_type: string
           label: string
@@ -177,6 +178,7 @@ export type Database = {
         Insert: {
           created_at?: string
           field_key: string
+          garment_type?: string
           id?: string
           input_type?: string
           label: string
@@ -186,6 +188,7 @@ export type Database = {
         Update: {
           created_at?: string
           field_key?: string
+          garment_type?: string
           id?: string
           input_type?: string
           label?: string

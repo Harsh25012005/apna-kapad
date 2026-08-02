@@ -447,15 +447,16 @@ export default function DashboardScreen({ navigation }: DashboardScreenProps<'Da
       </View>
     </ScrollView>
 
-    {/* AI voice assistant — floats above the tab bar, opens a fresh
+    {/* AI voice assistant — floats above the tab bar (which is 78px tall
+        plus its own safe-area padding, see CustomTabBar.tsx), opens a fresh
         Gujarati conversation for hands-free order creation. */}
     <Pressable
       onPress={() => {
         haptics.tap();
         navigation.navigate('AIOrderAssistant');
       }}
-      className="absolute bottom-6 right-5 h-14 w-14 items-center justify-center rounded-full bg-primary-600 shadow-lg active:bg-primary-700"
-      style={{ bottom: insets.bottom + 24 }}
+      className="absolute right-5 h-14 w-14 items-center justify-center rounded-full bg-primary-600 shadow-lg active:bg-primary-700"
+      style={{ bottom: insets.bottom + 78 + 16 }}
     >
       <FontAwesome5 name="robot" size={20} color="#FFFFFF" />
     </Pressable>

@@ -242,8 +242,15 @@ function AnimatedTabIcon({
   );
 }
 
-export function CustomTabBar({ state, navigation }: BottomTabBarProps) {
+export function CustomTabBar({ state, navigation, descriptors }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
+  // A nested screen (e.g. the AI assistant) can hide this bar entirely by
+  // calling navigation.getParent()?.setOptions({ tabBarStyle: { display: 'none' } })
+  // — the standard React Navigation escape hatch for custom tab bars.
+  const focusedOptions = descriptors[state.routes[state.index].key]?.options;
+  if (focusedOptions?.tabBarStyle && (focusedOptions.tabBarStyle as { display?: string }).display === 'none') {
+    return null;
+  }
   const [isAddMenuOpen, setIsAddMenuOpen] = useState(false);
   const { t } = useTranslation('common');
   const { scheme } = useTheme();

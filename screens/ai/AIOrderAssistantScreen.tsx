@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ScrollView, Text, View, Pressable } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import * as Speech from 'expo-speech';
 import { ExpoSpeechRecognitionModule, useSpeechRecognitionEvent } from 'expo-speech-recognition';
 import { FontAwesome5 } from '@expo/vector-icons';
@@ -8,6 +9,7 @@ import { supabase } from '../../lib/supabase';
 import { customersRepo, ordersRepo } from '../../lib/data/repository';
 import { sendWhatsAppMessage, buildAiOrderConfirmationMessage } from '../../lib/whatsapp';
 import { useShop } from '../../context/AuthContext';
+import { fieldDefMatchesGarment } from '../../lib/measurementFieldScope';
 import {
   parseYesNo,
   parseClientType,
@@ -15,6 +17,8 @@ import {
   extractFirstNumber,
   extractPhoneNumber,
   extractNameAroundPhone,
+  cleanSpokenName,
+  customerNameMatches,
   parseClothCounts,
 } from '../../lib/aiAssistant/gujaratiNlu';
 import type { DashboardScreenProps } from '../../navigation/types';
@@ -28,6 +32,7 @@ type Step =
   | 'askIntent'
   | 'askClientType'
   | 'collectNewClient'
+  | 'collectNewClientPhoneOnly'
   | 'collectExistingClientSearch'
   | 'chooseClientFromList'
   | 'confirmCreateNewFallback'
@@ -57,6 +62,9 @@ async function nextOrderNumber(shopId: string): Promise<string> {
  * since it's only ever read/written from the step-advance handler, never rendered directly. */
 type Session = {
   fieldDefinitions: FieldDefinition[];
+  /** fieldDefinitions filtered to the garment type picked at
+   * askGarmentForMeasurement — the list actually walked field-by-field. */
+  activeFieldDefinitions: FieldDefinition[];
   customer: Customer | null;
   matches: Customer[];
   garmentType: string;
@@ -67,11 +75,15 @@ type Session = {
   clothCount: number;
   totalAmount: number;
   lastOrderNumber: string;
+  /** The cleaned name from a failed existing-client search — reused so the
+   * new-client fallback doesn't make the owner repeat the name. */
+  pendingName: string;
 };
 
 function newSession(): Session {
   return {
     fieldDefinitions: [],
+    activeFieldDefinitions: [],
     customer: null,
     matches: [],
     garmentType: '',
@@ -82,6 +94,7 @@ function newSession(): Session {
     clothCount: 0,
     totalAmount: 0,
     lastOrderNumber: '',
+    pendingName: '',
   };
 }
 
@@ -96,20 +109,34 @@ export default function AIOrderAssistantScreen({ navigation }: DashboardScreenPr
   const session = useRef<Session>(newSession());
   const scrollRef = useRef<ScrollView>(null);
 
+  // Hides the bottom tab bar while this full-screen conversation is open —
+  // see CustomTabBar's descriptor-based display:none check.
+  useFocusEffect(
+    useCallback(() => {
+      navigation.getParent()?.setOptions({ tabBarStyle: { display: 'none' } });
+      return () => navigation.getParent()?.setOptions({ tabBarStyle: undefined });
+    }, [navigation])
+  );
+
   const appendLog = useCallback((entry: LogEntry) => {
     setLog((prev) => [...prev, entry]);
     setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 50);
   }, []);
 
-  /** Speaks a line in Gujarati, logs it, then opens the mic for the reply (unless this is a terminal line). */
+  /** Speaks a line in Gujarati, logs it, then opens the mic for the reply
+   * (unless this is a terminal line). `lang` picks the recognizer language
+   * for that reply — client names/phone numbers are typically spoken or
+   * stored in English/Latin script, so those prompts listen in en-IN while
+   * everything else listens in gu-IN. */
   const speak = useCallback(
-    (text: string, opts?: { listenAfter?: boolean }) => {
+    (text: string, opts?: { listenAfter?: boolean; lang?: 'gu-IN' | 'en-IN' }) => {
       appendLog({ who: 'ai', text });
       const listenAfter = opts?.listenAfter ?? true;
+      const lang = opts?.lang ?? 'gu-IN';
       Speech.speak(text, {
         language: 'gu-IN',
         onDone: () => {
-          if (listenAfter) void startListening();
+          if (listenAfter) void startListening(lang);
         },
       });
       // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -117,14 +144,14 @@ export default function AIOrderAssistantScreen({ navigation }: DashboardScreenPr
     [appendLog]
   );
 
-  const startListening = async () => {
+  const startListening = async (lang: 'gu-IN' | 'en-IN' = 'gu-IN') => {
     const perm = await ExpoSpeechRecognitionModule.requestPermissionsAsync();
     if (!perm.granted) {
       showToast('માઈક્રોફોનની પરવાનગી જરૂરી છે', 'error');
       return;
     }
     setListening(true);
-    ExpoSpeechRecognitionModule.start({ lang: 'gu-IN', interimResults: false, continuous: false });
+    ExpoSpeechRecognitionModule.start({ lang, interimResults: false, continuous: false });
   };
   const stopListening = () => ExpoSpeechRecognitionModule.stop();
 
@@ -186,10 +213,10 @@ export default function AIOrderAssistantScreen({ navigation }: DashboardScreenPr
         const type = parseClientType(text);
         if (type === 'new') {
           setStep('collectNewClient');
-          speak('ગ્રાહકનું નામ અને મોબાઈલ નંબર બોલો.');
+          speak('ગ્રાહકનું નામ અને મોબાઈલ નંબર બોલો.', { lang: 'en-IN' });
         } else if (type === 'existing' || type === 'unknown') {
           setStep('collectExistingClientSearch');
-          speak('ગ્રાહકનું નામ બોલો.');
+          speak('ગ્રાહકનું નામ બોલો.', { lang: 'en-IN' });
         } else {
           speak('માફ કરશો, નવો, જૂનો, કે ખબર નથી — એમાંથી એક બોલો.');
         }
@@ -199,7 +226,7 @@ export default function AIOrderAssistantScreen({ navigation }: DashboardScreenPr
       case 'collectNewClient': {
         const phone = extractPhoneNumber(text);
         if (!phone) {
-          speak('મોબાઈલ નંબર ના મળ્યો. ફરી નામ અને 10 આંકડાનો નંબર બોલો.');
+          speak('મોબાઈલ નંબર ના મળ્યો. ફરી નામ અને 10 આંકડાનો નંબર બોલો.', { lang: 'en-IN' });
           return;
         }
         const name = extractNameAroundPhone(text, phone) || 'ગ્રાહક';
@@ -211,9 +238,13 @@ export default function AIOrderAssistantScreen({ navigation }: DashboardScreenPr
       }
 
       case 'collectExistingClientSearch': {
-        const query = text.trim().toLowerCase();
+        // Names are typically typed/stored in English even though the rest
+        // of the conversation is Gujarati, so the search itself is
+        // language-agnostic: it matches against both the raw transcript and
+        // a cleaned version, whichever script the recognizer produced.
+        s.pendingName = cleanSpokenName(text);
         const all = await customersRepo.list(shop.id);
-        const matches = all.filter((c) => c.name.toLowerCase().includes(query));
+        const matches = all.filter((c) => customerNameMatches(text, c.name));
         if (matches.length === 0) {
           setStep('confirmCreateNewFallback');
           speak('કોઈ ગ્રાહક ના મળ્યો. નવો ગ્રાહક બનાવીએ?');
@@ -222,19 +253,37 @@ export default function AIOrderAssistantScreen({ navigation }: DashboardScreenPr
           setStep('askMeasurementOrOrder');
           speak(`${matches[0].name} મળ્યા. માપ બદલવું છે કે ઓર્ડર બનાવવો છે?`);
         } else {
-          s.matches = matches.slice(0, 6);
+          // Every match is read out, not just the first few, so the owner
+          // never loses a client that happens to be lower in the list.
+          s.matches = matches;
           const list = s.matches.map((c, i) => `${i + 1}. ${c.name}`).join(', ');
           setStep('chooseClientFromList');
-          speak(`આ નામ મળ્યા: ${list}. કયો નંબર પસંદ કરો છો?`);
+          speak(`આ નામ મળ્યા: ${list}. કયો નંબર પસંદ કરો છો? અથવા આમાંથી કોઈ ના હોય તો "નવો ગ્રાહક" બોલો.`, {
+            lang: 'en-IN',
+          });
         }
         return;
       }
 
       case 'chooseClientFromList': {
+        // The right client might not be in the list at all — "નવો ગ્રાહક" /
+        // "new" bails straight into creating a new one instead of forcing a
+        // number pick.
+        if (parseClientType(text) === 'new') {
+          if (s.pendingName) {
+            setStep('collectNewClientPhoneOnly');
+            speak(`ઠીક છે, ${s.pendingName} નામે નવો ગ્રાહક બનાવીએ. મોબાઈલ નંબર બોલો.`, { lang: 'en-IN' });
+          } else {
+            setStep('collectNewClient');
+            speak('ગ્રાહકનું નામ અને મોબાઈલ નંબર બોલો.', { lang: 'en-IN' });
+          }
+          return;
+        }
+
         const idx = extractFirstNumber(text);
         const picked = idx ? s.matches[idx - 1] : undefined;
         if (!picked) {
-          speak('માફ કરશો, નંબર બોલો — 1, 2, વગેરે.');
+          speak('માફ કરશો, નંબર બોલો — 1, 2, વગેરે. અથવા "નવો ગ્રાહક" બોલો.', { lang: 'en-IN' });
           return;
         }
         s.customer = picked;
@@ -246,12 +295,31 @@ export default function AIOrderAssistantScreen({ navigation }: DashboardScreenPr
       case 'confirmCreateNewFallback': {
         const yes = parseYesNo(text);
         if (yes === true) {
-          setStep('collectNewClient');
-          speak('ગ્રાહકનું નામ અને મોબાઈલ નંબર બોલો.');
+          if (s.pendingName) {
+            setStep('collectNewClientPhoneOnly');
+            speak(`ઠીક છે, ${s.pendingName} નામે નવો ગ્રાહક બનાવીએ. મોબાઈલ નંબર બોલો.`, { lang: 'en-IN' });
+          } else {
+            setStep('collectNewClient');
+            speak('ગ્રાહકનું નામ અને મોબાઈલ નંબર બોલો.', { lang: 'en-IN' });
+          }
         } else {
           setStep('done');
           speak('ઠીક છે. જ્યારે તૈયાર હો ત્યારે ફરી બોલાવજો.', { listenAfter: false });
         }
+        return;
+      }
+
+      case 'collectNewClientPhoneOnly': {
+        const phone = extractPhoneNumber(text);
+        if (!phone) {
+          speak('મોબાઈલ નંબર ના મળ્યો. ફરી 10 આંકડાનો નંબર બોલો.', { lang: 'en-IN' });
+          return;
+        }
+        const name = s.pendingName || 'ગ્રાહક';
+        const customer = await customersRepo.create({ shop_id: shop.id, name, phone });
+        s.customer = customer;
+        setStep('askMeasurementOrOrder');
+        speak(`${name} ઉમેરાયા. માપ બદલવું છે કે ઓર્ડર બનાવવો છે?`);
         return;
       }
 
@@ -280,27 +348,33 @@ export default function AIOrderAssistantScreen({ navigation }: DashboardScreenPr
           return;
         }
         s.garmentType = garment;
+        s.activeFieldDefinitions = s.fieldDefinitions.filter((d) => fieldDefMatchesGarment(d.garment_type, garment));
         s.fieldIndex = 0;
         s.fieldValues = {};
+        if (s.activeFieldDefinitions.length === 0) {
+          speak(`${garment} માટે કોઈ માપ ફીલ્ડ સેટ નથી. સેટિંગ્સ માંથી ઉમેરો. હવે ઓર્ડર બનાવીએ. કેટલા કપડાં છે?`);
+          setStep('askClothCount');
+          return;
+        }
         setStep('collectMeasurementField');
-        speak(s.fieldDefinitions[0].label + '?');
+        speak(s.activeFieldDefinitions[0].label + '?');
         return;
       }
 
       case 'collectMeasurementField': {
-        const def = s.fieldDefinitions[s.fieldIndex];
+        const def = s.activeFieldDefinitions[s.fieldIndex];
         const value = extractFirstNumber(text);
         if (def && value !== null) {
           s.fieldValues[def.field_key] = String(value);
         }
         s.fieldIndex += 1;
-        if (s.fieldIndex < s.fieldDefinitions.length) {
-          speak(s.fieldDefinitions[s.fieldIndex].label + '?');
+        if (s.fieldIndex < s.activeFieldDefinitions.length) {
+          speak(s.activeFieldDefinitions[s.fieldIndex].label + '?');
           return;
         }
 
         // All fields collected — save the measurement.
-        const customFields = s.fieldDefinitions
+        const customFields = s.activeFieldDefinitions
           .filter((def2) => s.fieldValues[def2.field_key] !== undefined)
           .map((def2) => ({ label: def2.label, value: s.fieldValues[def2.field_key] }));
         const { data, error } = await supabase

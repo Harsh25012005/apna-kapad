@@ -7,6 +7,8 @@ import type { DropdownOption } from '../../components/ui';
 import { supabase } from '../../lib/supabase';
 import { runSync } from '../../lib/data/sync';
 import { useShop } from '../../context/AuthContext';
+import { DEFAULT_SHIRT_FIELDS, DEFAULT_PANT_FIELDS, DEFAULT_ALL_FIELDS } from '../../lib/defaultMeasurementFields';
+import { fieldDefMatchesGarment } from '../../lib/measurementFieldScope';
 import type { CustomersScreenProps } from '../../navigation/types';
 import type { Tables } from '../../lib/database.types';
 
@@ -22,6 +24,23 @@ const GARMENT_TYPE_KEYS: Record<GarmentType, string> = {
 
 type FieldDefinition = Tables<'measurement_field_definitions'>;
 type CustomField = { label: string; value: string };
+
+/** Common measurement fields per garment type — not shop-defined fields, just
+ * a quick-fill shortcut so an owner who hasn't set up Custom Measurement
+ * Fields in Settings still gets the usual tailoring fields with one tap. */
+const DEFAULT_FIELDS_BY_GARMENT: Record<GarmentType, string[]> = {
+  Shirt: DEFAULT_SHIRT_FIELDS,
+  Pant: DEFAULT_PANT_FIELDS,
+  'Shirt+Pant': DEFAULT_ALL_FIELDS,
+};
+
+/** Loose match for past measurement records when hunting for fields the shop
+ * has used before — a "Shirt+Pant" record is relevant either way. */
+function recordMatchesGarment(recordGarmentType: string, selected: GarmentType): boolean {
+  return (
+    recordGarmentType === selected || selected === 'Shirt+Pant' || recordGarmentType === 'Shirt+Pant'
+  );
+}
 
 export default function MeasurementFormScreen({
   navigation,
@@ -109,11 +128,70 @@ export default function MeasurementFormScreen({
     void load();
   }, [load]);
 
+  /** Only the shop-defined fields scoped to the garment type currently
+   * selected — a field marked "Pant" doesn't show up while editing a Shirt
+   * measurement, and vice versa. */
+  const visibleFieldDefinitions = useMemo(() => {
+    const match = GARMENT_TYPE_VALUES.find((v) => v === garmentType);
+    if (!match) return [];
+    return fieldDefinitions.filter((d) => fieldDefMatchesGarment(d.garment_type, match));
+  }, [fieldDefinitions, garmentType]);
+
+  // Once a garment type is picked on a new measurement, pull in any custom
+  // field label the shop has ever used for that garment type before — even
+  // if it was typed ad-hoc rather than added in Settings — so it reopens as
+  // a fillable field instead of having to be retyped from scratch.
+  useEffect(() => {
+    const match = GARMENT_TYPE_VALUES.find((v) => v === garmentType);
+    if (isEditing || !match) return;
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from('measurements')
+        .select('garment_type, custom_fields')
+        .eq('shop_id', shop.id);
+      if (cancelled || !data) return;
+
+      const labels = new Set<string>();
+      for (const m of data) {
+        if (!recordMatchesGarment(m.garment_type, match)) continue;
+        const fields = Array.isArray(m.custom_fields) ? (m.custom_fields as unknown as CustomField[]) : [];
+        for (const f of fields) {
+          if (f?.label) labels.add(f.label);
+        }
+      }
+
+      setExtraFields((prev) => {
+        const known = new Set([...fieldDefinitions.map((d) => d.label), ...prev.map((f) => f.label)]);
+        const toAdd = [...labels].filter((l) => !known.has(l));
+        return toAdd.length > 0 ? [...prev, ...toAdd.map((label) => ({ label, value: '' }))] : prev;
+      });
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [garmentType, isEditing, shop.id]);
+
   const setFieldValue = (key: string, value: string) =>
     setFieldValues((prev) => ({ ...prev, [key]: value }));
 
   const addExtraField = () => {
     setExtraFields((prev) => [...prev, { label: '', value: '' }]);
+  };
+
+  /** Appends the standard fields for the selected garment type, skipping any
+   * already present (as a shop-defined field or already added below). */
+  const addDefaultFields = () => {
+    const match = GARMENT_TYPE_VALUES.find((v) => v === garmentType);
+    if (!match) return;
+    const existingLabels = new Set([
+      ...visibleFieldDefinitions.map((d) => d.label),
+      ...extraFields.map((f) => f.label),
+    ]);
+    const toAdd = DEFAULT_FIELDS_BY_GARMENT[match].filter((label) => !existingLabels.has(label));
+    if (toAdd.length === 0) return;
+    setExtraFields((prev) => [...prev, ...toAdd.map((label) => ({ label, value: '' }))]);
   };
 
   const updateExtraField = (index: number, key: keyof CustomField, value: string) => {
@@ -132,7 +210,7 @@ export default function MeasurementFormScreen({
     setError('');
     setLoading(true);
     try {
-      const definedCustomFields: CustomField[] = fieldDefinitions
+      const definedCustomFields: CustomField[] = visibleFieldDefinitions
         .map((def) => ({ label: def.label, value: (fieldValues[def.field_key] ?? '').trim() }))
         .filter((f) => f.value);
 
@@ -204,99 +282,117 @@ export default function MeasurementFormScreen({
           required
         />
 
-        {fieldDefinitions.length > 0 ? (
-          <Card className="mb-4">
-            <Text className="mb-3 text-base font-semibold text-gray-900 dark:text-gray-50">
-              {t('measurementForm.fieldsSection')}
-            </Text>
-            {/* Every field the shop has defined in Settings, entered one by
-                one — order matches the order they were added in. */}
-            <View className="gap-3">
-              {fieldDefinitions.map((def) => (
-                <InputField
-                  key={def.id}
-                  label={def.label}
-                  value={fieldValues[def.field_key] ?? ''}
-                  onChangeText={(v) => setFieldValue(def.field_key, v)}
-                  placeholder={def.label}
-                  keyboardType={def.input_type === 'number' ? 'number-pad' : 'default'}
-                />
-              ))}
-            </View>
-          </Card>
-        ) : (
-          <Text className="font-sans mb-4 text-base text-gray-400 dark:text-gray-500">
-            {t('measurementForm.noFieldsDefined')}
+        {!garmentType ? (
+          <Text className="font-sans mt-2 text-base text-gray-400 dark:text-gray-500">
+            {t('measurementForm.selectGarmentTypeFirst')}
           </Text>
-        )}
-
-        <InputField
-          label={t('measurementForm.notesLabel')}
-          value={notes}
-          onChangeText={setNotes}
-          placeholder={t('measurementForm.notesPlaceholder')}
-        />
-
-        <View className="mt-2">
-          <View className="mb-2 flex-row items-center justify-between">
-            <Text className="text-base font-semibold text-gray-900 dark:text-gray-50">
-              {t('measurementForm.customFieldsLabel')}
-            </Text>
+        ) : (
+          <>
             <Pressable
-              onPress={addExtraField}
-              className="flex-row items-center rounded-md bg-primary-50 px-3 py-1.5 dark:bg-primary-950"
+              onPress={addDefaultFields}
+              className="mb-4 flex-row items-center self-start rounded-md bg-primary-50 px-3 py-1.5 dark:bg-primary-950"
             >
-              <FontAwesome5 name="plus" size={11} color="#1D4ED8" />
+              <FontAwesome5 name="magic" size={11} color="#1D4ED8" />
               <Text className="ml-1.5 text-base font-semibold text-primary-600 dark:text-primary-400">
-                {t('measurementForm.addCustomField')}
+                {t('measurementForm.addDefaultFields')}
               </Text>
             </Pressable>
-          </View>
 
-          {extraFields.length === 0 ? (
-            <Text className="font-sans text-base text-gray-400 dark:text-gray-500">
-              {t('measurementForm.noCustomFields')}
-            </Text>
-          ) : (
-            <View className="gap-2">
-              {extraFields.map((field, index) => (
-                <View key={index} className="flex-row items-center gap-2">
-                  <View className="flex-1">
+            {visibleFieldDefinitions.length > 0 ? (
+              <Card className="mb-4">
+                <Text className="mb-3 text-base font-semibold text-gray-900 dark:text-gray-50">
+                  {t('measurementForm.fieldsSection')}
+                </Text>
+                {/* Only the fields the shop scoped to this garment type in
+                    Settings, entered one by one in the order they were added. */}
+                <View className="gap-3">
+                  {visibleFieldDefinitions.map((def) => (
                     <InputField
-                      label={index === 0 ? t('measurementForm.customFieldLabelLabel') : undefined}
-                      value={field.label}
-                      onChangeText={(v) => updateExtraField(index, 'label', v)}
-                      placeholder={t('measurementForm.customFieldLabelPlaceholder')}
+                      key={def.id}
+                      label={def.label}
+                      value={fieldValues[def.field_key] ?? ''}
+                      onChangeText={(v) => setFieldValue(def.field_key, v)}
+                      placeholder={def.label}
+                      keyboardType={def.input_type === 'number' ? 'number-pad' : 'default'}
                     />
-                  </View>
-                  <View className="flex-1">
-                    <InputField
-                      label={index === 0 ? t('measurementForm.customFieldValueLabel') : undefined}
-                      value={field.value}
-                      onChangeText={(v) => updateExtraField(index, 'value', v)}
-                      placeholder={t('measurementForm.customFieldValuePlaceholder')}
-                      keyboardType="number-pad"
-                    />
-                  </View>
-                  <Pressable
-                    onPress={() => removeExtraField(index)}
-                    hitSlop={8}
-                    className="h-6 w-6 items-center justify-center"
-                  >
-                    <FontAwesome5 name="trash-alt" size={15} color="#EF4444" />
-                  </Pressable>
+                  ))}
                 </View>
-              ))}
-            </View>
-          )}
-        </View>
+              </Card>
+            ) : (
+              <Text className="font-sans mb-4 text-base text-gray-400 dark:text-gray-500">
+                {t('measurementForm.noFieldsDefined')}
+              </Text>
+            )}
 
-        <Button
-          title={isEditing ? t('measurementForm.updateMeasurement') : t('measurementForm.saveMeasurement')}
-          onPress={handleSave}
-          loading={loading}
-          className="mt-4"
-        />
+            <InputField
+              label={t('measurementForm.notesLabel')}
+              value={notes}
+              onChangeText={setNotes}
+              placeholder={t('measurementForm.notesPlaceholder')}
+            />
+
+            <View className="mt-2">
+              <View className="mb-2 flex-row items-center justify-between">
+                <Text className="text-base font-semibold text-gray-900 dark:text-gray-50">
+                  {t('measurementForm.customFieldsLabel')}
+                </Text>
+                <Pressable
+                  onPress={addExtraField}
+                  className="flex-row items-center rounded-md bg-primary-50 px-3 py-1.5 dark:bg-primary-950"
+                >
+                  <FontAwesome5 name="plus" size={11} color="#1D4ED8" />
+                  <Text className="ml-1.5 text-base font-semibold text-primary-600 dark:text-primary-400">
+                    {t('measurementForm.addCustomField')}
+                  </Text>
+                </Pressable>
+              </View>
+
+              {extraFields.length === 0 ? (
+                <Text className="font-sans text-base text-gray-400 dark:text-gray-500">
+                  {t('measurementForm.noCustomFields')}
+                </Text>
+              ) : (
+                <View className="gap-2">
+                  {extraFields.map((field, index) => (
+                    <View key={index} className="flex-row items-center gap-2">
+                      <View className="flex-1">
+                        <InputField
+                          label={index === 0 ? t('measurementForm.customFieldLabelLabel') : undefined}
+                          value={field.label}
+                          onChangeText={(v) => updateExtraField(index, 'label', v)}
+                          placeholder={t('measurementForm.customFieldLabelPlaceholder')}
+                        />
+                      </View>
+                      <View className="flex-1">
+                        <InputField
+                          label={index === 0 ? t('measurementForm.customFieldValueLabel') : undefined}
+                          value={field.value}
+                          onChangeText={(v) => updateExtraField(index, 'value', v)}
+                          placeholder={t('measurementForm.customFieldValuePlaceholder')}
+                          keyboardType="number-pad"
+                        />
+                      </View>
+                      <Pressable
+                        onPress={() => removeExtraField(index)}
+                        hitSlop={8}
+                        className="h-6 w-6 items-center justify-center"
+                      >
+                        <FontAwesome5 name="trash-alt" size={15} color="#EF4444" />
+                      </Pressable>
+                    </View>
+                  ))}
+                </View>
+              )}
+            </View>
+
+            <Button
+              title={isEditing ? t('measurementForm.updateMeasurement') : t('measurementForm.saveMeasurement')}
+              onPress={handleSave}
+              loading={loading}
+              className="mt-4"
+            />
+          </>
+        )}
       </ScrollView>
       </KeyboardAvoidingView>
     </>
